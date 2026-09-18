@@ -3,16 +3,14 @@
 Family cookbook for Christine (Chris) Barrett: **My Addiction with Sally's Baking Addiction**.
 Public site for family. Chris writes. Connor runs the services.
 
-If a URL or ID is missing below, it is not set up yet. Do not invent cloud projects.
-
 ## Services
 
 | What | Where | Status |
 | --- | --- | --- |
 | Source | GitHub `bytesofconnor/baking-addiction` | https://github.com/bytesofconnor/baking-addiction |
-| App (SPA) | Vite 8 + React 19 + React Router 8 on Vercel | Team **Connor's projects** (`team_ynn7qy4sDXJcDEMHSuWLuXXo`) |
-| Backend + DB | Convex project `baking-addiction` | Team **connor-barrett**. Production: `beloved-lapwing-642` |
-| Domain | — | Not purchased. Intended: `myaddiction.kitchen` |
+| App (SPA) | Vercel project `baking-addiction` | Team **Connor's projects** (`team_ynn7qy4sDXJcDEMHSuWLuXXo` / `connors-projects-408eaae2`). Project `prj_aFYDZXk50XMLtWsmraJ6lbd8eTAg` |
+| Backend + DB | Convex project `baking-addiction` | Team **connor-barrett**. Production deployment `beloved-lapwing-642` |
+| Domain | — | Not purchased. Intended: `myaddiction.kitchen`. Live URL is the Vercel alias below. |
 | Kitchen AI | Vercel AI Gateway via Convex action `kitchen.remix` | `AI_GATEWAY_API_KEY` is **not** set. Falls back to notes in `convex/lib/kitchenLetter.ts`. |
 
 Git remote: `github.com-personal:bytesofconnor/baking-addiction.git`
@@ -21,13 +19,26 @@ Git remote: `github.com-personal:bytesofconnor/baking-addiction.git`
 
 | Piece | Address |
 | --- | --- |
+| Site | https://baking-addiction.vercel.app |
+| Vercel dashboard | https://vercel.com/connors-projects-408eaae2/baking-addiction |
 | Convex HTTP | https://beloved-lapwing-642.convex.cloud |
 | Convex dashboard | https://dashboard.convex.dev/t/connor-barrett/baking-addiction/beloved-lapwing-642 |
-| Site | Vercel production URL (see below once deployed) |
 
-**Do not seed production.** `convex/seed.ts` is `internalMutation` only (CLI/dashboard). Live cookbook starts empty; Chris writes the real bakes.
+Production cookbook starts **empty**. Chris writes the real bakes. Dummy seed is `internalMutation` only — never run it on prod.
 
-Dummy cover photos live in `public/bakes/` for local samples. Real photos go through Convex file storage (`photos.generateUploadUrl` + `photos.attach`).
+Git is **not** connected to Vercel right now. Auto-deploy on push was blocked because the GitHub commit author is not a member of the Vercel team. Ship with:
+
+```bash
+npx vercel pull --yes --environment=production --scope connors-projects-408eaae2
+npx vercel build --prod --yes --scope connors-projects-408eaae2
+npx vercel deploy --prebuilt --prod --yes --scope connors-projects-408eaae2
+```
+
+To reconnect Git later (after the GitHub user is on the Vercel team):
+
+```bash
+npx vercel git connect https://github.com/bytesofconnor/baking-addiction --yes --scope connors-projects-408eaae2
+```
 
 ## Local
 
@@ -51,11 +62,14 @@ npm run dev          # http://localhost:4821
 - `VITE_CONVEX_URL`
 - `VITE_CONVEX_SITE_URL`
 
+Do not let `vercel env pull` overwrite this file’s local Convex URL.
+
 Push functions to production without touching local:
 
 ```bash
+printf 'CONVEX_DEPLOYMENT=prod:beloved-lapwing-642\n' > /tmp/convex-prod.env
 npx convex deploy --env-file /tmp/convex-prod.env
-# where CONVEX_DEPLOYMENT=prod:beloved-lapwing-642
+rm /tmp/convex-prod.env
 ```
 
 ## Routes
@@ -70,6 +84,8 @@ npx convex deploy --env-file /tmp/convex-prod.env
 | `/chris-desk` | Legacy redirect to `/admin` |
 
 Session cookie `mba_desk` + `localStorage` `mba-desk-session`, ~400 days.
+
+Send Chris: `https://baking-addiction.vercel.app/admin?code=` plus the kitchen code. Once per phone, once per laptop.
 
 ## Convex env
 
