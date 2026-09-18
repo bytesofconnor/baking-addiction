@@ -316,7 +316,7 @@ function TrayGrid({
       >
         {heading}
       </h2>
-      <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {bakes.map((bake) => (
           <BakeCard key={bake.slug} bake={bake} showKind={showKind} />
         ))}

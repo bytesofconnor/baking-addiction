@@ -5,7 +5,7 @@ import { BAKER_FULL_NAME, SITE_SHORT } from "@/lib/site";
 
 export function AboutPage() {
   return (
-    <div className="max-w-[38rem]">
+    <div className="max-w-[46rem] xl:max-w-[52rem]">
       <PageTitle title={`About · ${SITE_SHORT}`} />
       <Kicker>{BAKER_FULL_NAME}</Kicker>
       <h1 className="font-display mt-3 text-[2.8rem] leading-[1.08] tracking-tight">

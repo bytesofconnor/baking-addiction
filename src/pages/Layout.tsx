@@ -7,7 +7,7 @@ export function Layout() {
   const { status } = useWriter();
   const { pathname } = useLocation();
   return (
-    <div className="relative mx-auto min-h-screen w-full max-w-[56rem] pb-[max(4rem,env(safe-area-inset-bottom))] pl-12 pr-5 pt-6 md:max-w-[68rem] md:pl-28 md:pr-14 md:pt-8">
+    <div className="relative mx-auto min-h-screen w-full max-w-[56rem] pb-[max(4rem,env(safe-area-inset-bottom))] pl-12 pr-5 pt-6 md:max-w-[80rem] md:pl-28 md:pr-14 md:pt-8 xl:max-w-[92rem] xl:pr-16">
       <a
         href="#main"
         className="skip-link"
