@@ -35,12 +35,10 @@ export function CookbookExplorer({ bakes }: { bakes: CookbookBake[] }) {
   const searchId = useId();
   const countId = useId();
   const query = params.get("q") ?? "";
-  const sort: CookbookSort = isSort(params.get("sort"))
-    ? params.get("sort")!
-    : "newest";
-  const kind: BakeKind | "all" = isKind(params.get("kind"))
-    ? params.get("kind")!
-    : "all";
+  const sortParam = params.get("sort");
+  const kindParam = params.get("kind");
+  const sort: CookbookSort = isSort(sortParam) ? sortParam : "newest";
+  const kind: BakeKind | "all" = isKind(kindParam) ? kindParam : "all";
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const trays = useMemo(() => kindsInCookbook(bakes), [bakes]);
