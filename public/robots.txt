@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /mom-desk
+Disallow: /write
+Disallow: /admin
