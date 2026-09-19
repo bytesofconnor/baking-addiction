@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { FamilyDoor, JoinLanding } from "@/components/FamilyDoor";
 import { useFamily } from "@/lib/family";
-import { isOAuthReturn } from "@/lib/oauthReturn";
+import { clearOAuthReturn, isOAuthReturn } from "@/lib/oauthReturn";
 import { PageTitle } from "@/lib/pageTitle";
 import { SITE_SHORT } from "@/lib/site";
 
@@ -57,6 +57,11 @@ export function JoinPage() {
           <p role="status">Opening your book…</p>
         </>
       );
+    }
+    if (status === "out" && isOAuthReturn()) {
+      // OAuth return without invite - redirect to home
+      clearOAuthReturn();
+      return <Navigate to="/" replace />;
     }
     return <JoinLanding />;
   }
