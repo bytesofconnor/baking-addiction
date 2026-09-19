@@ -51,14 +51,11 @@ export function JoinLanding() {
         The perfect recipe book
       </h1>
       <p className="mt-4 text-[19px] leading-8 text-ink-soft">
-        Your recipes stay in your book. Share with the people you cook with — 
-        flip through theirs the same way. Not a feed. Not one shared site.
+        All your favorite recipes in one place. Your family&apos;s recipes, 
+        right where you need them.
       </p>
       <p className="mt-4 text-[19px] leading-8 text-ink-soft">
-        Snap a photo, write later. It&apos;s that simple.
-      </p>
-      <p className="mt-4 text-[19px] leading-8 text-ink-soft">
-        Free. Just use your Google account.
+        Snap a photo. Write later. Done.
       </p>
       <GoogleComeIn />
     </div>
