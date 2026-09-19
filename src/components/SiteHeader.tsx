@@ -7,10 +7,10 @@ import { pageHeading, SITE_LINE } from "@/lib/site";
 
 function navClass(isActive: boolean) {
   return [
-    "font-display inline-flex min-h-14 cursor-pointer items-center px-1 text-[1.25rem] font-semibold touch-manipulation transition-colors duration-150",
+    "font-display inline-flex min-h-14 cursor-pointer items-center px-4 py-2 text-[1.25rem] font-semibold touch-manipulation transition-all duration-150 rounded-md",
     isActive
-      ? "text-cinnamon-deep"
-      : "text-ink hover:text-cinnamon-deep active:text-cocoa",
+      ? "bg-cinnamon-deep text-paper-raised shadow-md"
+      : "text-ink hover:bg-paper-raised hover:text-cinnamon-deep hover:shadow-sm active:text-cocoa active:bg-paper-press",
   ].join(" ");
 }
 
@@ -69,7 +69,7 @@ export function SiteHeader({
       {hasNav ? (
         <nav
           aria-label="Primary"
-          className="mt-2 flex flex-wrap gap-x-7 gap-y-0 border-b border-cocoa/40 py-0.5"
+          className="mt-2 flex flex-wrap gap-x-4 gap-y-2 py-0.5"
         >
           {showPeople ? (
             <NavLink
