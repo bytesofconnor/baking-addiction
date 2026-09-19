@@ -27,7 +27,7 @@ export function PersonPage() {
   if (status === "checking") {
     return <p role="status">Opening the book…</p>;
   }
-  if (status === "out") {
+  if (status === "out" || !user) {
     return <RedirectToJoin />;
   }
 
@@ -35,7 +35,7 @@ export function PersonPage() {
     (member) => member.otherUserId === userId,
   );
   const called =
-    userId === user?._id ? (user.called ?? "You") : (person?.called ?? "Family");
+    userId === user._id ? user.called : (person?.called ?? "Family");
 
   return (
     <div>

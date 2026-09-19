@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, type KeyboardEvent, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
+import type { Id } from "../../convex/_generated/dataModel";
 import type { BakeKind } from "../../convex/lib/kinds";
 import { KIND_LABELS } from "../../convex/lib/kinds";
 import {
@@ -450,11 +451,13 @@ function PortalCard({
         ) : (
           <BakePlate kind={kind} seed={bake.slug} />
         )}
-        <RecipeShare
-          className="recipe-share-on-photo"
-          bakeId={bake._id}
-          title={bake.title}
-        />
+        {bake._id ? (
+          <RecipeShare
+            className="recipe-share-on-photo"
+            bakeId={bake._id as Id<"bakes">}
+            title={bake.title}
+          />
+        ) : null}
       </div>
       <div className="book-portal-copy">
         <p className="text-[16px] font-medium leading-6 text-ink-soft">

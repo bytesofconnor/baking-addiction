@@ -158,13 +158,14 @@ export function FamilyBook() {
   }
 
   const people = collapsePeople(view.family);
+  const kitchenId = mine._id;
 
   async function copyLink() {
     setPending(true);
     setError(null);
     setCopied(false);
     try {
-      const result = await createInvite({ kitchenId: mine._id, role: "cook" });
+      const result = await createInvite({ kitchenId, role: "cook" });
       const url = `${window.location.origin}/join?invite=${result.token}`;
       setInviteUrl(url);
       await navigator.clipboard?.writeText(url).catch(() => undefined);

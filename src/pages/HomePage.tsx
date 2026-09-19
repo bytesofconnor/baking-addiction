@@ -110,7 +110,7 @@ export function HomePage() {
         selfId={view.selfId}
         selfCalled={view.selfCalled}
         whose={whose}
-        emptyNote={trayNote(view.selection, view.people)}
+        emptyNote={trayNote(view.selection ?? undefined, view.people)}
       />
     </>
   );
