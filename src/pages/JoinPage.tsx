@@ -50,18 +50,9 @@ export function JoinPage() {
       const query = next.toString();
       return <Navigate to={query ? `/?${query}` : "/"} replace />;
     }
-    if (status === "checking" && isOAuthReturn()) {
-      return (
-        <>
-          <PageTitle title={`Come in · ${SITE_SHORT}`} />
-          <p role="status">Opening your book…</p>
-        </>
-      );
-    }
-    if (status === "out" && isOAuthReturn()) {
-      // OAuth return without invite - redirect to home
+    // Clear stale OAuth return flag if no actual OAuth params
+    if (isOAuthReturn() && !params.get("code")) {
       clearOAuthReturn();
-      return <Navigate to="/" replace />;
     }
     return <JoinLanding />;
   }

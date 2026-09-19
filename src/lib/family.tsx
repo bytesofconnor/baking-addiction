@@ -112,11 +112,14 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
         writeKitchenId(id);
         if (!planted.current) {
           planted.current = true;
-          await plantFamily({});
+          await plantFamily({}).catch(() => {
+            // Planting sample data is optional, don't block
+          });
         }
       })
-      .catch(() => {
-        // Stay on the empty book; they can retry from Family.
+      .catch((error) => {
+        console.error("Failed to ensure kitchen:", error);
+        // Don't block on kitchen creation failure - let user proceed
       });
     return () => {
       cancelled = true;
@@ -126,12 +129,13 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
   const status: FamilyStatus =
     isLoading ||
     !kitchenReady ||
-    comingBack ||
-    (isAuthenticated && me === undefined)
+    comingBack
+      ? "checking"
+      : isAuthenticated && me === undefined
       ? "checking"
       : me
-        ? "in"
-        : "out";
+      ? "in"
+      : "out";
 
   const value = useMemo(
     () => ({
