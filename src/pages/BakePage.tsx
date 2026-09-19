@@ -1,30 +1,56 @@
 import { useQuery } from "convex/react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { api } from "../../convex/_generated/api";
 import { Kicker } from "@/components/Kicker";
 import { PageTurn } from "@/components/PageTurn";
+import { BakePlate } from "@/components/BakePlate";
 import { PhotoFrame } from "@/components/PhotoFrame";
-import { SallyCredit } from "@/components/SallyCredit";
+import { RecipeSource } from "@/components/RecipeSource";
 import { SecretSauce } from "@/components/SecretSauce";
 import { CookbookBack } from "@/components/CookbookBack";
+import { RecipeShare } from "@/components/RecipeShare";
 import { KitchenMethod } from "@/components/KitchenMethod";
+import { BakeStars } from "@/components/BakeStars";
 import { KitchenAsk } from "@/components/KitchenAsk";
+import { HowItWent } from "@/components/HowItWent";
 import { formatBakeDate } from "@/lib/dates";
+import { accordingTo } from "@/lib/cookbook";
 import { inferKind, KIND_LABELS } from "../../convex/lib/kinds";
 import { PageTitle } from "@/lib/pageTitle";
 import { SITE_NAME, SITE_SHORT } from "@/lib/site";
+import { useFamily } from "@/lib/family";
+import { useRecipeTitle } from "@/lib/bookHeading";
+import { RedirectToJoin } from "@/components/RedirectToJoin";
+import { useCookbookView } from "@/lib/preview";
 
 export function BakePage() {
   const { slug } = useParams();
+  const [params] = useSearchParams();
+  const { status } = useFamily();
+  const view = useCookbookView();
   const bake = useQuery(
     api.bakes.getPublishedBySlug,
-    slug ? { slug } : "skip",
+    status === "in" && slug ? { slug } : "skip",
   );
-  const catalog = useQuery(api.bakes.listPublished);
+  const catalog = view.bakes;
   const photos = useQuery(
     api.photos.listForBake,
     bake ? { bakeId: bake._id } : "skip",
   );
+  useRecipeTitle(bake && "title" in bake ? bake.title : null);
+
+  if (status === "checking") {
+    return (
+      <>
+        <PageTitle title={SITE_NAME} />
+        <p role="status">Opening this bake…</p>
+      </>
+    );
+  }
+
+  if (status === "out") {
+    return <RedirectToJoin />;
+  }
 
   if (bake === undefined) {
     return (
@@ -38,8 +64,8 @@ export function BakePage() {
   if (bake === null) {
     return (
       <>
-        <PageTitle title={`Not in the cookbook · ${SITE_SHORT}`} />
-        <p className="text-ink-soft">That bake isn&apos;t in the cookbook.</p>
+        <PageTitle title={`Not in the recipe book · ${SITE_SHORT}`} />
+        <p className="text-ink-soft">That card isn&apos;t in the book.</p>
         <p className="mt-6">
           <CookbookBack />
         </p>
@@ -53,7 +79,7 @@ export function BakePage() {
   const [firstParagraph, ...restParagraphs] = bake.story
     .split("\n")
     .filter((line) => line.length > 0);
-  const index = catalog?.findIndex((item) => item.slug === bake.slug) ?? -1;
+  const index = catalog?.findIndex((item) => item._id === bake._id) ?? -1;
   const newer = index > 0 ? catalog?.[index - 1] : null;
   const older = index >= 0 ? catalog?.[index + 1] : null;
 
@@ -62,7 +88,10 @@ export function BakePage() {
   return (
     <article>
       <PageTitle title={`${bake.title} · ${SITE_SHORT}`} />
-      <CookbookBack />
+      <div className="bake-leaf-bar">
+        <CookbookBack />
+        <RecipeShare bakeId={bake._id} title={bake.title} />
+      </div>
       {heroSrc ? (
         <PhotoFrame
           src={heroSrc}
@@ -70,9 +99,13 @@ export function BakePage() {
           size="hero"
           className="mt-8"
         />
-      ) : null}
+      ) : (
+        <div className="book-portal-frame book-plate-hero mt-8">
+          <BakePlate kind={kind} seed={bake.slug} />
+        </div>
+      )}
 
-      <Kicker className={heroSrc ? undefined : "mt-8"}>
+      <Kicker className="mt-6">
         {KIND_LABELS[kind]}
         {" · "}
         {bake.bakerName}
@@ -83,30 +116,47 @@ export function BakePage() {
         {bake.title}
       </h1>
       <div className="mt-4">
-        <SallyCredit title={bake.sourceTitle} url={bake.sourceUrl} />
+        <RecipeSource
+          sourceKind={bake.sourceKind}
+          sourceTitle={bake.sourceTitle}
+          sourceUrl={bake.sourceUrl}
+        />
       </div>
 
-      <div className="mt-10 flex flex-col gap-8 md:grid md:grid-cols-[1.08fr_0.92fr] md:items-start md:gap-10">
+      <div className="mt-10">
         <KitchenMethod
+          makes={bake.makes}
+          ingredients={bake.ingredients}
+          steps={bake.steps}
           method={bake.method}
           sourceTitle={bake.sourceTitle}
           sourceUrl={bake.sourceUrl}
         />
-        <SecretSauce changes={bake.changes} />
       </div>
 
-      <div className="mt-10 flex max-w-[38rem] flex-col gap-5">
-        {firstParagraph ? (
-          <p className="drop-cap">{firstParagraph}</p>
-        ) : null}
-        {restParagraphs.map((paragraph) => (
-          <p key={paragraph}>{paragraph}</p>
-        ))}
-        {bake.outcome ? (
-          <p className="mt-2 border-t border-rule pt-5 font-display text-[1.25rem] leading-8 text-cocoa italic">
-            {bake.outcome}
-          </p>
-        ) : null}
+      <div className="mt-10 flex flex-col gap-8 md:grid md:grid-cols-[1.15fr_0.85fr] md:items-start md:gap-10">
+        <div className="flex max-w-[40rem] flex-col gap-5">
+          {firstParagraph ? (
+            <p className="drop-cap">{firstParagraph}</p>
+          ) : null}
+          {restParagraphs.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+          {bake.rating > 0 ? (
+            <div className="mt-2 border-t border-rule pt-5">
+              <p className="book-according">
+                {accordingTo(bake, view.selfId) ?? `According to ${bake.bakerName}`}
+              </p>
+              <BakeStars value={bake.rating} />
+            </div>
+          ) : null}
+          {bake.outcome ? (
+            <p className="mt-2 font-display text-[1.25rem] leading-8 text-cocoa italic">
+              {bake.outcome}
+            </p>
+          ) : null}
+        </div>
+        <SecretSauce changes={bake.changes} />
       </div>
 
       <KitchenAsk
@@ -117,7 +167,9 @@ export function BakePage() {
         changes={bake.changes}
       />
 
-      <PageTurn older={older} newer={newer} />
+      <HowItWent bakeId={bake._id} />
+
+      <PageTurn older={older} newer={newer} search={params.toString()} />
     </article>
   );
 }

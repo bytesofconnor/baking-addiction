@@ -1,20 +1,31 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-arrive="arrive">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>My Addiction with Sally's Baking Addiction</title>
+    <title>That's Yum</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="robots" content="noindex, nofollow" />
     <meta
       name="description"
-      content="My addiction with Sally's Baking Addiction — her versions, the notes, the swaps, the bake."
+      content="That's Yum — the perfect recipe book. Keep yours. Flip through theirs."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&display=swap"
-      rel="stylesheet"
-    />
+    <style>
+      html,
+      body,
+      #root {
+        min-height: 100%;
+        background: #6e2c14;
+      }
+      body {
+        margin: 0;
+      }
+    </style>
+    <script>
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        document.documentElement.dataset.arrive = "in";
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

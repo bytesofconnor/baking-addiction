@@ -27,3 +27,19 @@ export function formatBakeDate(isoDate: string): string {
   const year = parts[0];
   return year ? `${monthName} ${day}, ${year}` : `${monthName} ${day}`;
 }
+
+export function todayStamp(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+export function formatMadeAt(ms: number): string {
+  const date = new Date(ms);
+  const monthName = MONTHS[date.getMonth()];
+  if (!monthName) {
+    return "";
+  }
+  return `${monthName} ${date.getDate()}, ${date.getFullYear()}`;
+}

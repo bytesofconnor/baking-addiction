@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import { Link } from "react-router";
+import { Link, type To } from "react-router";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -10,7 +10,7 @@ const buttonVariants = cva(
       variant: {
         primary: "btn-primary hover:bg-cocoa active:bg-ink",
         secondary:
-          "border-[1.5px] border-cocoa bg-transparent text-ink hover:border-cinnamon-deep hover:bg-paper-raised hover:text-ink active:border-ink active:bg-[#efe6d8]",
+          "border-[1.5px] border-cocoa bg-transparent text-ink hover:border-cinnamon-deep hover:bg-paper-raised hover:text-ink active:border-ink active:bg-paper-press",
         ghost:
           "px-3 text-ink underline decoration-rule decoration-2 underline-offset-4 hover:text-cinnamon-deep hover:decoration-cinnamon-deep active:text-cocoa active:decoration-cocoa",
       },
@@ -45,7 +45,7 @@ export function ButtonLink({
   className,
   children,
 }: {
-  to: string;
+  to: To;
   variant?: VariantProps<typeof buttonVariants>["variant"];
   className?: string;
   children: ReactNode;

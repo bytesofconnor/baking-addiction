@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireFreshWriterToken } from "./lib/writer";
+import { requireWriterOrCook, writerOrCookArgs } from "./lib/access";
 import { photoValidator } from "./lib/validators";
 
 export const listForBake = query({
@@ -26,24 +26,24 @@ export const listForBake = query({
 });
 
 export const generateUploadUrl = mutation({
-  args: { writerToken: v.string() },
+  args: writerOrCookArgs,
   returns: v.string(),
   handler: async (ctx, args) => {
-    await requireFreshWriterToken(ctx, args.writerToken);
+    await requireWriterOrCook(ctx, args);
     return await ctx.storage.generateUploadUrl();
   },
 });
 
 export const attach = mutation({
   args: {
-    writerToken: v.string(),
+    ...writerOrCookArgs,
     bakeId: v.id("bakes"),
     storageId: v.id("_storage"),
     alt: v.string(),
   },
   returns: v.id("photos"),
   handler: async (ctx, args) => {
-    await requireFreshWriterToken(ctx, args.writerToken);
+    await requireWriterOrCook(ctx, args);
     const bake = await ctx.db.get("bakes", args.bakeId);
     if (!bake) {
       throw new Error("Bake not found");

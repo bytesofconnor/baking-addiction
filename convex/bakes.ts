@@ -2,13 +2,32 @@ import { v } from "convex/values";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import {
-  requireFreshWriterToken,
-  requireWriterToken,
-} from "./lib/writer";
+  calledName,
+  canReadBake,
+  getSignedInUser,
+  isConnectedTo,
+  kitchensForPeople,
+  requireMember,
+  requireSignedIn,
+  visibleKitchenIds,
+} from "./lib/family";
+import { requireWriterOrCook } from "./lib/access";
+import { requireWriterToken } from "./lib/writer";
 import { inferKind } from "./lib/kinds";
-import { bakeTeaserValidator, bakeValidator, kindValidator } from "./lib/validators";
+import {
+  bakeTeaserValidator,
+  bakeValidator,
+  kindValidator,
+} from "./lib/validators";
+import {
+  ingredientSearchText,
+  inferSourceKind,
+  sourceKindValidator,
+} from "./lib/sources";
+import { sampleCoverUrl } from "./seed";
+import { countMadeByOthers } from "./lib/makeCounts";
 
-async function photoUrlForBake(
+export async function photoUrlForBake(
   ctx: QueryCtx,
   bake: Doc<"bakes">,
 ): Promise<string | null> {
@@ -18,7 +37,18 @@ async function photoUrlForBake(
       return stored;
     }
   }
-  return bake.coverUrl ?? null;
+  const photos = await ctx.db
+    .query("photos")
+    .withIndex("by_bake", (q) => q.eq("bakeId", bake._id))
+    .take(1);
+  const first = photos[0];
+  if (first) {
+    const stored = await ctx.storage.getUrl(first.storageId);
+    if (stored) {
+      return stored;
+    }
+  }
+  return bake.coverUrl ?? sampleCoverUrl(bake.slug);
 }
 
 function slugify(title: string): string {
@@ -29,53 +59,137 @@ function slugify(title: string): string {
   return slug.length > 0 ? slug : "bake";
 }
 
+export async function toTeaser(
+  ctx: QueryCtx,
+  bake: Doc<"bakes">,
+) {
+  return {
+    _id: bake._id,
+    slug: bake.slug,
+    title: bake.title,
+    sourceTitle: bake.sourceTitle,
+    sourceUrl: bake.sourceUrl,
+    sourceKind: inferSourceKind(bake.sourceKind, bake.sourceUrl),
+    bakerName: bake.bakerName,
+    kind: bake.kind ?? inferKind(bake.title, bake.sourceTitle),
+    publishedAt: bake.publishedAt,
+    bakedOn: bake.bakedOn,
+    rating: bake.rating,
+    outcome: bake.outcome,
+    changes: bake.changes,
+    ingredients: bake.ingredients ?? [],
+    photoUrl: await photoUrlForBake(ctx, bake),
+    ownerId: bake.ownerId,
+    madeByOthers: await countMadeByOthers(ctx, bake),
+  };
+}
+
 export const listPublished = query({
-  args: {},
+  args: {
+    includeMine: v.optional(v.boolean()),
+    otherUserIds: v.optional(v.array(v.id("users"))),
+    mineOnly: v.optional(v.boolean()),
+  },
   returns: v.array(bakeTeaserValidator),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
+    const user = await getSignedInUser(ctx);
+    if (!user) {
+      return [];
+    }
+
+    const kitchenIds =
+      args.mineOnly === true
+        ? await visibleKitchenIds(ctx, user._id, true)
+        : args.otherUserIds !== undefined
+          ? await kitchensForPeople(
+              ctx,
+              user._id,
+              args.includeMine !== false,
+              args.otherUserIds,
+            )
+          : await visibleKitchenIds(ctx, user._id, false);
+    const collected: Doc<"bakes">[] = [];
+    for (const kitchenId of kitchenIds) {
+      const bakes = await ctx.db
+        .query("bakes")
+        .withIndex("by_kitchen_and_status", (q) =>
+          q.eq("kitchenId", kitchenId).eq("status", "published"),
+        )
+        .order("desc")
+        .take(80);
+      collected.push(...bakes);
+    }
+    collected.sort(
+      (left, right) => (right.publishedAt ?? 0) - (left.publishedAt ?? 0),
+    );
+
+    const teasers = [];
+    for (const bake of collected.slice(0, 80)) {
+      teasers.push(await toTeaser(ctx, bake));
+    }
+    return teasers;
+  },
+});
+
+export const listByPerson = query({
+  args: {
+    userId: v.id("users"),
+  },
+  returns: v.array(bakeTeaserValidator),
+  handler: async (ctx, args) => {
+    const user = await getSignedInUser(ctx);
+    if (!user) {
+      return [];
+    }
+    if (!(await isConnectedTo(ctx, user._id, args.userId))) {
+      return [];
+    }
+
     const bakes = await ctx.db
       .query("bakes")
-      .withIndex("by_status_and_publishedAt", (q) =>
-        q.eq("status", "published"),
+      .withIndex("by_owner_and_status", (q) =>
+        q.eq("ownerId", args.userId).eq("status", "published"),
       )
       .order("desc")
-      .take(80);
+      .take(40);
 
     const teasers = [];
     for (const bake of bakes) {
-      teasers.push({
-        _id: bake._id,
-        slug: bake.slug,
-        title: bake.title,
-        sourceTitle: bake.sourceTitle,
-        sourceUrl: bake.sourceUrl,
-        bakerName: bake.bakerName,
-        kind: bake.kind ?? inferKind(bake.title, bake.sourceTitle),
-        publishedAt: bake.publishedAt,
-        bakedOn: bake.bakedOn,
-        outcome: bake.outcome,
-        changes: bake.changes,
-        photoUrl: await photoUrlForBake(ctx, bake),
-      });
+      teasers.push(await toTeaser(ctx, bake));
     }
     return teasers;
   },
 });
 
 export const getPublishedBySlug = query({
-  args: { slug: v.string() },
+  args: {
+    slug: v.string(),
+  },
   returns: v.union(bakeValidator, v.null()),
   handler: async (ctx, args) => {
-    const bake = await ctx.db
-      .query("bakes")
-      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
-      .unique();
-
-    if (!bake || bake.status !== "published") {
+    const user = await getSignedInUser(ctx);
+    if (!user) {
       return null;
     }
 
-    return bake;
+    const matches = await ctx.db
+      .query("bakes")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .take(8);
+
+    for (const bake of matches) {
+      if (bake.status !== "published") {
+        continue;
+      }
+      if (await canReadBake(ctx, user._id, bake)) {
+        return {
+          ...bake,
+          coverUrl: bake.coverUrl ?? sampleCoverUrl(bake.slug) ?? undefined,
+        };
+      }
+    }
+
+    return null;
   },
 });
 
@@ -88,9 +202,40 @@ const writerBakeValidator = v.object({
 });
 
 export const listMine = query({
-  args: { writerToken: v.string() },
+  args: {
+    writerToken: v.optional(v.string()),
+    kitchenId: v.optional(v.id("kitchens")),
+  },
   returns: v.array(writerBakeValidator),
   handler: async (ctx, args) => {
+    if (args.kitchenId) {
+      const user = await requireSignedIn(ctx);
+      await requireMember(ctx, args.kitchenId);
+      const published = await ctx.db
+        .query("bakes")
+        .withIndex("by_owner_and_status", (q) =>
+          q.eq("ownerId", user._id).eq("status", "published"),
+        )
+        .take(20);
+      const drafts = await ctx.db
+        .query("bakes")
+        .withIndex("by_owner_and_status", (q) =>
+          q.eq("ownerId", user._id).eq("status", "draft"),
+        )
+        .take(20);
+      return [...drafts, ...published]
+        .filter((bake) => bake.kitchenId === args.kitchenId)
+        .map((bake) => ({
+          _id: bake._id,
+          slug: bake.slug,
+          title: bake.title,
+          status: bake.status,
+          bakedOn: bake.bakedOn,
+        }));
+    }
+    if (!args.writerToken) {
+      return [];
+    }
     await requireWriterToken(ctx, args.writerToken);
 
     const published = await ctx.db
@@ -118,14 +263,21 @@ export const listMine = query({
 
 export const save = mutation({
   args: {
-    writerToken: v.string(),
+    writerToken: v.optional(v.string()),
+    kitchenId: v.optional(v.id("kitchens")),
     title: v.string(),
     story: v.string(),
-    sourceTitle: v.string(),
-    sourceUrl: v.string(),
+    sourceTitle: v.optional(v.string()),
+    sourceUrl: v.optional(v.string()),
+    sourceKind: v.optional(sourceKindValidator),
     bakerName: v.string(),
     kind: v.optional(kindValidator),
     method: v.optional(v.string()),
+    makes: v.optional(v.string()),
+    ingredients: v.optional(v.array(v.string())),
+    steps: v.optional(v.array(v.string())),
+    originStorageId: v.optional(v.id("_storage")),
+    coverStorageId: v.optional(v.id("_storage")),
     bakedOn: v.string(),
     rating: v.number(),
     outcome: v.string(),
@@ -143,16 +295,26 @@ export const save = mutation({
     slug: v.string(),
   }),
   handler: async (ctx, args) => {
-    await requireFreshWriterToken(ctx, args.writerToken);
+    const family = await requireWriterOrCook(ctx, {
+      writerToken: args.writerToken,
+      kitchenId: args.kitchenId,
+    });
 
     const title = args.title.trim();
     if (title.length < 2) {
-      throw new Error("Title must be at least 2 characters");
+      throw new Error("Give it a name so you can find it later.");
     }
-    if (!args.sourceUrl.trim().startsWith("http")) {
-      throw new Error("Sally's recipe needs a full URL");
+    const ingredients = (args.ingredients ?? [])
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    const steps = (args.steps ?? [])
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    const sourceUrl = args.sourceUrl?.trim() ?? "";
+    const sourceKind = inferSourceKind(args.sourceKind, sourceUrl);
+    if (sourceKind === "sally" && !sourceUrl.startsWith("http")) {
+      throw new Error("Sally's recipe needs her full link for the credit.");
     }
-
     let slug = slugify(title);
     const existing = await ctx.db
       .query("bakes")
@@ -162,15 +324,32 @@ export const save = mutation({
       slug = `${slug}-${Date.now().toString().slice(-5)}`;
     }
 
+    let kitchenId = family?.kitchen._id ?? args.kitchenId;
+    if (!kitchenId) {
+      const firstKitchen = await ctx.db.query("kitchens").take(1);
+      kitchenId = firstKitchen[0]?._id;
+    }
+
     const bakeId = await ctx.db.insert("bakes", {
       slug,
       title,
       story: args.story.trim(),
-      sourceTitle: args.sourceTitle.trim(),
-      sourceUrl: args.sourceUrl.trim(),
-      bakerName: args.bakerName.trim() || "Mom",
-      kind: args.kind ?? inferKind(title, args.sourceTitle),
+      sourceTitle: (args.sourceTitle ?? "").trim(),
+      sourceUrl,
+      sourceKind,
+      bakerName: family
+        ? calledName(family.user)
+        : args.bakerName.trim() || "Mom",
+      kind: args.kind ?? inferKind(title, args.sourceTitle ?? ""),
       method: args.method?.trim() || undefined,
+      makes: args.makes?.trim() || undefined,
+      ingredients,
+      steps,
+      ingredientSearch: ingredientSearchText(ingredients),
+      originStorageId: args.originStorageId,
+      coverStorageId: args.coverStorageId,
+      ownerId: family?.user._id,
+      kitchenId,
       status: args.status,
       publishedAt: args.status === "published" ? Date.now() : undefined,
       bakedOn: args.bakedOn,
