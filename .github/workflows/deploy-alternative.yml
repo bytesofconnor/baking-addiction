@@ -1,0 +1,46 @@
+# Alternative deployment using Vercel GitHub Action (simpler, requires Git integration)
+# This is a backup option if you prefer using the official Vercel GitHub Action
+# To use this, rename to deploy.yml and ensure Git is connected to Vercel
+
+name: Deploy to Vercel (Alternative)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
+
+      - name: Deploy Convex Functions to Production
+        run: |
+          printf 'CONVEX_DEPLOYMENT=prod:beloved-lapwing-642\n' > /tmp/convex-prod.env
+          npx convex deploy --env-file /tmp/convex-prod.env
+          rm /tmp/convex-prod.env
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}

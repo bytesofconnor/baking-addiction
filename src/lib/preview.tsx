@@ -47,8 +47,11 @@ function readOpen(): boolean {
 export function PreviewProvider({ children }: { children: ReactNode }) {
   const [params, setParams] = useSearchParams();
   const rawAs = params.get("as");
-  const asKey = isDummyKey(rawAs) ? rawAs : null;
-  const [open, setOpenState] = useState(readOpen);
+  const asKey =
+    import.meta.env.DEV && isDummyKey(rawAs) ? rawAs : null;
+  const [open, setOpenState] = useState(
+    () => import.meta.env.DEV && readOpen(),
+  );
 
   const setAs = useCallback(
     (key: DummyKey | null) => {
@@ -75,6 +78,9 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
 
   const keep = useCallback(
     (path: string) => {
+      if (!import.meta.env.DEV) {
+        return path;
+      }
       const next = new URLSearchParams();
       const month = params.get("month");
       const as = params.get("as");
