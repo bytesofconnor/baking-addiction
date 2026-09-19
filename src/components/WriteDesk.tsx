@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Link } from "react-router";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -611,43 +611,40 @@ export function WriteDesk({
             </p>
           ) : (
             <div className="mt-8 flex flex-col gap-3">
-              <Button
+              <button
                 type="button"
-                className="w-full justify-start"
+                className="book-press book-press-text book-press-save w-full justify-start"
                 onClick={() => {
                   setIntake("photo");
                   window.setTimeout(() => fileInput.current?.click(), 0);
                 }}
               >
                 Take or choose a photo
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
-                variant="secondary"
-                className="w-full justify-start"
+                className="book-press book-press-text w-full justify-start"
                 onClick={() => {
                   setIntake("file");
                   window.setTimeout(() => fileInput.current?.click(), 0);
                 }}
               >
                 Upload a file — photo, PDF, PowerPoint
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
-                variant="secondary"
-                className="w-full justify-start"
+                className="book-press book-press-text w-full justify-start"
                 onClick={() => start("link")}
               >
                 Paste a link — Sally, TikTok, Pinterest
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
-                variant="ghost"
-                className="w-full justify-start px-0"
+                className="w-full justify-start min-h-12 cursor-pointer text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
                 onClick={() => start("type")}
               >
                 Type it myself
-              </Button>
+              </button>
             </div>
           )}
         </div>
@@ -739,8 +736,9 @@ export function WriteDesk({
             </p>
           ) : null}
           <div className="sticky bottom-0 z-10 mt-8 -mx-2 border-t border-rule bg-paper px-2 py-3">
-            <Button
+            <button
               type="button"
+              className="book-press book-press-text book-press-save w-full"
               disabled={pending}
               aria-busy={pending}
               onClick={() => void addKeptCards()}
@@ -750,7 +748,7 @@ export function WriteDesk({
                 : pile.filter((draft) => draft.keep).length === 1
                   ? "Put this one in the book"
                   : `Put ${pile.filter((draft) => draft.keep).length} in the book`}
-            </Button>
+            </button>
           </div>
         </div>
       ) : (
@@ -1110,17 +1108,22 @@ export function WriteDesk({
 
           <div className="sticky bottom-0 z-10 mt-8 -mx-2 border-t border-rule bg-paper px-2 py-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Button type="submit" disabled={pending || extracting} aria-busy={pending}>
+              <button
+                type="submit"
+                className="book-press book-press-text book-press-save"
+                disabled={pending || extracting}
+                aria-busy={pending}
+              >
                 {pending ? "Putting it in the book…" : "Put it in the book"}
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
-                variant="ghost"
+                className="book-press book-press-text"
                 disabled={pending}
                 onClick={() => void onSubmit("draft")}
               >
                 Save for later
-              </Button>
+              </button>
             </div>
           </div>
         </form>
@@ -1136,13 +1139,12 @@ export function WriteDesk({
             {mine.map((bake) => (
               <li key={bake._id} className="border-t border-rule py-4">
                 {bake.status === "published" ? (
-                  <ButtonLink
+                  <Link
                     to={`/bakes/${bake.slug}`}
-                    variant="ghost"
-                    className="font-display h-auto min-h-14 px-0 text-[1.35rem]"
+                    className="font-display h-auto min-h-14 px-0 text-[1.35rem] block text-ink no-underline hover:text-cinnamon-deep"
                   >
                     {bake.title}
-                  </ButtonLink>
+                  </Link>
                 ) : (
                   <p className="font-display text-[1.35rem] text-ink-soft">
                     {bake.title}
@@ -1163,10 +1165,9 @@ export function WriteDesk({
       ) : null}
 
       {screen === "choose" && onLock ? (
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          className="mt-10 px-0"
+          className="mt-10 min-h-12 cursor-pointer text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
           onClick={() => {
             if (
               window.confirm(
@@ -1178,7 +1179,7 @@ export function WriteDesk({
           }}
         >
           Lock the kitchen
-        </Button>
+        </button>
       ) : null}
     </div>
   );
