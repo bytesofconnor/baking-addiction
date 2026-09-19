@@ -52,11 +52,11 @@ export function PersonPage() {
         {called}
       </h1>
       <p className="mt-3 text-[19px] leading-8 text-ink-soft">
-        The cards they left.
+        The recipes they shared.
       </p>
       {bakes === undefined ? (
         <p role="status" className="mt-8">
-          Looking through the cards…
+          Looking through the recipes…
         </p>
       ) : (
         <div className="mt-8">

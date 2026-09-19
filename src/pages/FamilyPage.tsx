@@ -205,7 +205,7 @@ export function FamilyBook() {
                 disabled={planting}
                 onClick={() => void fillSample()}
               >
-                {planting ? "Laying their cards in…" : "Put some family in"}
+                {planting ? "Adding sample recipes…" : "Put some family in"}
               </button>
             </p>
           </div>

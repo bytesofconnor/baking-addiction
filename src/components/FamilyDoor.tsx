@@ -51,15 +51,14 @@ export function JoinLanding() {
         The perfect recipe book
       </h1>
       <p className="mt-4 text-[19px] leading-8 text-ink-soft">
-        Your cards stay in your book. The people you cook with share theirs
-        into it — you flip through them the same way. Not a feed. Not one
-        shared site.
+        Your recipes stay in your book. Share with the people you cook with — 
+        flip through theirs the same way. Not a feed. Not one shared site.
       </p>
       <p className="mt-4 text-[19px] leading-8 text-ink-soft">
-        A picture of a card is enough. You can fix the words after.
+        Snap a photo, write later. It&apos;s that simple.
       </p>
       <p className="mt-4 text-[19px] leading-8 text-ink-soft">
-        It&apos;s free. Come in with the Google you already have.
+        Free. Just use your Google account.
       </p>
       <GoogleComeIn />
     </div>
