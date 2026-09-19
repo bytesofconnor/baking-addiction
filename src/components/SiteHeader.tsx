@@ -7,10 +7,8 @@ import { pageHeading, SITE_LINE } from "@/lib/site";
 
 function navClass(isActive: boolean) {
   return [
-    "font-display inline-flex min-h-14 cursor-pointer items-center px-2 py-2 text-[1.25rem] font-semibold touch-manipulation transition-all duration-150 rounded-md",
-    isActive
-      ? "bg-cinnamon-deep text-paper-raised shadow-md"
-      : "text-ink hover:bg-paper-raised hover:text-cinnamon-deep hover:shadow-sm active:text-cocoa active:bg-paper-press",
+    "book-press book-press-text",
+    isActive ? "book-press-save" : "",
   ].join(" ");
 }
 
