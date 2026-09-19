@@ -16,7 +16,7 @@ function DoodleSvg({
       aria-hidden="true"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2.15"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -30,11 +30,13 @@ function Apple({ className }: { className?: string }) {
     <DoodleSvg className={className}>
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M32 20c-2.5-6-8-9-13-7-7 3-9 14-5 24 4 11 12 17 18 17s14-6 18-17c4-10 2-21-5-24-5-2-10.5 1-13 7Z"
+        fillOpacity="0.35"
+        d="M32 16c-3-8-10-12-16-10-8 4-11 18-6 28 5 14 20 20 20 20s15-6 20-20c5-10 2-24-6-28-6-2-13 1-16 10Z"
       />
-      <path d="M32 20c1-8 6-12 11-13" />
-      <path d="M32 22c-5 3-9 3-13 1" />
+      <path d="M32 16c1-10 7-15 13-16" strokeWidth="2.5" />
+      <path d="M32 18c-6 4-11 4-16 2" strokeWidth="2" />
+      <path d="M28 14c2-3 6-4 8-3" strokeWidth="1.5" />
+      <path d="M36 12c2-3 5-3 7-1" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -44,10 +46,12 @@ function Leaf({ className }: { className?: string }) {
     <DoodleSvg className={className}>
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M12 46c10-24 28-34 44-38-2 18-8 34-28 42-6 2-16 2-16-4Z"
+        fillOpacity="0.35"
+        d="M14 44c12-28 32-40 48-44-2 20-10 38-32 44-8 2-18 2-16 0Z"
       />
-      <path d="M16 44c10-12 22-22 36-28" />
+      <path d="M18 42c12-14 26-26 42-32" strokeWidth="2.5" />
+      <path d="M20 40c8-10 18-18 30-24" strokeWidth="1.5" />
+      <path d="M22 38c6-6 14-12 22-16" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -55,12 +59,16 @@ function Leaf({ className }: { className?: string }) {
 function Maple({ className }: { className?: string }) {
   return (
     <DoodleSvg className={className}>
-      <path d="M32 58V36" />
+      <path d="M32 58V38" strokeWidth="2.5" />
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M32 18 18 26l6-12L14 10l16 4L32 4l2 10 16-4-10 4 6 12-14-8Z"
+        fillOpacity="0.35"
+        d="M32 16 16 28l8-14L12 8l20 6L32 2l4 12 20-6-12 6 8 14-16-12Z"
       />
+      <path d="M32 16c-8 4-14 8-16 12" strokeWidth="1.5" />
+      <path d="M32 16c8 4 14 8 16 12" strokeWidth="1.5" />
+      <path d="M24 14c4-2 8-2 8 0" strokeWidth="1.5" />
+      <path d="M40 14c4-2 8-2 8 0" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -68,13 +76,16 @@ function Maple({ className }: { className?: string }) {
 function Squash({ className }: { className?: string }) {
   return (
     <DoodleSvg className={className}>
-      <path d="M31 10c2 5 2 9 0 12" />
+      <path d="M32 8c3 6 3 12 0 14" strokeWidth="2.5" />
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M20 26c-7 9-6 24 3 30 7 5 18 4 22-3 7-10 4-24-5-30-5-4-14-4-20 3Z"
+        fillOpacity="0.35"
+        d="M18 24c-8 12-7 28 4 36 8 6 22 5 26-4 8-12 5-28-6-36-6-5-16-5-22 4Z"
       />
-      <path d="M26 34c2 9 5 16 5 20" />
+      <path d="M24 32c3 10 6 18 6 22" strokeWidth="2" />
+      <path d="M28 20c4-2 8-2 10 2" strokeWidth="1.5" />
+      <path d="M36 18c4-2 8-2 10 2" strokeWidth="1.5" />
+      <path d="M20 28c6 4 12 4 16 0" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -84,14 +95,17 @@ function Corn({ className }: { className?: string }) {
     <DoodleSvg className={className}>
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M32 8c9 8 11 34 0 50-11-16-9-42 0-50Z"
+        fillOpacity="0.35"
+        d="M32 6c10 10 12 36 0 54-12-18-10-44 0-54Z"
       />
-      <path d="M26 22c2 1 4 1 6 0M32 22c2 1 4 1 6 0" />
-      <path d="M25 30c2 1 5 1 7 0M32 30c2 1 5 1 7 0" />
-      <path d="M26 38c2 1 4 1 6 0M32 38c2 1 4 1 6 0" />
-      <path d="M18 20c-5 12-2 24 8 30" />
-      <path d="M46 20c5 12 2 24-8 30" />
+      <path d="M26 20c2 1 4 1 6 0M32 20c2 1 4 1 6 0" strokeWidth="2" />
+      <path d="M25 28c2 1 5 1 7 0M32 28c2 1 5 1 7 0" strokeWidth="2" />
+      <path d="M26 36c2 1 4 1 6 0M32 36c2 1 4 1 6 0" strokeWidth="2" />
+      <path d="M25 44c2 1 5 1 7 0M32 44c2 1 5 1 7 0" strokeWidth="2" />
+      <path d="M16 18c-6 14-3 28 10 36" strokeWidth="2.5" />
+      <path d="M48 18c6 14 3 28-10 36" strokeWidth="2.5" />
+      <path d="M30 8c2-2 4-2 4 0" strokeWidth="1.5" />
+      <path d="M34 8c2-2 4-2 4 0" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -101,10 +115,14 @@ function Tomato({ className }: { className?: string }) {
     <DoodleSvg className={className}>
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M16 30c0-10 8-16 16-16s16 6 16 16-6 20-16 20-16-10-16-20Z"
+        fillOpacity="0.35"
+        d="M14 28c0-12 10-18 18-18s18 6 18 18-8 22-18 22-18-10-18-22Z"
       />
-      <path d="M32 14c-4-6-10-6-12-4 4 2 8 4 12 4 4 0 8-2 12-4-2-2-8-2-12 4Z" />
+      <path d="M32 12c-5-8-12-8-14-5 5 3 10 5 14 5 5 0 10-3 14-5-2-3-10-3-14 5Z" strokeWidth="2.5" />
+      <path d="M28 18c4-2 8-2 10 2" strokeWidth="1.5" />
+      <path d="M36 18c4-2 8-2 10 2" strokeWidth="1.5" />
+      <path d="M24 26c2 0 4 0 4 2" strokeWidth="1.5" />
+      <path d="M40 26c2 0 4 0 4 2" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -112,9 +130,12 @@ function Tomato({ className }: { className?: string }) {
 function Rain({ className }: { className?: string }) {
   return (
     <DoodleSvg className={className}>
-      <path d="M18 18c0 6 4 12 6 12s6-6 6-12-4-8-6-8-6 2-6 8Z" />
-      <path d="M34 28c0 6 4 12 6 12s6-6 6-12-4-8-6-8-6 2-6 8Z" />
-      <path d="M24 42c0 5 3 10 5 10s5-5 5-10-3-7-5-7-5 2-5 7Z" />
+      <path d="M16 16c0 8 5 14 8 14s8-6 8-14-5-10-8-10-8 2-8 10Z" strokeWidth="2.5" />
+      <path d="M36 26c0 8 5 14 8 14s8-6 8-14-5-10-8-10-8 2-8 10Z" strokeWidth="2.5" />
+      <path d="M26 40c0 6 4 12 6 12s6-6 6-12-4-8-6-8-6 2-6 8Z" strokeWidth="2.5" />
+      <path d="M20 24c2 0 4 0 4 2" strokeWidth="1.5" />
+      <path d="M40 34c2 0 4 0 4 2" strokeWidth="1.5" />
+      <path d="M30 44c2 0 4 0 4 2" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -122,14 +143,18 @@ function Rain({ className }: { className?: string }) {
 function Pumpkin({ className }: { className?: string }) {
   return (
     <DoodleSvg className={className}>
-      <path d="M32 16c2 4 2 8 0 10" />
+      <path d="M32 14c3 5 3 10 0 12" strokeWidth="2.5" />
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M16 34c0-12 8-18 16-18s16 6 16 18-6 18-16 18-16-6-16-18Z"
+        fillOpacity="0.35"
+        d="M14 32c0-14 10-20 18-20s18 6 18 20-8 20-18 20-18-6-18-20Z"
       />
-      <path d="M24 20c-4 6-4 20 0 28" />
-      <path d="M40 20c4 6 4 20 0 28" />
+      <path d="M22 18c-5 8-5 24 0 32" strokeWidth="2.5" />
+      <path d="M42 18c5 8 5 24 0 32" strokeWidth="2.5" />
+      <path d="M32 14c-4-4-10-4-12-2 5 3 10 4 12 2 2 2 7 3 12 2" strokeWidth="1.5" />
+      <path d="M28 24c2 2 4 2 6 0" strokeWidth="1.5" />
+      <path d="M38 24c2 2 4 2 6 0" strokeWidth="1.5" />
+      <path d="M32 32c2 2 4 2 6 0" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -137,12 +162,18 @@ function Pumpkin({ className }: { className?: string }) {
 function Pine({ className }: { className?: string }) {
   return (
     <DoodleSvg className={className}>
-      <path d="M32 58V40" />
+      <path d="M32 58V42" strokeWidth="2.5" />
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M32 10 16 28h8l-10 10h10l-8 10h28l-8-10h10L40 28h8L32 10Z"
+        fillOpacity="0.35"
+        d="M32 8 14 30h10l-12 12h12l-10 12h32l-10-12h12L40 30h10L32 8Z"
       />
+      <path d="M32 8c-10 6-16 14-18 22" strokeWidth="1.5" />
+      <path d="M32 8c10 6 16 14 18 22" strokeWidth="1.5" />
+      <path d="M28 20c4-2 8-2 8 0" strokeWidth="1.5" />
+      <path d="M36 20c4-2 8-2 8 0" strokeWidth="1.5" />
+      <path d="M24 30c4-2 8-2 8 0" strokeWidth="1.5" />
+      <path d="M40 30c4-2 8-2 8 0" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -150,7 +181,15 @@ function Pine({ className }: { className?: string }) {
 function Snow({ className }: { className?: string }) {
   return (
     <DoodleSvg className={className}>
-      <path d="M32 10v44M12 32h40M18 18l28 28M46 18 18 46" />
+      <path d="M32 8v48M10 32h44M16 16l32 32M48 16l-32 32" strokeWidth="2.5" />
+      <path d="M32 16c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M32 48c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M16 32c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M48 32c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M22 22c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M42 22c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M22 42c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M42 42c2 0 4 0 4 2" strokeWidth="2" />
     </DoodleSvg>
   );
 }
@@ -160,12 +199,16 @@ function Mug({ className }: { className?: string }) {
     <DoodleSvg className={className}>
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M16 24h26v22c0 6-6 10-13 10s-13-4-13-10V24Z"
+        fillOpacity="0.35"
+        d="M14 22h28v24c0 8-8 12-14 12s-14-4-14-12V22Z"
       />
-      <path d="M42 28h6c4 0 6 4 6 8s-2 8-6 8h-6" />
-      <path d="M24 14c0-4 4-6 4-10" />
-      <path d="M32 14c0-4 4-6 4-10" />
+      <path d="M42 26h8c5 0 8 5 8 10s-3 10-8 10h-8" strokeWidth="2.5" />
+      <path d="M22 12c0-5 5-8 5-12" strokeWidth="2.5" />
+      <path d="M32 12c0-5 5-8 5-12" strokeWidth="2.5" />
+      <path d="M26 16c2-2 4-2 4 0" strokeWidth="1.5" />
+      <path d="M36 16c2-2 4-2 4 0" strokeWidth="1.5" />
+      <path d="M18 30c8-2 16-2 20 0" strokeWidth="1.5" />
+      <path d="M18 38c8-2 16-2 20 0" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -173,10 +216,25 @@ function Mug({ className }: { className?: string }) {
 function Berry({ className }: { className?: string }) {
   return (
     <DoodleSvg className={className}>
-      <path d="M24 36a8 8 0 1 1 0.1 0Z" />
-      <path d="M38 30a8 8 0 1 1 0.1 0Z" />
-      <path d="M36 44a7 7 0 1 1 0.1 0Z" />
-      <path d="M32 22c2 4 6 6 10 6" />
+      <path
+        fill="currentColor"
+        fillOpacity="0.35"
+        d="M22 34a10 10 0 1 1 0.1 0Z"
+      />
+      <path
+        fill="currentColor"
+        fillOpacity="0.35"
+        d="M40 28a10 10 0 1 1 0.1 0Z"
+      />
+      <path
+        fill="currentColor"
+        fillOpacity="0.35"
+        d="M38 46a9 9 0 1 1 0.1 0Z"
+      />
+      <path d="M34 20c3 5 8 8 12 8" strokeWidth="2.5" />
+      <path d="M26 38c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M44 32c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M42 44c2 0 4 0 4 2" strokeWidth="2" />
     </DoodleSvg>
   );
 }
@@ -186,11 +244,16 @@ function Strawberry({ className }: { className?: string }) {
     <DoodleSvg className={className}>
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M32 18c-10 4-16 16-12 26 4 8 20 8 24 0 4-10-2-22-12-26Z"
+        fillOpacity="0.35"
+        d="M32 16c-12 4-18 18-14 30 5 10 22 10 28 0 5-12-2-24-14-30Z"
       />
-      <path d="M22 18c4 2 7 2 10 0 3 2 6 2 10 0-2-6-8-8-10-8s-8 2-10 8Z" />
-      <path d="M26 30h.1M34 36h.1M28 42h.1M36 28h.1" />
+      <path d="M20 16c5 2 8 2 12 0 4 2 8 2 12 0-2-8-10-10-12-10s-10 2-12 10Z" strokeWidth="2" />
+      <path d="M24 28c2 0 4 0 4 2" strokeWidth="2.5" />
+      <path d="M36 34c2 0 4 0 4 2" strokeWidth="2.5" />
+      <path d="M28 40c2 0 4 0 4 2" strokeWidth="2.5" />
+      <path d="M40 26c2 0 4 0 4 2" strokeWidth="2.5" />
+      <path d="M22 32c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M38 30c2 0 4 0 4 2" strokeWidth="2" />
     </DoodleSvg>
   );
 }
@@ -198,13 +261,16 @@ function Strawberry({ className }: { className?: string }) {
 function Lilac({ className }: { className?: string }) {
   return (
     <DoodleSvg className={className}>
-      <path d="M32 58V30" />
-      <path fill="currentColor" fillOpacity="0.28" d="M24 22a6 6 0 1 1 0.1 0Z" />
-      <path fill="currentColor" fillOpacity="0.28" d="M32 16a6 6 0 1 1 0.1 0Z" />
-      <path fill="currentColor" fillOpacity="0.28" d="M40 22a6 6 0 1 1 0.1 0Z" />
-      <path fill="currentColor" fillOpacity="0.28" d="M28 30a5 5 0 1 1 0.1 0Z" />
-      <path fill="currentColor" fillOpacity="0.28" d="M36 30a5 5 0 1 1 0.1 0Z" />
-      <path d="M20 36c6-2 10-2 12 2" />
+      <path d="M32 58V32" strokeWidth="2.5" />
+      <path fill="currentColor" fillOpacity="0.35" d="M22 20a8 8 0 1 1 0.1 0Z" />
+      <path fill="currentColor" fillOpacity="0.35" d="M32 14a8 8 0 1 1 0.1 0Z" />
+      <path fill="currentColor" fillOpacity="0.35" d="M42 20a8 8 0 1 1 0.1 0Z" />
+      <path fill="currentColor" fillOpacity="0.35" d="M26 28a7 7 0 1 1 0.1 0Z" />
+      <path fill="currentColor" fillOpacity="0.35" d="M38 28a7 7 0 1 1 0.1 0Z" />
+      <path d="M18 34c8-2 12-2 14 2" strokeWidth="2" />
+      <path d="M28 24c2 0 4 0 4 2" strokeWidth="1.5" />
+      <path d="M38 18c2 0 4 0 4 2" strokeWidth="1.5" />
+      <path d="M32 28c2 0 4 0 4 2" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -212,10 +278,13 @@ function Lilac({ className }: { className?: string }) {
 function Rhubarb({ className }: { className?: string }) {
   return (
     <DoodleSvg className={className}>
-      <path d="M24 54c-2-16 0-28 2-36 6-2 8 2 6 8" />
-      <path d="M36 54c2-18 4-30 8-36 6 0 6 6 2 10" />
-      <path d="M18 16c6-6 12-6 16-2" />
-      <path d="M36 16c6-4 12-2 14 4" />
+      <path d="M22 52c-2-18 0-32 2-40 8-2 10 2 8 10" strokeWidth="2.5" />
+      <path d="M38 52c2-20 4-34 10-40 8 0 8 6 2 12" strokeWidth="2.5" />
+      <path d="M16 14c8-8 16-8 20-2" strokeWidth="2" />
+      <path d="M36 14c8-6 16-4 18 6" strokeWidth="2" />
+      <path d="M20 24c4-2 8-2 10 2" strokeWidth="1.5" />
+      <path d="M32 18c4-2 8-2 10 2" strokeWidth="1.5" />
+      <path d="M24 32c4-2 8-2 10 2" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -223,10 +292,13 @@ function Rhubarb({ className }: { className?: string }) {
 function Robin({ className }: { className?: string }) {
   return (
     <DoodleSvg className={className}>
-      <path d="M14 36c6-10 18-14 28-8 6 4 8 12 2 16-8 6-22 4-28-2-2-2-4-4-2-6Z" />
-      <path d="M40 30c4-2 10-2 12 2" />
-      <path d="M18 34c6 2 12 2 16-2" />
-      <path d="M22 44l-4 8M30 46l2 8" />
+      <path d="M12 34c8-12 20-16 32-10 8 5 10 14 2 20-10 8-26 5-34-2-2-2-5-5-2-8Z" strokeWidth="2.5" />
+      <path d="M42 28c5-2 12-2 14 3" strokeWidth="2" />
+      <path d="M16 32c8 2 14 2 18-2" strokeWidth="2" />
+      <path d="M20 46l-5 10" strokeWidth="2" />
+      <path d="M32 48l3 10" strokeWidth="2" />
+      <path d="M24 30c4-2 8-2 10 2" strokeWidth="1.5" />
+      <path d="M36 26c4-2 8-2 10 2" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -236,11 +308,14 @@ function Wave({ className }: { className?: string }) {
     <DoodleSvg className={className}>
       <path
         fill="currentColor"
-        fillOpacity="0.2"
-        d="M6 28c8 8 14 8 22 0s14-8 22 0 8 8 10 8v12c-2 0-2-8-10-8s-14 8-22 0-14 8-22 0V28Z"
+        fillOpacity="0.25"
+        d="M4 26c10 10 18 10 28 0s18-10 28 0 10 10 12 10v14c-2 0-2-10-12-10s-18 10-28 0-18 10-28 0V26Z"
       />
-      <path d="M6 28c8 8 14 8 22 0s14-8 22 0 8 8 10 8" />
-      <path d="M6 40c8 8 14 8 22 0s14-8 22 0 8 8 10 8" />
+      <path d="M4 26c10 10 18 10 28 0s18-10 28 0 10 10 12 10" strokeWidth="2.5" />
+      <path d="M4 40c10 10 18 10 28 0s18-10 28 0 10 10 12 10" strokeWidth="2.5" />
+      <path d="M12 32c4 0 8 0 10 2" strokeWidth="1.5" />
+      <path d="M28 26c4 0 8 0 10 2" strokeWidth="1.5" />
+      <path d="M44 32c4 0 8 0 10 2" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -250,10 +325,17 @@ function Cookie({ className }: { className?: string }) {
     <DoodleSvg className={className}>
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M14 32c0-12 10-20 20-18 8 2 16 10 14 20-2 12-14 18-24 14-8-2-10-8-10-16Z"
+        fillOpacity="0.35"
+        d="M12 30c0-14 12-22 22-20 10 2 18 12 16 24-2 14-16 20-28 16-10-2-12-10-12-20Z"
       />
-      <path d="M24 26h.2M34 22h.2M30 34h.2M40 32h.2M26 40h.2" />
+      <path d="M22 24c2 0 4 0 4 2" strokeWidth="2.5" />
+      <path d="M36 20c2 0 4 0 4 2" strokeWidth="2.5" />
+      <path d="M32 32c2 0 4 0 4 2" strokeWidth="2.5" />
+      <path d="M42 30c2 0 4 0 4 2" strokeWidth="2.5" />
+      <path d="M24 38c2 0 4 0 4 2" strokeWidth="2.5" />
+      <path d="M18 28c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M38 24c2 0 4 0 4 2" strokeWidth="2" />
+      <path d="M28 36c2 0 4 0 4 2" strokeWidth="2" />
     </DoodleSvg>
   );
 }
@@ -263,11 +345,16 @@ function Pie({ className }: { className?: string }) {
     <DoodleSvg className={className}>
       <path
         fill="currentColor"
-        fillOpacity="0.28"
-        d="M12 40c4 10 16 16 28 12 6-2 10-8 8-14L32 18 12 40Z"
+        fillOpacity="0.35"
+        d="M10 38c5 12 18 18 32 14 8-2 12-10 10-16L32 16 10 38Z"
       />
-      <path d="M14 38c10-4 22-6 32 0" />
-      <path d="M32 18v10" />
+      <path d="M12 36c12-4 24-6 36 0" strokeWidth="2.5" />
+      <path d="M32 16v12" strokeWidth="2.5" />
+      <path d="M32 16c-8 4-14 8-16 14" strokeWidth="1.5" />
+      <path d="M32 16c8 4 14 8 16 14" strokeWidth="1.5" />
+      <path d="M20 24c4-2 8-2 8 0" strokeWidth="1.5" />
+      <path d="M36 20c4-2 8-2 8 0" strokeWidth="1.5" />
+      <path d="M28 28c4-2 8-2 8 0" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }
@@ -275,10 +362,12 @@ function Pie({ className }: { className?: string }) {
 function Tap({ className }: { className?: string }) {
   return (
     <DoodleSvg className={className}>
-      <path d="M18 14h8v18" />
-      <path d="M22 32c0 8 4 14 4 14" />
-      <path d="M16 48h20c2 6-2 10-10 10s-12-4-10-10Z" />
-      <path d="M20 48c2 4 8 4 12 0" />
+      <path d="M16 12h10v22" strokeWidth="2.5" />
+      <path d="M22 34c0 10 5 16 5 16" strokeWidth="2.5" />
+      <path d="M14 50h24c3 8-3 12-12 12s-15-4-12-12Z" strokeWidth="2.5" />
+      <path d="M18 50c3 5 10 5 14 0" strokeWidth="2" />
+      <path d="M26 16c2-2 4-2 4 0" strokeWidth="1.5" />
+      <path d="M30 14c2-2 4-2 4 0" strokeWidth="1.5" />
     </DoodleSvg>
   );
 }

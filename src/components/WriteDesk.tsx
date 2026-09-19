@@ -283,7 +283,7 @@ export function WriteDesk({
         many
           ? extracted.usedAi
             ? `Found ${drafts.length} recipes. Leave out any you don’t want, then put the rest in the book.`
-            : `Pulled ${drafts.length} cards off the file. Check them before they go in.`
+            : `Pulled ${drafts.length} recipes off the file. Check them before they go in.`
           : extracted.usedAi
             ? "Check this. Fix anything it got wrong."
             : first && linesFromText(first.ingredients).length > 0
@@ -337,8 +337,8 @@ export function WriteDesk({
       dirty &&
       !window.confirm(
         pile.length > 1
-          ? "Leave this pile? None of these cards will be saved."
-          : "Leave this card? What you typed here won’t be saved.",
+          ? "Leave this pile? None of these recipes will be saved."
+          : "Leave this recipe? What you typed here won’t be saved.",
       )
     ) {
       return;
@@ -601,12 +601,12 @@ export function WriteDesk({
           </h1>
           <p className="mt-3 text-[19px] leading-8 text-ink-soft">
             Put it in the book however you already have it. A picture of a
-            card is enough. A whole PowerPoint of cards is fine too — you’ll
+            recipe is enough. A whole PowerPoint of recipes is fine too — you’ll
             see the pile before anything goes in.
           </p>
           {extracting ? (
             <p role="status" className="mt-8 text-[18px] text-ink-soft">
-              Reading the file. If there are a lot of cards, this can take a
+              Reading the file. If there are a lot of recipes, this can take a
               minute.
             </p>
           ) : (
@@ -661,7 +661,7 @@ export function WriteDesk({
             Add a different way
           </button>
           <h1 className="font-display mt-2 text-[2.15rem] leading-[1.12] tracking-tight md:text-[2.6rem]">
-            These cards
+            These recipes
           </h1>
           <p className="mt-3 text-[19px] leading-8 text-ink-soft">
             {extractNote ??
@@ -926,7 +926,7 @@ export function WriteDesk({
             A photo of what came out
           </Label>
           <p className="mt-1 text-[16px] leading-6 text-ink-soft">
-            Nice if you have it. Old cards can go in without one.
+            Nice if you have it. Old recipes can go in without one.
           </p>
           <label
             htmlFor={photoId}
