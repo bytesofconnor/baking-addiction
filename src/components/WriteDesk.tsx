@@ -652,7 +652,7 @@ export function WriteDesk({
         <div className="mt-3">
           <button
             type="button"
-            className="self-start min-h-12 cursor-pointer text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+            className="book-press book-press-text self-start"
             onClick={startOver}
           >
             Add a different way
