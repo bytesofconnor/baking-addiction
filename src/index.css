@@ -602,21 +602,14 @@ body {
   overflow-x: hidden;
   background-color: var(--color-room);
   background-image:
-    radial-gradient(
-      980px 560px at 100% 0%,
-      color-mix(in srgb, var(--color-wash-warm) 58%, transparent),
-      transparent 62%
+    linear-gradient(
+      color-mix(in srgb, var(--color-room) 85%, var(--color-cinnamon)),
+      color-mix(in srgb, var(--color-room) 70%, var(--color-cocoa))
     ),
-    radial-gradient(
-      640px 420px at 85% 72%,
-      color-mix(in srgb, var(--color-wash-cool) 36%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      760px 520px at 0% 100%,
-      color-mix(in srgb, var(--color-cocoa) 62%, transparent),
-      transparent 64%
-    );
+    url('https://images.unsplash.com/photo-1556910103-1c02745a30bf?auto=format&fit=crop&w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: 20px;
@@ -632,7 +625,7 @@ body {
   height: 100dvh;
   min-height: 100dvh;
   overflow: hidden;
-  padding: 0.65rem 1.45rem 1.7rem;
+  padding: 1rem 2rem 2rem;
 }
 
 .room-shell[data-preview="open"] {
