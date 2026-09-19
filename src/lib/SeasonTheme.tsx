@@ -33,7 +33,9 @@ const SeasonControlContext = createContext<SeasonControl>({
 
 export function SeasonProvider({ children }: { children: ReactNode }) {
   const [params, setParams] = useSearchParams();
-  const forced = parseMonthParam(params.get("month"));
+  const forced = import.meta.env.DEV
+    ? parseMonthParam(params.get("month"))
+    : null;
   const [live, setLive] = useState(liveMinnesotaMonth);
   const month = forced ?? live;
 

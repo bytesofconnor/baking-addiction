@@ -9,6 +9,7 @@ import { usePreview } from "@/lib/preview";
 import { useBookFlip } from "@/lib/useBookFlip";
 
 export function Layout() {
+  const preview = import.meta.env.DEV;
   const { open } = usePreview();
   const liveFace = useRef<HTMLDivElement>(null);
   const { pathname, flip, ghost } = useBookFlip(liveFace);
@@ -26,8 +27,11 @@ export function Layout() {
   }, []);
 
   return (
-    <div className="room-shell" data-preview={open ? "open" : "shut"}>
-      <AdminShell />
+    <div
+      className="room-shell"
+      data-preview={preview ? (open ? "open" : "shut") : undefined}
+    >
+      {preview ? <AdminShell /> : null}
       <SeasonDoodles />
       <div
         className="book relative z-10 mx-auto w-full max-w-[44rem] md:max-w-[52rem] xl:max-w-[58rem]"
