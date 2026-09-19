@@ -769,6 +769,39 @@ body {
   margin-top: 0.15rem;
 }
 
+.book-portal-scrollable {
+  flex-direction: column;
+}
+
+.book-portal-well-scrollable {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.book-portal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 0.5rem;
+}
+
+.book-portal-footer {
+  position: sticky;
+  bottom: 0;
+  padding: 0.75rem;
+  background: var(--color-paper-raised);
+  border-top: 1px solid var(--color-rule);
+  z-index: 10;
+}
+
+.book-portal-count {
+  text-align: center;
+  font-size: 16px;
+  color: var(--color-ink-soft);
+}
+
 .book-portal-stack,
 .book-portal-stack-2 {
   position: absolute;
@@ -803,6 +836,20 @@ body {
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
+}
+
+.book-portal-grid .book-portal-card {
+  min-height: auto;
+  border: 1.5px solid var(--color-rule);
+  border-radius: 0.4rem;
+  background: var(--color-paper-raised);
+  padding: 0.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.book-portal-grid .book-portal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-cocoa) 15%, transparent);
 }
 
 .book-portal-miss {

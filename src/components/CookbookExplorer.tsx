@@ -99,18 +99,13 @@ export function CookbookExplorer({
     // write is stable enough for this URL cleanup; kind/trays drive it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind, shownKind]);
-  const rawCard = Number(params.get("card") ?? "1");
-  const card = Number.isFinite(rawCard)
-    ? Math.min(Math.max(1, Math.floor(rawCard)), Math.max(1, results.length))
-    : 1;
-  const current = results[card - 1];
+
 
   function write(next: {
     q?: string;
     kind?: string;
     sort?: string;
     stars?: number | "all";
-    card?: number;
   }) {
     const nextParams = new URLSearchParams(params);
     const q = next.q ?? query;
@@ -137,31 +132,7 @@ export function CookbookExplorer({
     } else {
       nextParams.delete("stars");
     }
-    const nextCard = next.card ?? 1;
-    if (nextCard > 1) {
-      nextParams.set("card", String(nextCard));
-    } else {
-      nextParams.delete("card");
-    }
     setParams(nextParams, { replace: true });
-  }
-
-  function turn(step: number) {
-    if (results.length === 0) {
-      return;
-    }
-    write({ card: Math.min(results.length, Math.max(1, card + step)) });
-  }
-
-  function onPortalKey(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key === "ArrowRight") {
-      event.preventDefault();
-      turn(1);
-    }
-    if (event.key === "ArrowLeft") {
-      event.preventDefault();
-      turn(-1);
-    }
   }
 
   return (
@@ -248,22 +219,13 @@ export function CookbookExplorer({
       </form>
 
       <div
-        className="book-portal"
-        tabIndex={0}
+        className="book-portal book-portal-scrollable"
         aria-labelledby={countId}
-        onKeyDown={onPortalKey}
       >
         <div className="book-portal-stack" aria-hidden="true" />
         <div className="book-portal-stack book-portal-stack-2" aria-hidden="true" />
-        <div className="book-portal-well">
-          {current ? (
-            <PortalCard
-              bake={current}
-              query={rest}
-              selfId={selfId}
-              search={params.toString()}
-            />
-          ) : (
+        <div className="book-portal-well book-portal-well-scrollable">
+          {results.length === 0 ? (
             <div className="book-portal-empty">
               <PortalMiss
                 query={query}
@@ -275,46 +237,39 @@ export function CookbookExplorer({
                 }
               />
             </div>
+          ) : (
+            <div className="book-portal-grid" role="list">
+              {results.map((bake) => (
+                <PortalCard
+                  key={bake._id || bake.slug}
+                  bake={bake}
+                  query={rest}
+                  selfId={selfId}
+                  search={params.toString()}
+                />
+              ))}
+            </div>
           )}
 
-          <div className="book-portal-turn">
-            <button
-              type="button"
-              className="book-portal-leaf"
-              data-way="back"
-              disabled={card <= 1}
-              onClick={() => turn(-1)}
-            >
-              <LeafCaret way="back" />
-              Back
-            </button>
-            <p id={countId} role="status" className="book-portal-folio">
+          <div className="book-portal-footer">
+
+            <p id={countId} role="status" className="book-portal-count">
               {results.length === 0
                 ? query
                   ? "Nothing uses that"
                   : "The tray’s empty"
                 : who && rest
-                  ? `${card} / ${results.length} · ${who.called} · “${rest}”`
+                  ? `${results.length} · ${who.called} · “${rest}”`
                   : who
-                    ? `${card} / ${results.length} · ${who.called}`
+                    ? `${results.length} · ${who.called}`
                     : rest
-                      ? `${card} / ${results.length} with “${rest}”`
+                      ? `${results.length} with “${rest}”`
                       : stars !== "all"
-                        ? `${card} / ${results.length} · ${stars}★`
+                        ? `${results.length} · ${stars}★`
                         : mineOnly && hasFamily
-                          ? `${card} / ${results.length} · just yours`
-                          : `${card} / ${results.length}`}
+                          ? `${results.length} · just yours`
+                          : `${results.length}`}
             </p>
-            <button
-              type="button"
-              className="book-portal-leaf"
-              data-way="next"
-              disabled={card >= results.length}
-              onClick={() => turn(1)}
-            >
-              Next
-              <LeafCaret way="next" />
-            </button>
           </div>
         </div>
       </div>
@@ -392,25 +347,6 @@ function PortalMiss({
   );
 }
 
-function LeafCaret({ way }: { way: "back" | "next" }) {
-  return (
-    <svg
-      className="book-portal-leaf-mark"
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-    >
-      <path
-        d={way === "back" ? "M10 3.2 5 8l5 4.8" : "M6 3.2 11 8l-5 4.8"}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function fromWhoseBook(bake: CookbookBake, selfId?: string) {
   if (!selfId || !bake.ownerId || bake.ownerId === selfId) {
     return null;
@@ -444,7 +380,7 @@ function PortalCard({
   const madeLine = madeByOthersLine(bake.madeByOthers);
 
   return (
-    <article className="book-portal-card">
+    <article className="book-portal-results" role="listitem">
       <div className="book-portal-frame">
         {bake.photoUrl ? (
           <img src={bake.photoUrl} alt="" />
@@ -469,7 +405,7 @@ function PortalCard({
         </h2>
         {bakeStars(bake) > 0 ? (
           <p className="book-portal-rating">
-            <BakeStars value={bakeStars(bake)} size="card" />
+            <BakeStars value={bakeStars(bake)} size="results" />
             <span className="book-portal-according">
               {accordingTo(bake, selfId) ?? `According to ${bake.bakerName}`}
             </span>
