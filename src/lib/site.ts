@@ -33,7 +33,7 @@ export function pageHeading(
     return { lead: "That's", accent: "Yum", home: false, compact: false };
   }
   if (pathname === "/you" || pathname.startsWith("/you/")) {
-    return { ...nameHeading(pageName), home: false, compact: false };
+    return { lead: "Your", accent: "page", home: false, compact: false };
   }
   return { lead: "That's", accent: "Yum", home: true, compact: false };
 }

@@ -69,7 +69,7 @@ export function SiteHeader({
       {hasNav ? (
         <nav
           aria-label="Primary"
-          className="mt-2 flex flex-wrap gap-x-4 gap-y-2 py-0.5"
+          className="mt-2 flex gap-x-4 py-0.5"
         >
           {showPeople ? (
             <NavLink
