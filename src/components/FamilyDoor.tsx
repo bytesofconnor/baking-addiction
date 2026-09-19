@@ -35,6 +35,7 @@ function GoogleComeIn() {
           disabled={pending}
           aria-busy={pending}
           onClick={() => void handleGoogle()}
+          className="w-full text-[18px] py-4"
         >
           Continue with Google
         </Button>

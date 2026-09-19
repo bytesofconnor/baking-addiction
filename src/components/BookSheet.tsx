@@ -47,6 +47,7 @@ export function BookChrome({ pathname }: { pathname?: string }) {
 
 export function BookColophon({ pathname }: { pathname: string }) {
   const page = pageForPath(pathname);
+  const showPageNumber = pathname !== "/join" && pathname !== "/";
 
   return (
     <footer className="book-colophon">
@@ -54,9 +55,11 @@ export function BookColophon({ pathname }: { pathname: string }) {
         <span className="font-display text-[1.35rem] leading-6 text-cinnamon-deep italic">
           That&apos;s Yum
         </span>
-        <span className="font-display text-[1.05rem] leading-6 text-cocoa tabular-nums">
-          {page}
-        </span>
+        {showPageNumber && (
+          <span className="font-display text-[1.05rem] leading-6 text-cocoa tabular-nums">
+            {page}
+          </span>
+        )}
       </p>
     </footer>
   );
