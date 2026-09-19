@@ -26,18 +26,35 @@ Git remote: `github.com-personal:bytesofconnor/baking-addiction.git`
 
 Production cookbook starts **empty**. Mom writes the real bakes. Dummy seed is `internalMutation` only — never run it on prod.
 
-Git is **not** connected to Vercel right now. Auto-deploy on push was blocked because the GitHub commit author is not a member of the Vercel team. Ship with:
+### CI/CD Deployment
+
+GitHub Actions automatically deploys to production when you push to `main`. The workflow:
+
+1. Builds the project locally
+2. Pulls Vercel environment information
+3. Builds Vercel production artifacts
+4. Deploys to Vercel production
+5. Deploys Convex functions to production
+
+### Required GitHub Secrets
+
+Configure these secrets in your GitHub repository settings (Settings → Secrets and variables → Actions):
+
+| Secret | Value | How to get it |
+| --- | --- | --- |
+| `VERCEL_TOKEN` | Your Vercel API token | Vercel dashboard → Settings → Tokens |
+| `VERCEL_ORG_ID` | `team_ynn7qy4sDXJcDEMHSuWLuXXo` | From Vercel project settings |
+| `VERCEL_PROJECT_ID` | `prj_aFYDZXk50XMLtWsmraJ6lbd8eTAg` | From Vercel project settings |
+| `CONVEX_DEPLOY_KEY` | Your Convex deploy key | Convex dashboard → Settings → API Keys |
+
+### Manual Deployment
+
+If you need to deploy manually without CI (for testing or emergencies):
 
 ```bash
 npx vercel pull --yes --environment=production --scope connors-projects-408eaae2
 npx vercel build --prod --yes --scope connors-projects-408eaae2
 npx vercel deploy --prebuilt --prod --yes --scope connors-projects-408eaae2
-```
-
-To reconnect Git later (after the GitHub user is on the Vercel team):
-
-```bash
-npx vercel git connect https://github.com/bytesofconnor/baking-addiction --yes --scope connors-projects-408eaae2
 ```
 
 ## Local
