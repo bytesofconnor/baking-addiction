@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Button } from "@/components/ui/button";
 import { PageTitle } from "@/lib/pageTitle";
 import { markOAuthReturn } from "@/lib/oauthReturn";
 import { SITE_NAME, SITE_SHORT } from "@/lib/site";
@@ -30,15 +29,15 @@ function GoogleComeIn() {
         </p>
       ) : null}
       <div className="mt-8">
-        <Button
+        <button
           type="button"
+          className="book-press book-press-text book-press-save w-full"
           disabled={pending}
           aria-busy={pending}
           onClick={() => void handleGoogle()}
-          className="w-full text-[18px] py-4"
         >
           Continue with Google
-        </Button>
+        </button>
       </div>
     </>
   );
