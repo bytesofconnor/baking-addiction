@@ -47,8 +47,7 @@ jobs:
 
       - name: Deploy Convex Functions to Production
         run: |
-          printf 'CONVEX_DEPLOYMENT=prod:beloved-lapwing-642\n' > /tmp/convex-prod.env
-          npx convex deploy --env-file /tmp/convex-prod.env
-          rm /tmp/convex-prod.env
+          npx convex deploy --prod
         env:
+          CONVEX_DEPLOYMENT: prod:beloved-lapwing-642
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
