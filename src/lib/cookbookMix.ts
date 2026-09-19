@@ -138,12 +138,13 @@ export function mixName(
     return "Nobody";
   }
   if (names.length === 1) {
-    return names[0] === "me" || names[0] === selfCalled ? "Just me" : names[0];
+    const only = names[0] ?? "Just me";
+    return only === "me" || only === selfCalled ? "Just me" : only;
   }
   if (names.length === 2) {
-    return `${names[0]} & ${names[1]}`;
+    return `${names[0] ?? "Someone"} & ${names[1] ?? "someone"}`;
   }
-  return `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
+  return `${names.slice(0, -1).join(", ")} & ${names[names.length - 1] ?? "someone"}`;
 }
 
 export function resolveMix(

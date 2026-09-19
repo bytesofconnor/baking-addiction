@@ -74,7 +74,7 @@ export function AdminShell() {
               onClick={() => setMonth(value)}
               title={MONTH_LONG[value - 1]}
             >
-              {MONTH_SHORT[value - 1]}
+              {MONTH_SHORT[value - 1] ?? ""}
             </AdminPill>
           ))}
         </div>
