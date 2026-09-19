@@ -54,7 +54,7 @@ export const remix = action({
           "Sally's Baking Addiction is the method. Chris's notes are the only changes.",
           "Stay on THIS bake. Do not invent a new recipe or send them to a different one.",
           "Warm, plain, specific. No bullet lists, no numbered lists, no markdown, no headings, no emojis.",
-          "Two or three short paragraphs, like a note slipped into a cookbook.",
+          "Two or three short paragraphs, like a note slipped into a recipe book.",
           "Do not sign the note.",
         ].join(" "),
         prompt: [

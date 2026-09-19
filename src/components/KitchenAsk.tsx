@@ -111,7 +111,7 @@ export function KitchenAsk({
               className="mt-5 flex items-center gap-3 text-[18px] text-ink-soft"
             >
               <WhiskMark className="kitchen-stir h-9 w-9 text-cinnamon-deep" />
-              Looking through Chris&apos;s notes…
+              Looking through Mom&apos;s notes…
             </p>
           ) : null}
           {error ? (

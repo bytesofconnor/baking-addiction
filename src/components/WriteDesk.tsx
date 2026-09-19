@@ -1,0 +1,1185 @@
+import { useAction, useMutation, useQuery } from "convex/react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router";
+import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { BakeStars } from "@/components/BakeStars";
+import { Kicker } from "@/components/Kicker";
+import { formatBakeDate } from "@/lib/dates";
+import { PageTitle } from "@/lib/pageTitle";
+import { BAKER_NAME, SITE_SHORT, bookSignedName } from "@/lib/site";
+import { linesFromText } from "@/lib/recipe";
+import {
+  SOURCE_KINDS,
+  SOURCE_LABELS,
+  sourceLink,
+  sourceNote,
+  type SourceKind,
+} from "@/lib/sources";
+import { kindFromUrl } from "../../convex/lib/sources";
+import {
+  CHANGE_MOVES,
+  MAKES_HINT,
+  changeHint,
+  houseTitleFromSally,
+  isSallyUrl,
+  normalizeSallyUrl,
+  readyChanges,
+  trayFor,
+  type ChangeRow,
+} from "@/lib/writeDesk";
+
+type ChangeDraft = ChangeRow & { id: string };
+
+type Screen = "choose" | "tray" | "card";
+type Intake = "photo" | "file" | "link" | "type";
+
+type DraftCard = {
+  title: string;
+  makes: string;
+  ingredients: string;
+  steps: string;
+  sourceKind: SourceKind;
+  sourceTitle: string;
+  keep: boolean;
+};
+
+export function WriteDesk({
+  token,
+  kitchenId,
+  bakerName = BAKER_NAME,
+  onLock,
+}: {
+  token?: string;
+  kitchenId?: Id<"kitchens">;
+  bakerName?: string;
+  onLock?: () => Promise<void>;
+}) {
+  const writeAccess = {
+    ...(token ? { writerToken: token } : {}),
+    ...(kitchenId ? { kitchenId } : {}),
+  };
+  const saveBake = useMutation(api.bakes.save);
+  const generateUploadUrl = useMutation(api.photos.generateUploadUrl);
+  const attachPhoto = useMutation(api.photos.attach);
+  const lookupCredit = useAction(api.sallyCredit.lookupCredit);
+  const extractCard = useAction(api.extractCard.fromUpload);
+  const mine = useQuery(
+    api.bakes.listMine,
+    token || kitchenId ? writeAccess : "skip",
+  );
+  const navigate = useNavigate();
+  const formErrorId = useId();
+  const photoId = useId();
+  const fileId = useId();
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  const [screen, setScreen] = useState<Screen>("choose");
+  const [intake, setIntake] = useState<Intake>("type");
+  const [sourceKind, setSourceKind] = useState<SourceKind>("original");
+  const [title, setTitle] = useState("");
+  const [sourceTitle, setSourceTitle] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [titleTouched, setTitleTouched] = useState(false);
+  const [lookupState, setLookupState] = useState<
+    "idle" | "looking" | "found" | "miss"
+  >("idle");
+  const [extracting, setExtracting] = useState(false);
+  const [extractNote, setExtractNote] = useState<string | null>(null);
+  const [story, setStory] = useState("");
+  const [bakedOn, setBakedOn] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
+  const [showDate, setShowDate] = useState(false);
+  const [rating, setRating] = useState(0);
+  const outcomeId = useId();
+  const [changes, setChanges] = useState<ChangeDraft[]>([]);
+  const changeSerial = useRef(0);
+  const [makes, setMakes] = useState("");
+  const [ingredients, setIngredients] = useState("");
+  const [steps, setSteps] = useState("");
+  const [originStorageId, setOriginStorageId] = useState<Id<"_storage"> | null>(
+    null,
+  );
+  const [originIsImage, setOriginIsImage] = useState(false);
+  const [originPreview, setOriginPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [pile, setPile] = useState<DraftCard[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!photoFile) {
+      setPhotoPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(photoFile);
+    setPhotoPreview(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [photoFile]);
+
+  useEffect(() => {
+    if (
+      sourceKind === "family" ||
+      sourceKind === "book" ||
+      sourceKind === "friend"
+    ) {
+      return;
+    }
+    const fromUrl = kindFromUrl(sourceUrl);
+    if (fromUrl && fromUrl !== sourceKind) {
+      setSourceKind(fromUrl);
+    }
+  }, [sourceKind, sourceUrl]);
+
+  useEffect(() => {
+    if (sourceKind !== "sally") {
+      return;
+    }
+    const url = normalizeSallyUrl(sourceUrl);
+    if (!isSallyUrl(url)) {
+      setLookupState(sourceUrl.trim().length > 8 ? "miss" : "idle");
+      return;
+    }
+    let cancelled = false;
+    const handle = window.setTimeout(() => {
+      setLookupState("looking");
+      void lookupCredit({ ...writeAccess, url })
+        .then((result) => {
+          if (cancelled) {
+            return;
+          }
+          if (!result.hostOk) {
+            setLookupState("miss");
+            return;
+          }
+          if (result.title) {
+            setSourceTitle(result.title);
+            setTitle((current) =>
+              titleTouched || current.trim().length > 0
+                ? current
+                : houseTitleFromSally(result.title ?? ""),
+            );
+            setLookupState("found");
+            return;
+          }
+          setLookupState("miss");
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setLookupState("miss");
+          }
+        });
+    }, 500);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [lookupCredit, sourceKind, sourceUrl, titleTouched, token, kitchenId]);
+
+  function applyCardToForm(card: DraftCard) {
+    setTitle(card.title);
+    setMakes(card.makes);
+    setIngredients(card.ingredients);
+    setSteps(card.steps);
+    setSourceKind(card.sourceKind);
+    setSourceTitle(card.sourceTitle);
+  }
+
+  function formToDraft(keep: boolean): DraftCard {
+    return {
+      title,
+      makes,
+      ingredients,
+      steps,
+      sourceKind,
+      sourceTitle,
+      keep,
+    };
+  }
+
+  function draftsFromExtract(
+    cards: Array<{
+      title: string;
+      makes: string;
+      ingredients: string[];
+      steps: string[];
+      sourceKind: SourceKind;
+      sourceTitle: string;
+    }>,
+  ): DraftCard[] {
+    return cards.map((card) => ({
+      title: card.title,
+      makes: card.makes,
+      ingredients: card.ingredients.join("\n"),
+      steps: card.steps.join("\n"),
+      sourceKind: card.sourceKind,
+      sourceTitle: card.sourceTitle,
+      keep: true,
+    }));
+  }
+
+  async function ingestFile(file: File, nextIntake: Intake) {
+    setError(null);
+    setExtracting(true);
+    setExtractNote("Reading the file…");
+    setIntake(nextIntake);
+    setSourceKind("original");
+    const isImage = file.type.startsWith("image/");
+    setOriginIsImage(isImage);
+    if (isImage) {
+      setOriginPreview((current) => {
+        if (current) {
+          URL.revokeObjectURL(current);
+        }
+        return URL.createObjectURL(file);
+      });
+    } else {
+      setOriginPreview((current) => {
+        if (current) {
+          URL.revokeObjectURL(current);
+        }
+        return null;
+      });
+    }
+    try {
+      const uploadUrl = await generateUploadUrl(writeAccess);
+      const uploaded = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        body: file,
+      });
+      if (!uploaded.ok) {
+        throw new Error("That file didn't upload. Try one more time.");
+      }
+      const { storageId } = (await uploaded.json()) as {
+        storageId: Id<"_storage">;
+      };
+      setOriginStorageId(storageId);
+      const extracted = await extractCard({
+        ...writeAccess,
+        storageId,
+        fileName: file.name,
+        mimeType: file.type || "application/octet-stream",
+      });
+      const drafts = draftsFromExtract(extracted.cards);
+      setPile(drafts);
+      setEditingIndex(null);
+      const first = drafts[0];
+      if (first) {
+        applyCardToForm(first);
+      }
+      const many = drafts.length > 1;
+      setExtractNote(
+        many
+          ? extracted.usedAi
+            ? `Found ${drafts.length} recipes. Leave out any you don’t want, then put the rest in the book.`
+            : `Pulled ${drafts.length} cards off the file. Check them before they go in.`
+          : extracted.usedAi
+            ? "Check this. Fix anything it got wrong."
+            : first && linesFromText(first.ingredients).length > 0
+              ? "Pulled the words off the file. Check them."
+              : "Saved the file. Add what went in so you can find it later.",
+      );
+      setScreen(many ? "tray" : "card");
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Couldn't read that file.",
+      );
+    } finally {
+      setExtracting(false);
+    }
+  }
+
+  function start(next: Intake) {
+    setError(null);
+    setIntake(next);
+    if (next === "link") {
+      setSourceKind("original");
+      setScreen("card");
+      return;
+    }
+    if (next === "type") {
+      setSourceKind("original");
+      setScreen("card");
+      return;
+    }
+    fileInput.current?.click();
+  }
+
+  function addChange(move: string) {
+    changeSerial.current += 1;
+    const id = `change-${changeSerial.current}`;
+    setChanges((current) => [...current, { id, move, change: "", why: "" }]);
+    window.setTimeout(() => {
+      document.getElementById(id)?.focus();
+    }, 0);
+  }
+
+  function startOver() {
+    const dirty =
+      title.trim().length > 0 ||
+      ingredients.trim().length > 0 ||
+      pile.length > 0 ||
+      originStorageId !== null;
+    if (
+      dirty &&
+      !window.confirm(
+        pile.length > 1
+          ? "Leave this pile? None of these cards will be saved."
+          : "Leave this card? What you typed here won’t be saved.",
+      )
+    ) {
+      return;
+    }
+    if (originPreview) {
+      URL.revokeObjectURL(originPreview);
+    }
+    setScreen("choose");
+    setIntake("type");
+    setSourceKind("original");
+    setTitle("");
+    setSourceTitle("");
+    setSourceUrl("");
+    setTitleTouched(false);
+    setLookupState("idle");
+    setExtractNote(null);
+    setStory("");
+    setBakedOn(new Date().toISOString().slice(0, 10));
+    setShowDate(false);
+    setRating(0);
+    setChanges([]);
+    setMakes("");
+    setIngredients("");
+    setSteps("");
+    setOriginStorageId(null);
+    setOriginIsImage(false);
+    setOriginPreview(null);
+    setPhotoFile(null);
+    setPile([]);
+    setEditingIndex(null);
+    setError(null);
+    setStatusMessage(null);
+  }
+
+  function openDraft(index: number) {
+    const draft = pile[index];
+    if (!draft) {
+      return;
+    }
+    applyCardToForm(draft);
+    setEditingIndex(index);
+    setError(null);
+    setScreen("card");
+  }
+
+  function returnToPile() {
+    setPile((current) =>
+      current.map((draft, index) =>
+        index === editingIndex ? formToDraft(draft.keep) : draft,
+      ),
+    );
+    setEditingIndex(null);
+    setError(null);
+    setScreen("tray");
+  }
+
+  function toggleKeep(index: number) {
+    setPile((current) =>
+      current.map((draft, i) =>
+        i === index ? { ...draft, keep: !draft.keep } : draft,
+      ),
+    );
+  }
+
+  async function addKeptCards() {
+    const kept = pile.filter(
+      (draft) =>
+        draft.keep &&
+        draft.title.trim().length >= 2 &&
+        linesFromText(draft.ingredients).length > 0,
+    );
+    if (kept.length === 0) {
+      setError(
+        "Keep at least one card with a name and what went in.",
+      );
+      return;
+    }
+    setError(null);
+    setPending(true);
+    try {
+      let lastSlug: string | null = null;
+      for (const draft of kept) {
+        const result = await saveBake({
+          ...writeAccess,
+          title: draft.title,
+          story: "",
+          sourceTitle: draft.sourceTitle,
+          sourceUrl: "",
+          sourceKind: draft.sourceKind,
+          bakerName,
+          kind: trayFor(draft.title, draft.sourceTitle),
+          makes: draft.makes,
+          ingredients: linesFromText(draft.ingredients),
+          steps: linesFromText(draft.steps),
+          originStorageId: originStorageId ?? undefined,
+          bakedOn,
+          rating: 5,
+          outcome: "",
+          changes: [],
+          status: "published",
+        });
+        lastSlug = result.slug;
+      }
+      if (kept.length === 1 && lastSlug) {
+        navigate(`/bakes/${lastSlug}`);
+        return;
+      }
+      navigate("/");
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Could not put those in the book.",
+      );
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function onSubmit(status: "draft" | "published") {
+    setError(null);
+    setStatusMessage(null);
+    if (status === "published") {
+      if (title.trim().length < 2) {
+        setError("Give it a name so you can find it later.");
+        document.getElementById("bake-title")?.focus();
+        return;
+      }
+      if (sourceKind === "sally" && !isSallyUrl(sourceUrl)) {
+        setError("Paste Sally's link so the credit stays with her.");
+        document.getElementById("sourceUrl")?.focus();
+        return;
+      }
+      if (linesFromText(ingredients).length === 0) {
+        setError(
+          "Add what went in — even a short list — so you can search an ingredient later.",
+        );
+        document.getElementById("ingredients")?.focus();
+        return;
+      }
+      if (story.trim().length < 2) {
+        setError("Say how it went — even a line or two.");
+        document.getElementById("story")?.focus();
+        return;
+      }
+      if (rating < 1 || rating > 5) {
+        setError("Tap how it turned out — one to five stars.");
+        document.getElementById(outcomeId)?.focus();
+        return;
+      }
+    }
+    setPending(true);
+    try {
+      const tray = photoFile;
+      const coverFromCard =
+        originIsImage && originStorageId ? originStorageId : null;
+      const coverStorageId = tray
+        ? await uploadFile(tray)
+        : coverFromCard ?? undefined;
+      const result = await saveBake({
+        ...writeAccess,
+        title,
+        story,
+        sourceTitle,
+        sourceUrl: sourceKind === "sally" ? normalizeSallyUrl(sourceUrl) : sourceUrl,
+        sourceKind,
+        bakerName,
+        kind: trayFor(title, sourceTitle),
+        makes,
+        ingredients: linesFromText(ingredients),
+        steps: linesFromText(steps),
+        originStorageId: originStorageId ?? undefined,
+        coverStorageId,
+        bakedOn,
+        rating: rating > 0 ? rating : 5,
+        outcome: "",
+        changes: readyChanges(changes),
+        status,
+      });
+      if (coverStorageId) {
+        await attachPhoto({
+          ...writeAccess,
+          bakeId: result.bakeId,
+          storageId: coverStorageId,
+          alt: title,
+        });
+      }
+      if (status === "published" && pile.length > 1 && editingIndex !== null) {
+        const remaining = pile.filter((_, index) => index !== editingIndex);
+        setPile(remaining);
+        setEditingIndex(null);
+        if (remaining.length === 0) {
+          navigate(`/bakes/${result.slug}`);
+          return;
+        }
+        setStatusMessage("That one is in the book.");
+        setScreen("tray");
+        return;
+      }
+      if (status === "published") {
+        navigate(`/bakes/${result.slug}`);
+      } else {
+        setStatusMessage("Saved. You can come back to this later.");
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not save");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function uploadFile(file: File): Promise<Id<"_storage">> {
+    const uploadUrl = await generateUploadUrl(writeAccess);
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
+    if (!response.ok) {
+      throw new Error("The photo didn't upload. Try one more time.");
+    }
+    const { storageId } = (await response.json()) as {
+      storageId: Id<"_storage">;
+    };
+    return storageId;
+  }
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    void onSubmit("published");
+  }
+
+  return (
+    <div className="max-w-[40rem]">
+      <PageTitle title={`Add a recipe · ${SITE_SHORT}`} />
+      <Kicker>For {bookSignedName(bakerName) ?? bakerName}</Kicker>
+      <input
+        ref={fileInput}
+        id={fileId}
+        type="file"
+        accept={
+          intake === "photo"
+            ? "image/*"
+            : "image/*,.pdf,.ppt,.pptx,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain"
+        }
+        className="sr-only"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (file) {
+            void ingestFile(file, intake === "file" ? "file" : "photo");
+          }
+        }}
+      />
+
+      {screen === "choose" ? (
+        <div>
+          <h1 className="font-display mt-3 text-[2.15rem] leading-[1.12] tracking-tight md:text-[2.6rem]">
+            Add a recipe
+          </h1>
+          <p className="mt-3 text-[19px] leading-8 text-ink-soft">
+            Put it in the book however you already have it. A picture of a
+            card is enough. A whole PowerPoint of cards is fine too — you’ll
+            see the pile before anything goes in.
+          </p>
+          {extracting ? (
+            <p role="status" className="mt-8 text-[18px] text-ink-soft">
+              Reading the file. If there are a lot of cards, this can take a
+              minute.
+            </p>
+          ) : (
+            <div className="mt-8 flex flex-col gap-3">
+              <Button
+                type="button"
+                className="w-full justify-start"
+                onClick={() => {
+                  setIntake("photo");
+                  window.setTimeout(() => fileInput.current?.click(), 0);
+                }}
+              >
+                Take or choose a photo
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full justify-start"
+                onClick={() => {
+                  setIntake("file");
+                  window.setTimeout(() => fileInput.current?.click(), 0);
+                }}
+              >
+                Upload a file — photo, PDF, PowerPoint
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full justify-start"
+                onClick={() => start("link")}
+              >
+                Paste a link — Sally, TikTok, Pinterest
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full justify-start px-0"
+                onClick={() => start("type")}
+              >
+                Type it myself
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : screen === "tray" ? (
+        <div className="mt-3">
+          <button
+            type="button"
+            className="self-start min-h-12 cursor-pointer text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+            onClick={startOver}
+          >
+            Add a different way
+          </button>
+          <h1 className="font-display mt-2 text-[2.15rem] leading-[1.12] tracking-tight md:text-[2.6rem]">
+            These cards
+          </h1>
+          <p className="mt-3 text-[19px] leading-8 text-ink-soft">
+            {extractNote ??
+              "Leave out any you don’t want. Open one to fix the words. Then put the rest in the book."}
+          </p>
+          <ul className="mt-8 flex flex-col">
+            {pile.map((draft, index) => {
+              const ings = linesFromText(draft.ingredients);
+              const preview = ings.slice(0, 3).join(" · ");
+              return (
+                <li
+                  key={`${draft.title}-${index}`}
+                  className="border-t border-rule py-5"
+                >
+                  <div className="flex items-start gap-4">
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={draft.keep}
+                      aria-label={
+                        draft.keep
+                          ? `Keep ${draft.title || "this card"}`
+                          : `Leave out ${draft.title || "this card"}`
+                      }
+                      onClick={() => toggleKeep(index)}
+                      className={[
+                        "mt-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center border-[1.5px]",
+                        draft.keep
+                          ? "border-cinnamon-deep bg-paper-raised text-cinnamon-deep"
+                          : "border-cocoa bg-transparent text-transparent",
+                      ].join(" ")}
+                    >
+                      <span aria-hidden className="font-display text-[1.4rem] leading-none">
+                        ✓
+                      </span>
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={[
+                          "font-display text-[1.45rem] leading-8",
+                          draft.keep ? "text-ink" : "text-ink-soft line-through",
+                        ].join(" ")}
+                      >
+                        {draft.title.trim() || "Untitled card"}
+                      </p>
+                      <p className="mt-1 text-[16px] leading-7 text-ink-soft">
+                        {draft.makes.trim()
+                          ? `${draft.makes} · `
+                          : ""}
+                        {ings.length === 1
+                          ? "1 ingredient"
+                          : `${ings.length} ingredients`}
+                        {preview ? ` — ${preview}` : ""}
+                      </p>
+                      <button
+                        type="button"
+                        className="mt-2 min-h-12 cursor-pointer text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+                        onClick={() => openDraft(index)}
+                      >
+                        Open and fix
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          {error ? (
+            <p
+              id={formErrorId}
+              role="alert"
+              className="mt-6 text-[17px] text-cinnamon-deep"
+            >
+              {error}
+            </p>
+          ) : null}
+          <div className="sticky bottom-0 z-10 mt-8 -mx-2 border-t border-rule bg-paper px-2 py-3">
+            <Button
+              type="button"
+              disabled={pending}
+              aria-busy={pending}
+              onClick={() => void addKeptCards()}
+            >
+              {pending
+                ? "Putting them in the book…"
+                : pile.filter((draft) => draft.keep).length === 1
+                  ? "Put this one in the book"
+                  : `Put ${pile.filter((draft) => draft.keep).length} in the book`}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form
+          className="mt-3 flex flex-col"
+          onSubmit={handleSubmit}
+          aria-describedby={error ? formErrorId : undefined}
+        >
+          <button
+            type="button"
+            className="self-start min-h-12 cursor-pointer text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+            onClick={pile.length > 1 ? returnToPile : startOver}
+          >
+            {pile.length > 1 ? "Back to the pile" : "Add a different way"}
+          </button>
+          {extractNote ? (
+            <p className="mt-3 text-[18px] leading-7 text-ink-soft">{extractNote}</p>
+          ) : null}
+
+          {originPreview ? (
+            <div className="mt-6">
+              <img
+                src={originPreview}
+                alt=""
+                className="aspect-[4/3] w-full max-w-[22rem] border border-rule object-cover"
+              />
+              <button
+                type="button"
+                className="mt-2 min-h-12 cursor-pointer text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+                onClick={() => {
+                  setOriginStorageId(null);
+                  setOriginIsImage(false);
+                  setOriginPreview((current) => {
+                    if (current) {
+                      URL.revokeObjectURL(current);
+                    }
+                    return null;
+                  });
+                }}
+              >
+                Remove this picture
+              </button>
+            </div>
+          ) : null}
+
+          <h1 className="mt-6 text-[1.25rem] font-medium leading-8 text-ink">
+            Where did this come from?
+          </h1>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {SOURCE_KINDS.map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                aria-pressed={sourceKind === kind}
+                onClick={() => setSourceKind(kind)}
+                className={[
+                  "inline-flex min-h-12 cursor-pointer items-center rounded-[2px] border-[1.5px] px-4 text-[17px]",
+                  sourceKind === kind
+                    ? "border-cinnamon-deep bg-paper-raised text-cinnamon-deep"
+                    : "border-cocoa bg-transparent text-ink hover:border-cinnamon-deep",
+                ].join(" ")}
+              >
+                {SOURCE_LABELS[kind]}
+              </button>
+            ))}
+          </div>
+
+          {sourceLink(sourceKind) || intake === "link" ? (
+            <>
+              <Label htmlFor="sourceUrl" className="mt-6">
+                {sourceLink(sourceKind)?.label ?? "The link"}
+              </Label>
+              <Input
+                id="sourceUrl"
+                type="url"
+                inputMode="url"
+                value={sourceUrl}
+                onChange={(event) => setSourceUrl(event.target.value)}
+                onBlur={(event) =>
+                  setSourceUrl(
+                    sourceKind === "sally"
+                      ? normalizeSallyUrl(event.target.value)
+                      : event.target.value.trim(),
+                  )
+                }
+                placeholder={
+                  sourceLink(sourceKind)?.placeholder ??
+                  "https://…"
+                }
+                className="mt-2 min-h-14"
+              />
+              {lookupState === "looking" ? (
+                <p role="status" className="mt-2 text-[17px] text-ink-soft">
+                  Looking up what she calls it…
+                </p>
+              ) : null}
+              {lookupState === "found" && sourceTitle ? (
+                <p className="mt-2 text-[17px] text-ink-soft">
+                  Sally calls this <span className="text-ink">{sourceTitle}</span>.
+                </p>
+              ) : null}
+            </>
+          ) : null}
+
+          {sourceNote(sourceKind) ? (
+            <>
+              <Label htmlFor="sourceTitle" className="mt-6">
+                {sourceNote(sourceKind)?.label}
+              </Label>
+              <Input
+                id="sourceTitle"
+                value={sourceTitle}
+                onChange={(event) => setSourceTitle(event.target.value)}
+                placeholder={sourceNote(sourceKind)?.placeholder}
+                className="mt-2 min-h-14"
+              />
+            </>
+          ) : null}
+
+          <Label htmlFor="bake-title" className="mt-6">
+            What do you call it?
+          </Label>
+          <input
+            id="bake-title"
+            value={title}
+            onChange={(event) => {
+              setTitleTouched(true);
+              setTitle(event.target.value);
+            }}
+            placeholder="Pumpkin muffins, extra spice"
+            required
+            className="font-display mt-2 w-full rounded-[2px] border-0 border-b-[1.5px] border-rule bg-transparent pb-2 text-[2rem] leading-[1.15] tracking-tight text-ink placeholder:text-ink-soft"
+          />
+
+          <Label htmlFor="makes" className="mt-6">
+            How much it made
+          </Label>
+          <Input
+            id="makes"
+            value={makes}
+            onChange={(event) => setMakes(event.target.value)}
+            placeholder={MAKES_HINT[trayFor(title, sourceTitle)]}
+            className="mt-2 min-h-14"
+          />
+
+          <Label htmlFor="ingredients" className="mt-6">
+            What went in
+          </Label>
+          <p className="mt-1 text-[16px] leading-6 text-ink-soft">
+            One thing per line. This is how you&apos;ll find it later — search
+            “buttermilk” and this shows up.
+          </p>
+          <Textarea
+            id="ingredients"
+            value={ingredients}
+            onChange={(event) => setIngredients(event.target.value)}
+            placeholder={"2 sticks butter\n1 cup brown sugar\nA pinch of salt"}
+            className="mt-2 min-h-28"
+          />
+
+          <Label htmlFor="steps" className="mt-6">
+            How
+          </Label>
+          <Textarea
+            id="steps"
+            value={steps}
+            onChange={(event) => setSteps(event.target.value)}
+            placeholder={"Mix the wet, then the dry.\nBake until the edges set."}
+            className="mt-2 min-h-28"
+          />
+
+          <Label htmlFor={photoId} className="mt-8">
+            A photo of what came out
+          </Label>
+          <p className="mt-1 text-[16px] leading-6 text-ink-soft">
+            Nice if you have it. Old cards can go in without one.
+          </p>
+          <label
+            htmlFor={photoId}
+            className="mt-3 flex min-h-28 cursor-pointer flex-col items-center justify-center border border-dashed border-cocoa bg-paper-raised px-4 py-5 text-center"
+          >
+            {photoPreview ? (
+              <img
+                src={photoPreview}
+                alt=""
+                className="aspect-[4/3] w-full max-w-[22rem] object-cover"
+              />
+            ) : (
+              <span className="text-[18px] leading-7">
+                Tap to add a photo of the pan
+              </span>
+            )}
+            <input
+              id={photoId}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(event) =>
+                setPhotoFile(event.target.files?.[0] ?? null)
+              }
+            />
+          </label>
+          {photoPreview ? (
+            <button
+              type="button"
+              className="mt-2 self-start min-h-12 cursor-pointer text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+              onClick={() => setPhotoFile(null)}
+            >
+              Remove the pan photo
+            </button>
+          ) : null}
+
+          <p className="mt-6 text-[16px] text-ink-soft">
+            {showDate ? null : (
+              <>
+                Added today.{" "}
+                <button
+                  type="button"
+                  className="cursor-pointer underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+                  onClick={() => setShowDate(true)}
+                >
+                  Not today?
+                </button>
+              </>
+            )}
+          </p>
+          {showDate ? (
+            <div className="mt-2">
+              <Label htmlFor="bakedOn">When</Label>
+              <Input
+                id="bakedOn"
+                type="date"
+                value={bakedOn}
+                onChange={(event) => setBakedOn(event.target.value)}
+                className="mt-2"
+              />
+            </div>
+          ) : null}
+
+          <Label htmlFor="story" className="mt-8">
+            How it went
+          </Label>
+          <Textarea
+            id="story"
+            value={story}
+            onChange={(event) => setStory(event.target.value)}
+            placeholder="Sunday morning. The house already smelled like cinnamon…"
+            required
+            className="mt-2 min-h-28"
+          />
+
+          <p
+            id={outcomeId}
+            tabIndex={-1}
+            className="mt-8 text-[17px] font-medium leading-6"
+          >
+            How it turned out
+          </p>
+          <p className="mt-1 text-[16px] leading-6 text-ink-soft">
+            Tap a star. One is just okay. Five is the keeper.
+          </p>
+          <div className="mt-2">
+            <BakeStars
+              value={rating}
+              onChange={setRating}
+              labelledBy={outcomeId}
+            />
+          </div>
+
+          <details className="write-tweak mt-8">
+            <summary className="write-tweak-open">
+              <span className="write-tweak-copy">
+                <span className="write-tweak-title">The secret sauce</span>
+                <span className="write-tweak-hint">
+                  {readyChanges(changes).length === 0
+                    ? "Optional. What you changed."
+                    : readyChanges(changes)
+                        .map((row) => `${row.move} ${row.change}`)
+                        .join(" · ")}
+                </span>
+              </span>
+              <span className="write-tweak-mark" aria-hidden="true" />
+            </summary>
+            <div className="write-tweak-body">
+              <p className="text-[17px] leading-7 text-ink-soft">
+                Tap what you did. Say what — butter, flour, whatever. Add as
+                many as you want.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {CHANGE_MOVES.map((move) => (
+                  <button
+                    key={move}
+                    type="button"
+                    onClick={() => addChange(move)}
+                    className="inline-flex min-h-12 cursor-pointer items-center whitespace-nowrap rounded-[2px] border-[1.5px] border-cocoa bg-transparent px-4 text-[17px] text-ink hover:border-cinnamon-deep"
+                  >
+                    {move}
+                  </button>
+                ))}
+              </div>
+              {changes.length > 0 ? (
+                <ul className="flex flex-col gap-3">
+                  {changes.map((row) => (
+                    <li key={row.id} className="flex flex-wrap items-end gap-2">
+                      <p className="min-w-[5.5rem] pb-3 font-display text-[1.15rem] leading-7">
+                        {row.move}
+                      </p>
+                      <Input
+                        id={row.id}
+                        value={row.change}
+                        onChange={(event) => {
+                          const next = event.target.value;
+                          setChanges((current) =>
+                            current.map((item) =>
+                              item.id === row.id
+                                ? { ...item, change: next }
+                                : item,
+                            ),
+                          );
+                        }}
+                        placeholder={changeHint(row.move)}
+                        aria-label={`${row.move} what`}
+                        className="min-h-14 min-w-[10rem] flex-1"
+                      />
+                      <button
+                        type="button"
+                        className="min-h-12 cursor-pointer text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+                        onClick={() =>
+                          setChanges((current) =>
+                            current.filter((item) => item.id !== row.id),
+                          )
+                        }
+                      >
+                        Take off
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </details>
+
+          {error ? (
+            <p
+              id={formErrorId}
+              role="alert"
+              className="mt-6 text-[17px] text-cinnamon-deep"
+            >
+              {error}
+            </p>
+          ) : null}
+          {statusMessage ? (
+            <p role="status" className="mt-6 text-[17px] text-ink-soft">
+              {statusMessage}
+            </p>
+          ) : null}
+
+          <div className="sticky bottom-0 z-10 mt-8 -mx-2 border-t border-rule bg-paper px-2 py-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Button type="submit" disabled={pending || extracting} aria-busy={pending}>
+                {pending ? "Putting it in the book…" : "Put it in the book"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={pending}
+                onClick={() => void onSubmit("draft")}
+              >
+                Save for later
+              </Button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {screen === "choose" && mine && mine.length > 0 ? (
+        <details className="mt-16 border-t border-rule pt-6">
+          <summary className="cursor-pointer text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep">
+            Already in the book
+            {mine.length === 1 ? " · 1 bake" : ` · ${mine.length} bakes`}
+          </summary>
+          <ul className="mt-4">
+            {mine.map((bake) => (
+              <li key={bake._id} className="border-t border-rule py-4">
+                {bake.status === "published" ? (
+                  <ButtonLink
+                    to={`/bakes/${bake.slug}`}
+                    variant="ghost"
+                    className="font-display h-auto min-h-14 px-0 text-[1.35rem]"
+                  >
+                    {bake.title}
+                  </ButtonLink>
+                ) : (
+                  <p className="font-display text-[1.35rem] text-ink-soft">
+                    {bake.title}
+                    <span className="ml-2 text-[17px] font-sans italic">
+                      Saved for later
+                    </span>
+                  </p>
+                )}
+                <p className="text-[16px] text-ink-soft">
+                  {bake.status === "draft"
+                    ? "Not in the book yet"
+                    : formatBakeDate(bake.bakedOn)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+
+      {screen === "choose" && onLock ? (
+        <Button
+          type="button"
+          variant="ghost"
+          className="mt-10 px-0"
+          onClick={() => {
+            if (
+              window.confirm(
+                "Lock this device? You'll need the kitchen code again to write.",
+              )
+            ) {
+              void onLock();
+            }
+          }}
+        >
+          Lock the kitchen
+        </Button>
+      ) : null}
+    </div>
+  );
+}

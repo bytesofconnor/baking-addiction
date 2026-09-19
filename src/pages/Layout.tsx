@@ -1,49 +1,67 @@
-import { Outlet, useLocation } from "react-router";
-import { Flourish } from "@/components/Flourish";
-import { SiteHeader } from "@/components/SiteHeader";
-import { useWriter } from "@/lib/writer";
+import { useEffect, useRef } from "react";
+import { AdminShell } from "@/components/AdminShell";
+import { BookBinding } from "@/components/BookBinding";
+import { BookCover } from "@/components/BookCover";
+import { BookFace } from "@/components/BookSheet";
+import { SeasonDoodles } from "@/components/SeasonDoodles";
+import { pageForPath } from "@/lib/bookPages";
+import { usePreview } from "@/lib/preview";
+import { useBookFlip } from "@/lib/useBookFlip";
 
 export function Layout() {
-  const { status } = useWriter();
-  const { pathname } = useLocation();
+  const { open } = usePreview();
+  const liveFace = useRef<HTMLDivElement>(null);
+  const { pathname, flip, ghost } = useBookFlip(liveFace);
+  const page = pageForPath(pathname);
+  const turning = flip !== null && ghost !== null;
+
+  useEffect(() => {
+    const robots = document.createElement("meta");
+    robots.name = "robots";
+    robots.content = "noindex, nofollow";
+    document.head.appendChild(robots);
+    return () => {
+      robots.remove();
+    };
+  }, []);
+
   return (
-    <div className="relative mx-auto min-h-screen w-full max-w-[56rem] pb-[max(4rem,env(safe-area-inset-bottom))] pl-12 pr-5 pt-6 md:max-w-[80rem] md:pl-28 md:pr-14 md:pt-8 xl:max-w-[92rem] xl:pr-16">
-      <a
-        href="#main"
-        className="skip-link"
-        onClick={() => {
-          document.getElementById("main")?.focus();
-        }}
+    <div className="room-shell" data-preview={open ? "open" : "shut"}>
+      <AdminShell />
+      <SeasonDoodles />
+      <div
+        className="book relative z-10 mx-auto w-full max-w-[44rem] md:max-w-[52rem] xl:max-w-[58rem]"
+        data-page={page}
+        aria-busy={turning ? true : undefined}
       >
-        Skip to the cookbook
-      </a>
-      <div aria-hidden="true" className="notebook-holes" />
-      <div aria-hidden="true" className="notebook-spine" />
-      <SiteHeader
-        showWrite={status === "unlocked"}
-        atmosphere={pathname === "/"}
-      />
-      <main id="main" className="pt-10" tabIndex={-1}>
-        <Outlet />
-      </main>
-      <footer className="mt-20">
-        <Flourish className="mb-6" />
-        <div className="flex flex-col gap-2 text-[16px] leading-6 text-ink-soft sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-          <p>
-            Chris Barrett · started from{" "}
-            <a
-              href="https://sallysbakingaddiction.com"
-              className="underline decoration-rule decoration-2 underline-offset-[3px] transition-colors duration-150 hover:text-cinnamon-deep hover:decoration-cinnamon-deep active:text-cocoa active:decoration-cocoa"
-            >
-              Sally&apos;s Baking Addiction
-            </a>
-            .
-          </p>
-          <p className="font-display text-[18px] leading-6 text-cocoa italic">
-            My Addiction with Sally&apos;s
-          </p>
+        <div className="book-foredge book-foredge-back" aria-hidden="true" />
+        <div className="book-footedge book-footedge-back" aria-hidden="true" />
+        <div className="book-foredge" aria-hidden="true" />
+        <div className="book-footedge" aria-hidden="true" />
+        <BookCover />
+        <div className="book-pages" data-dir={flip?.direction}>
+          <div className="book-leaf book-leaf-under">
+            <BookFace pathname={pathname} faceRef={liveFace} />
+          </div>
+          {turning ? (
+            <div className="book-leaf book-leaf-over">
+              <div className="book-leaf-front">
+                <div
+                  className="book-flip-ghost"
+                  ref={(node) => {
+                    if (node && ghost.parentElement !== node) {
+                      node.replaceChildren(ghost);
+                    }
+                  }}
+                />
+                <div className="book-leaf-shine" aria-hidden="true" />
+              </div>
+              <div className="book-leaf-back" aria-hidden="true" />
+            </div>
+          ) : null}
         </div>
-      </footer>
+        <BookBinding />
+      </div>
     </div>
   );
 }

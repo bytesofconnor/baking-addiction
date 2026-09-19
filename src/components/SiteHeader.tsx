@@ -1,65 +1,105 @@
-import { NavLink } from "react-router";
+import { Link, NavLink } from "react-router";
 import { Wordmark } from "@/components/Wordmark";
 import { DESK_PATH } from "@/lib/desk";
-import { cn } from "@/lib/utils";
+import { usePreview } from "@/lib/preview";
+import { useBookHeading } from "@/lib/bookHeading";
+import { pageHeading, SITE_LINE } from "@/lib/site";
 
 function navClass(isActive: boolean) {
   return [
-    "inline-flex min-h-14 cursor-pointer items-center px-1 text-[18px] underline underline-offset-[6px] rounded-[2px] touch-manipulation transition-colors duration-150",
+    "font-display inline-flex min-h-14 cursor-pointer items-center px-1 text-[1.25rem] font-semibold touch-manipulation transition-colors duration-150",
     isActive
-      ? "font-semibold text-ink decoration-2 decoration-cinnamon-deep hover:text-cocoa active:text-cocoa"
-      : "text-ink decoration-rule hover:text-cinnamon-deep hover:decoration-cinnamon-deep active:text-cocoa active:decoration-cocoa",
+      ? "text-cinnamon-deep"
+      : "text-ink hover:text-cinnamon-deep active:text-cocoa",
   ].join(" ");
 }
 
 export function SiteHeader({
   showWrite,
-  atmosphere = false,
+  showPeople = false,
+  showSignIn = false,
+  signed,
+  signedTo,
+  line = SITE_LINE,
+  pathname = "/",
 }: {
   showWrite: boolean;
-  atmosphere?: boolean;
+  showPeople?: boolean;
+  showSignIn?: boolean;
+  signed?: string;
+  signedTo?: string;
+  line?: string;
+  pathname?: string;
 }) {
+  const { keep } = usePreview();
+  const bookHeading = useBookHeading();
+  const heading = pageHeading(pathname, bookHeading?.recipeTitle, signed);
+  const hasNav = showPeople || showSignIn || showWrite;
+  const onYou = pathname === "/you" || pathname.startsWith("/you/");
+  const showSign = Boolean(signed) && !onYou;
+
   return (
-    <header className={cn("relative isolate", atmosphere && "min-h-[13.5rem]")}>
-      {atmosphere ? (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 -top-6 bottom-0 -z-10 overflow-hidden md:-top-8"
-        >
-          <img
-            src="/cookies-cupcakes-sketch.png"
-            alt=""
-            className="header-sketch absolute inset-0 h-full w-full object-cover object-[70%_42%]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-paper via-paper/55 to-transparent md:max-w-[28rem]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-paper" />
-        </div>
+    <header className={showSign ? "relative pr-[7.5rem]" : "relative"}>
+      {showSign ? (
+        signedTo ? (
+          <Link
+            to={keep(signedTo)}
+            className="book-sign"
+            aria-label={`${signed}, your page`}
+          >
+            {signed}
+          </Link>
+        ) : (
+          <p className="book-sign">{signed}</p>
+        )
       ) : null}
-      <p className="text-[16px] leading-6 text-cinnamon-deep">
-        From Chris&apos;s kitchen
-      </p>
-      <div className="mt-3">
-        <Wordmark />
+      <div>
+        <Wordmark
+          linked={heading.home}
+          lead={heading.lead}
+          accent={heading.accent}
+          compact={heading.compact}
+        />
       </div>
-      <p className="mt-3 max-w-[34rem] text-[18px] leading-7 text-ink-soft">
-        The swaps, the notes, with Sally.
-      </p>
-      <nav
-        aria-label="Primary"
-        className="mt-5 flex flex-wrap gap-x-6 gap-y-1 border-y-[3px] border-double border-cocoa/35 py-1"
-      >
-        <NavLink to="/" end className={({ isActive }) => navClass(isActive)}>
-          The cookbook
-        </NavLink>
-        <NavLink to="/about" className={({ isActive }) => navClass(isActive)}>
-          About Chris
-        </NavLink>
-        {showWrite ? (
-          <NavLink to={DESK_PATH} className={({ isActive }) => navClass(isActive)}>
-            Write
-          </NavLink>
-        ) : null}
-      </nav>
+      {heading.compact || onYou ? null : (
+        <p className="mt-1 max-w-[34rem] text-[17px] leading-6 text-ink-soft">
+          {line}
+        </p>
+      )}
+      {hasNav ? (
+        <nav
+          aria-label="Primary"
+          className="mt-2 flex flex-wrap gap-x-7 gap-y-0 border-b border-cocoa/40 py-0.5"
+        >
+          {showPeople ? (
+            <NavLink
+              to={keep("/")}
+              end
+              className={({ isActive }) =>
+                navClass(isActive || pathname.startsWith("/bakes/"))
+              }
+            >
+              The recipe book
+            </NavLink>
+          ) : null}
+          {showWrite ? (
+            <NavLink
+              to={DESK_PATH}
+              className={({ isActive }) => navClass(isActive)}
+            >
+              Add a recipe
+            </NavLink>
+          ) : null}
+          {showSignIn ? (
+            <NavLink
+              to={keep("/join")}
+              className={({ isActive }) => navClass(isActive)}
+            >
+              Sign in
+            </NavLink>
+          ) : null}
+        </nav>
+      ) : null}
     </header>
   );
 }

@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { sourceKindValidator } from "./sources";
 
 export const changeValidator = v.object({
   move: v.string(),
@@ -24,11 +25,19 @@ export const bakeValidator = v.object({
   story: v.string(),
   sourceTitle: v.string(),
   sourceUrl: v.string(),
+  sourceKind: v.optional(sourceKindValidator),
   bakerName: v.string(),
   kind: v.optional(kindValidator),
   method: v.optional(v.string()),
+  makes: v.optional(v.string()),
+  ingredients: v.optional(v.array(v.string())),
+  steps: v.optional(v.array(v.string())),
+  ingredientSearch: v.optional(v.string()),
+  originStorageId: v.optional(v.id("_storage")),
   coverUrl: v.optional(v.string()),
   coverStorageId: v.optional(v.id("_storage")),
+  ownerId: v.optional(v.id("users")),
+  kitchenId: v.optional(v.id("kitchens")),
   status: v.union(v.literal("draft"), v.literal("published")),
   publishedAt: v.optional(v.number()),
   bakedOn: v.string(),
@@ -43,13 +52,18 @@ export const bakeTeaserValidator = v.object({
   title: v.string(),
   sourceTitle: v.string(),
   sourceUrl: v.string(),
+  sourceKind: v.optional(sourceKindValidator),
   bakerName: v.string(),
   kind: v.optional(kindValidator),
   publishedAt: v.optional(v.number()),
   bakedOn: v.string(),
+  rating: v.number(),
   outcome: v.string(),
   changes: v.array(changeValidator),
+  ingredients: v.array(v.string()),
   photoUrl: v.union(v.string(), v.null()),
+  ownerId: v.optional(v.id("users")),
+  madeByOthers: v.number(),
 });
 
 export const photoValidator = v.object({

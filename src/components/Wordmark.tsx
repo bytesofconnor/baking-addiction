@@ -1,16 +1,39 @@
 import { Link } from "react-router";
+import { usePreview } from "@/lib/preview";
+import { SITE_SHORT } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
-export function Wordmark({ linked = true }: { linked?: boolean }) {
+export function Wordmark({
+  linked = true,
+  lead = "That's",
+  accent = "Yum",
+  compact = false,
+}: {
+  linked?: boolean;
+  lead?: string;
+  accent?: string;
+  compact?: boolean;
+}) {
   const mark = (
-    <span className="flex min-w-0 flex-col">
-      <span className="font-display text-[2.1rem] leading-[1.08] tracking-tight transition-colors duration-150 group-hover:text-cinnamon-deep group-active:text-cocoa md:text-[2.7rem]">
-        My Addiction
-      </span>
-      <span className="font-display mt-1 text-[1.2rem] leading-7 text-cocoa italic transition-colors duration-150 group-hover:text-cinnamon-deep group-active:text-cocoa md:text-[1.4rem]">
-        with Sally&apos;s Baking Addiction
-      </span>
+    <span
+      className={cn(
+        "font-display font-extrabold leading-[0.95]",
+        compact
+          ? "min-h-[2.1rem] text-[1.7rem] md:min-h-[2.45rem] md:text-[2.05rem]"
+          : "text-[2.25rem] md:text-[2.7rem]",
+      )}
+    >
+      {lead}
+      {lead && accent ? " " : null}
+      {accent ? (
+        <span className="inline-block origin-bottom-left -rotate-3 italic text-cinnamon-deep transition-colors duration-150 group-hover:text-cocoa group-active:text-cocoa">
+          {accent}
+        </span>
+      ) : null}
     </span>
   );
+
+  const { keep } = usePreview();
 
   if (!linked) {
     return mark;
@@ -18,9 +41,9 @@ export function Wordmark({ linked = true }: { linked?: boolean }) {
 
   return (
     <Link
-      to="/"
+      to={keep("/")}
       className="group inline-block min-w-0 py-1"
-      aria-label="My Addiction, back to the cookbook"
+      aria-label={`${SITE_SHORT}, back to the recipe book`}
     >
       {mark}
     </Link>

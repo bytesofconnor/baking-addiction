@@ -2,11 +2,32 @@ import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { inferKind } from "./lib/kinds";
 
-const samples = [
+export const chrisSamples = [
   {
     slug: "pumpkin-muffins-extra-spice",
     title: "Pumpkin muffins, extra spice",
     kind: "muffins" as const,
+    makes: "About 15. Muffin tin, paper liners.",
+    ingredients: [
+      "1 can pumpkin",
+      "1/2 cup oil",
+      "2 eggs",
+      "A splash of milk",
+      "1 3/4 cups flour",
+      "1 cup sugar",
+      "1 tsp baking soda",
+      "A pinch of salt",
+      "2 tsp pumpkin pie spice — twice what I used to use",
+      "Crumb: butter, brown sugar, flour",
+      "Chocolate chips for the crumb if kids are around",
+    ],
+    steps: [
+      "Whisk pumpkin, oil, eggs, and milk.",
+      "Fold in flour, sugar, baking soda, salt, and the doubled spice. No icing.",
+      "Mix the crumb. Chocolate chips on top if kids are home.",
+      "Fill the tins. 22 minutes, until the tops spring back.",
+      "The crumb should stay put. Next time I'll warm the chips so they don't sink.",
+    ],
     method:
       "Muffin tin, paper liners. About 15.\n\nPumpkin, oil, eggs, a splash of milk. Fold in flour, sugar, baking soda, salt, and two teaspoons of pumpkin pie spice — twice what I used to use. No icing.\n\nCrumb is butter, brown sugar, flour. Chocolate chips on top if kids are around.\n\nTwenty-two minutes. The crumb should stay put. Next time I'll warm the chips so they don't sink.",
     story:
@@ -40,6 +61,21 @@ const samples = [
     slug: "apple-crisp-less-sugar",
     title: "Apple crisp, less sugar",
     kind: "crisp" as const,
+    makes: "One 9×13",
+    ingredients: [
+      "A heap of Honeycrisp apples, peeled and sliced",
+      "A squeeze of lemon",
+      "Cinnamon and a pinch of salt",
+      "About two-thirds the sugar you'd usually put in a filling",
+      "Butter, brown sugar, and flour for the topping",
+      "An extra handful of oats",
+    ],
+    steps: [
+      "Toss the apples with lemon, cinnamon, salt, and the lighter sugar. They were already sweet.",
+      "Mix the topping and add the extra oats so you get more crunch than fruit.",
+      "Bake until the edges go darker than the photos and the middle bubbles.",
+      "Serve warm with a little cream, not ice cream.",
+    ],
     method:
       "One 9×13. The apples from the market were already sweet.\n\nPeel and slice a heap of Honeycrisps. Toss with lemon, cinnamon, a pinch of salt, and about two-thirds of the sugar you'd usually put in a filling. They don't need more.\n\nTopping is butter, brown sugar, flour, and an extra handful of oats so you get more crunch than fruit.\n\nBake until the edges go darker than the photos and the middle bubbles. Serve warm with a little cream, not ice cream.",
     story:
@@ -68,6 +104,21 @@ const samples = [
     slug: "banana-bread-browned-butter",
     title: "Banana bread, browned butter",
     kind: "bread" as const,
+    makes: "One loaf",
+    ingredients: [
+      "4 black bananas",
+      "1 stick butter, browned until it smells like toffee",
+      "Sugar",
+      "2 eggs",
+      "Flour, baking soda, salt",
+    ],
+    steps: [
+      "Brown the butter. That's the whole note.",
+      "Mash the bananas into it with the sugar and eggs.",
+      "Fold in flour, baking soda, and salt. No walnuts — not everyone at the table eats them.",
+      "About an hour. Tent it at 45 so the top doesn't go too far.",
+      "Better on day two, toasted.",
+    ],
     method:
       "One loaf pan.\n\nFour black bananas and a stick of butter browned until it smells like toffee. That's the whole note. Mix with sugar, eggs, flour, baking soda, salt. No walnuts — not everyone at the table eats them.\n\nAbout an hour. Tent it at 45 so the top doesn't go too far. Better on day two, toasted.",
     story:
@@ -96,6 +147,27 @@ const samples = [
     slug: "chocolate-chip-cookies-flaky-salt",
     title: "Chocolate chip cookies, flaky salt",
     kind: "cookies" as const,
+    makes: "Two dozen. Two trays.",
+    ingredients: [
+      "2 sticks butter, softened",
+      "1 cup brown sugar",
+      "1/2 cup white sugar",
+      "2 eggs",
+      "A splash of vanilla",
+      "2 1/4 cups flour",
+      "1 tsp baking soda",
+      "A pinch of salt",
+      "2 cups chocolate chips",
+      "Flaky salt for the tops",
+    ],
+    steps: [
+      "Mix the sugars with the butter, then the eggs and vanilla.",
+      "Fold in flour, baking soda, and salt, then the chips.",
+      "Chill 45 minutes while homework happens — not overnight.",
+      "Scoop onto two trays.",
+      "Bake until the edges set. Pull a minute early; they finish on the sheet.",
+      "A pinch of flaky salt on each one while they're hot. Not optional.",
+    ],
     method:
       "Two trays. After school.\n\nChewy cookie dough, chilled 45 minutes while homework happens — not overnight. Scoop, bake, pinch of flaky salt on each one while they're hot.\n\nPull them a minute early. They finish on the sheet. The salt is not optional.",
     story:
@@ -124,6 +196,18 @@ const samples = [
     slug: "vanilla-cupcakes-less-frosting",
     title: "Vanilla cupcakes, less frosting",
     kind: "cake" as const,
+    makes: "Two dozen",
+    ingredients: [
+      "Vanilla cupcake batter — flour, sugar, butter, eggs, milk, vanilla",
+      "Frosting, about two-thirds of a bakery swirl",
+      "Sprinkles for half the batch",
+    ],
+    steps: [
+      "Small scoop so the tops come out even.",
+      "Bake until they spring back.",
+      "Modest swirl so they pack in a tin without smearing.",
+      "Sprinkles on half. The rest stay plain.",
+    ],
     method:
       "Two dozen. The small scoop so the tops come out even.\n\nVanilla cupcakes, modest swirl — about two-thirds of a bakery frosting so they pack in a tin without smearing. Sprinkles on half. The other half stay plain.\n\nThey traveled. Came home empty.",
     story:
@@ -150,8 +234,20 @@ const samples = [
   },
 ] as const;
 
-function coverPath(slug: string) {
+export function coverPath(slug: string) {
   return `/bakes/${slug}.jpg`;
+}
+
+const SAMPLE_COVER_SLUGS = new Set([
+  ...chrisSamples.map((sample) => sample.slug),
+  "nana-rhubarb-crumble",
+  "nana-caramel-rolls",
+  "brenda-thursday-brownies",
+  "brenda-cinnamon-scones",
+]);
+
+export function sampleCoverUrl(slug: string): string | null {
+  return SAMPLE_COVER_SLUGS.has(slug) ? coverPath(slug) : null;
 }
 
 export const populateIfEmpty = internalMutation({
@@ -162,12 +258,16 @@ export const populateIfEmpty = internalMutation({
     if (existing.length > 0) {
       return null;
     }
-    const first = samples[0];
+    const first = chrisSamples[0];
     return await ctx.db.insert("bakes", {
       ...first,
       coverUrl: coverPath(first.slug),
       status: "published",
       changes: [...first.changes],
+      ingredients: [...first.ingredients],
+      steps: [...first.steps],
+      sourceKind: "sally",
+      ingredientSearch: first.ingredients.join("\n").toLowerCase(),
     });
   },
 });
@@ -177,26 +277,22 @@ export const ensureSamples = internalMutation({
   returns: v.number(),
   handler: async (ctx) => {
     let inserted = 0;
-    for (const sample of samples) {
+    for (const sample of chrisSamples) {
       const already = await ctx.db
         .query("bakes")
         .withIndex("by_slug", (q) => q.eq("slug", sample.slug))
         .unique();
       if (already) {
-        const nextCover = already.coverUrl ?? coverPath(sample.slug);
-        const nextMethod = already.method ?? sample.method;
-        const nextKind = already.kind ?? sample.kind;
-        if (
-          already.kind !== nextKind ||
-          already.coverUrl !== nextCover ||
-          already.method !== nextMethod
-        ) {
-          await ctx.db.patch(already._id, {
-            kind: nextKind,
-            coverUrl: nextCover,
-            method: nextMethod,
-          });
-        }
+        await ctx.db.patch(already._id, {
+          kind: already.kind ?? sample.kind,
+          coverUrl: already.coverUrl ?? coverPath(sample.slug),
+          method: sample.method,
+          makes: sample.makes,
+          ingredients: [...sample.ingredients],
+          steps: [...sample.steps],
+          sourceKind: "sally",
+          ingredientSearch: sample.ingredients.join("\n").toLowerCase(),
+        });
         continue;
       }
       await ctx.db.insert("bakes", {
@@ -204,6 +300,10 @@ export const ensureSamples = internalMutation({
         coverUrl: coverPath(sample.slug),
         status: "published",
         changes: [...sample.changes],
+        ingredients: [...sample.ingredients],
+        steps: [...sample.steps],
+        sourceKind: "sally",
+        ingredientSearch: sample.ingredients.join("\n").toLowerCase(),
       });
       inserted += 1;
     }

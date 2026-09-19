@@ -1,4 +1,2 @@
 User-agent: *
-Disallow: /chris-desk
-Disallow: /write
-Disallow: /admin
+Disallow: /

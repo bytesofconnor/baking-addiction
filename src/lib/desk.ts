@@ -1,4 +1,4 @@
-export const DESK_PATH = "/admin";
+export const DESK_PATH = "/add";
 
 const COOKIE_NAME = "mba_desk";
 const STORAGE_KEY = "mba-desk-session";

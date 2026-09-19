@@ -1,7 +1,7 @@
 # Ops
 
-Family cookbook for Christine (Chris) Barrett: **My Addiction with Sally's Baking Addiction**.
-Public site for family. Chris writes. Connor runs the services.
+Family cookbook for Christine (Chris) Barrett: **That's Yum**.
+Private family book. Unlisted — `robots.txt` disallows everything. Chris writes. Family uses the URL. Not a blog. Sally is a source on some cards, not the name of the book. The line under the name is “Keep yours. Flip through theirs.” Colors and header doodles follow the Minnesota month (America/Chicago) on load. Family comes in with Google.
 
 ## Services
 
@@ -10,7 +10,7 @@ Public site for family. Chris writes. Connor runs the services.
 | Source | GitHub `bytesofconnor/baking-addiction` | https://github.com/bytesofconnor/baking-addiction |
 | App (SPA) | Vercel project `baking-addiction` | Team **Connor's projects** (`team_ynn7qy4sDXJcDEMHSuWLuXXo` / `connors-projects-408eaae2`). Project `prj_aFYDZXk50XMLtWsmraJ6lbd8eTAg` |
 | Backend + DB | Convex project `baking-addiction` | Team **connor-barrett**. Production deployment `beloved-lapwing-642` |
-| Domain | — | Not purchased. Intended: `myaddiction.kitchen`. Live URL is the Vercel alias below. |
+| Domain | — | Intended: `thatsyum.kitchen` (not purchased). Live URL is the Vercel alias below. |
 | Kitchen AI | Vercel AI Gateway via Convex action `kitchen.remix` | `AI_GATEWAY_API_KEY` is **not** set. Falls back to notes in `convex/lib/kitchenLetter.ts`. |
 
 Git remote: `github.com-personal:bytesofconnor/baking-addiction.git`
@@ -78,14 +78,20 @@ rm /tmp/convex-prod.env
 | --- | --- |
 | `/` | Public cookbook |
 | `/bakes/:slug` | Public bake |
-| `/about` | Public |
-| `/admin` | Chris writes. Do not advertise. `robots.txt` disallows it. |
-| `/admin?code=…` | Magic link. Unlocks this device, then strips `code` from the URL. |
-| `/chris-desk` | Legacy redirect to `/admin` |
+| `/slip/:token` | One recipe, if you have the unguessable link. No book, no profile, no sign-in. |
+| `/about` | How she cooks. No recipes. |
+| `/join` | Family door. `?code=` is an invite. |
+| `/family` | People in the current kitchen. Invite lives here. |
+| `/family/:userId` | What that person shared. |
+| `/add` | Write desk. Family cooks, or the kitchen code. |
+| `/add?code=…` | Magic link. Unlocks this device, then strips `code` from the URL. |
+| `/admin` | Redirect to `/add` |
+| `/write` | Redirect to `/add` |
+| `/chris-desk` | Legacy redirect to `/add` |
 
-Session cookie `mba_desk` + `localStorage` `mba-desk-session`, ~400 days.
+Family signs in with Google. Session cookie `mba_desk` + `localStorage` `mba-desk-session` is only the write-desk kitchen code, ~400 days.
 
-Send Chris: `https://baking-addiction.vercel.app/admin?code=` plus the kitchen code. Once per phone, once per laptop.
+Family gets `/join?code=` from the Family page. After Google, the invite opens that kitchen. Chris can still write at `/admin` with the kitchen code, or by signing in as a cook.
 
 ## Convex env
 
@@ -94,11 +100,29 @@ Set on the **Convex** deployment, not Vercel.
 | Name | Required | Lives on |
 | --- | --- | --- |
 | `WRITER_PASSWORD` | Yes | Convex. Kitchen door code. Never commit it. Never put the value in this file. Set on local anonymous **and** production `beloved-lapwing-642`. |
+| `SITE_URL` | Yes | Frontend origin. Local: `http://localhost:4821`. Prod: the live site URL. |
+| `JWT_PRIVATE_KEY` | Yes | Convex Auth. Generated once per deployment. |
+| `JWKS` | Yes | Convex Auth public key. Generated with the private key. |
+| `AUTH_GOOGLE_ID` | Yes | Google OAuth client ID. |
+| `AUTH_GOOGLE_SECRET` | Yes | Google OAuth client secret. |
 | `AI_GATEWAY_API_KEY` | No | Convex. If missing, Ask the kitchen still answers from Chris's notes. |
 
 ```bash
 npx convex env set WRITER_PASSWORD --deployment connor-barrett:baking-addiction:production
 npx convex env set AI_GATEWAY_API_KEY --deployment connor-barrett:baking-addiction:production
+```
+
+Google OAuth (Google Cloud → APIs & Services → Credentials → Web application):
+
+- Authorized JavaScript origins: `http://localhost:4821` and the live site
+- Authorized redirect URI: `{CONVEX_SITE_URL}/api/auth/callback/google`
+  - Local site URL is `http://127.0.0.1:3211`
+  - Prod site URL is `https://beloved-lapwing-642.convex.site`
+
+```bash
+npx convex env set SITE_URL http://localhost:4821
+npx convex env set AUTH_GOOGLE_ID ...
+npx convex env set AUTH_GOOGLE_SECRET ...
 ```
 
 ## Vercel env
@@ -109,7 +133,7 @@ npx convex env set AI_GATEWAY_API_KEY --deployment connor-barrett:baking-addicti
 
 ## Recipe rule
 
-This site is Chris's version. She writes the method. Credit + link Sally. Do not copy Sally's ingredients, method, or photos into the database or the UI.
+Private kitchens. Anyone can make an account. Recipes stay inside a kitchen you were invited to. No family directory. Sources: Sally (credit + link), original, or family. Dummy seed is local only — first kitchen on that deployment claims leftover cards.
 
 ## Useful commands
 
