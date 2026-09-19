@@ -114,11 +114,13 @@
   cursor: pointer;
   transform: rotate(-8deg);
   transform-origin: top right;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
 a.book-sign:hover,
 a.book-sign:focus-visible {
   color: var(--color-cocoa);
+  transform: rotate(-8deg) scale(1.05);
 }
 
 .book-colophon {
@@ -1346,20 +1348,24 @@ body {
 
 .book-search {
   border: 1.5px solid var(--color-cocoa);
-  border-radius: 4px;
-  background: transparent;
+  border-radius: 0.4rem;
+  background: var(--color-paper-raised);
   padding: 0.55rem 0.9rem;
   font-size: 20px;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-cocoa) 10%, transparent);
+  transition: all 0.2s ease;
 }
 
 .book-search:hover {
   border-color: var(--color-cinnamon-deep);
+  box-shadow: 0 2px 4px color-mix(in srgb, var(--color-cocoa) 15%, transparent);
 }
 
 .book-search:focus-visible {
   border-color: var(--color-cinnamon-deep);
   outline: 3px solid var(--color-cinnamon-deep);
   outline-offset: 4px;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-cinnamon-deep) 20%, transparent);
 }
 
 .book-checks {
