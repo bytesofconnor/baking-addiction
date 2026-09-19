@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useMemo, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { BakeKind } from "../../convex/lib/kinds";
@@ -405,7 +405,7 @@ function PortalCard({
         </h2>
         {bakeStars(bake) > 0 ? (
           <p className="book-portal-rating">
-            <BakeStars value={bakeStars(bake)} size="results" />
+            <BakeStars value={bakeStars(bake)} size="card" />
             <span className="book-portal-according">
               {accordingTo(bake, selfId) ?? `According to ${bake.bakerName}`}
             </span>
