@@ -10,7 +10,6 @@ export const BAKER_FULL_NAME = "Christine Barrett";
 export function pageHeading(
   pathname: string,
   recipeTitle?: string | null,
-  pageName?: string | null,
 ): {
   lead: string;
   accent: string;
@@ -36,20 +35,6 @@ export function pageHeading(
     return { lead: "Your", accent: "page", home: false, compact: false };
   }
   return { lead: "That's", accent: "Yum", home: true, compact: false };
-}
-
-function nameHeading(called?: string | null): { lead: string; accent: string } {
-  const words = (called ?? "").trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) {
-    return { lead: "You", accent: "" };
-  }
-  if (words.length === 1) {
-    return { lead: "", accent: words[0] ?? "You" };
-  }
-  return {
-    lead: words.slice(0, -1).join(" "),
-    accent: words[words.length - 1] ?? "",
-  };
 }
 
 function recipeHeading(title: string): { lead: string; accent: string } {
