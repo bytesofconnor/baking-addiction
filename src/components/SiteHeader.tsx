@@ -33,7 +33,7 @@ export function SiteHeader({
 }) {
   const { keep } = usePreview();
   const bookHeading = useBookHeading();
-  const heading = pageHeading(pathname, bookHeading?.recipeTitle, signed);
+  const heading = pageHeading(pathname, bookHeading?.recipeTitle);
   const hasNav = showPeople || showSignIn || showWrite;
   const onYou = pathname === "/you" || pathname.startsWith("/you/");
   const showSign = Boolean(signed) && !onYou;
