@@ -41,7 +41,9 @@
   display: flex;
   width: 0.82rem;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 0.68rem;
+  overflow: hidden;
 }
 
 .book[data-spine="end"] .book-holes {
@@ -68,7 +70,9 @@
   display: flex;
   width: 2.4rem;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 0.68rem;
+  overflow: hidden;
 }
 
 .book[data-spine="end"] .book-coil {
@@ -152,6 +156,10 @@ a.book-sign:focus-visible {
 }
 
 .book-page-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
   padding-top: 0.7rem;
   padding-bottom: 2rem;
 }
@@ -197,6 +205,41 @@ a.book-sign:focus-visible {
   flex-direction: column;
   background-color: var(--color-paper);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+.room-shell[data-book-grow="true"] .book-face,
+.room-shell[data-book-grow="true"] .book-pages,
+.room-shell[data-book-grow="true"] .book-leaf-under,
+.room-shell[data-book-grow="true"] .book-leaf {
+  height: auto;
+  min-height: 100%;
+}
+
+.room-shell[data-book-grow="true"] .book-pages {
+  overflow: visible;
+  flex: 1 0 auto;
+}
+
+.room-shell[data-book-grow="true"] .book-leaf-under,
+.room-shell[data-book-grow="true"] .book-face {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+
+/* Grow the sheet so the colophon stays on the bottom edge of the page,
+   even when the recipe or form is short. */
+.room-shell[data-book-grow="true"] .book-sheet-inner {
+  display: flex;
+  overflow: visible;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.room-shell[data-book-grow="true"] .book-page-body {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 @media (min-width: 768px) {
@@ -1005,8 +1048,8 @@ html[data-arrive="in"] .admin-shell {
 html,
 body,
 #root {
-  height: 100%;
   min-height: 100%;
+  height: auto;
 }
 
 body {
@@ -1047,6 +1090,13 @@ body {
   perspective-origin: 50% 42%;
 }
 
+/* Grow with the recipes — window scroll instead of a trapped inner pane */
+.room-shell[data-book-grow="true"] {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+}
+
 .room-shell[data-bookmarks="true"] {
   padding-top: 4.6rem;
   /* Same floor clearance as the join door — bookmarks used to shove the book into the carpet */
@@ -1076,6 +1126,11 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
   border: 1.5px solid var(--color-cocoa);
   transform-style: preserve-3d;
+}
+
+.room-shell[data-book-grow="true"] .book {
+  flex: 1 0 auto;
+  min-height: calc(100dvh - 8.45rem);
 }
 
 /* Front ↔ Back: the whole book turns over, not a leaf. */
@@ -1851,22 +1906,24 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 
 .book-back-cta-link {
   display: inline-flex;
-  min-height: 2.8rem;
+  min-height: 3.85rem;
   align-items: center;
   gap: 0.55rem;
   justify-content: center;
-  padding: 0.42rem 0.9rem 0.3rem;
+  padding: 0.28rem 1.35rem 0.1rem;
   border: 2px solid var(--color-cocoa);
   border-right-width: 3px;
-  border-bottom-width: 4px;
+  border-bottom-width: 5px;
   border-radius: 4px;
   background: var(--color-cinnamon-deep);
   color: var(--color-paper-raised);
   font-family: var(--font-display);
-  font-size: clamp(0.8rem, 1.25vw, 0.95rem);
-  font-weight: 700;
+  font-size: clamp(1.08rem, 1.85vw, 1.28rem);
+  font-weight: 800;
   line-height: 1.15;
+  letter-spacing: 0.01em;
   text-decoration: none;
+  touch-action: manipulation;
 }
 
 .book-back-cta-link:hover,
@@ -1874,8 +1931,14 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   background: var(--color-cinnamon);
 }
 
+.book-back-cta-link:active {
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+  transform: translate(1px, 3px);
+}
+
 .book-back-cta-link:focus-visible {
-  outline: 2px solid var(--color-paper-raised);
+  outline: 3px solid var(--color-paper-raised);
   outline-offset: 3px;
 }
 
@@ -1984,9 +2047,14 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 
 .book-explorer {
   display: flex;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-height: 0;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+.room-shell[data-book-grow="true"] .book-explorer {
+  flex: 1 0 auto;
 }
 
 .book-portal-lintel {
@@ -2137,7 +2205,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 .book-portal {
   position: relative;
   display: flex;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   min-height: 0;
   margin-top: 0.15rem;
 }
@@ -2147,10 +2215,17 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 }
 
 .book-portal-well-scrollable {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.room-shell[data-book-grow="true"] .book-portal,
+.room-shell[data-book-grow="true"] .book-portal-well-scrollable {
+  overflow: visible;
+  flex: 1 0 auto;
 }
 
 .book-portal-grid {
@@ -2163,6 +2238,11 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 @media (min-width: 768px) {
   .book-portal-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* One card shouldn't leave a blank column beside it */
+  .book-portal-grid:has(> :only-child) {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2206,13 +2286,22 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   background: var(--color-paper-raised);
 }
 
+.room-shell[data-book-grow="true"] .book-portal-well {
+  overflow: visible;
+  flex: 1 0 auto;
+}
+
 .book-portal-empty {
   display: flex;
   width: 100%;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
+}
+
+.room-shell[data-book-grow="true"] .book-portal-empty {
+  min-height: 18rem;
 }
 
 .book-portal-grid .book-portal-results {
@@ -2253,6 +2342,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   box-sizing: border-box;
   flex: 1 1 auto;
   min-height: 14rem;
+  height: 100%;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -2267,6 +2357,10 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
       color-mix(in srgb, var(--color-wash-warm) 16%, var(--color-paper)),
       var(--color-paper-press)
     );
+}
+
+.room-shell[data-book-grow="true"] .book-portal-miss {
+  min-height: 18rem;
 }
 
 .book-portal-miss-mark {
@@ -3172,32 +3266,49 @@ a.book-tab {
   position: absolute;
   left: 1rem;
   top: 0;
-  z-index: 30;
+  z-index: 100;
   display: inline-flex;
-  min-height: 3.5rem;
-  align-items: center;
-  transform: translateY(-160%);
-  background: var(--color-paper-raised);
-  color: var(--color-ink);
-  padding: 0.75rem 1rem;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: transparent;
   font-size: 1rem;
   text-decoration: underline;
   text-underline-offset: 4px;
   cursor: pointer;
-  transition: color 150ms, background-color 150ms;
 }
 
-.skip-link:hover {
+/* Only reveal for keyboard focus — .book’s perspective traps position:fixed,
+   so parking off-screen with translate used to leave this floating in the margin. */
+.skip-link:focus-visible {
+  position: fixed;
+  top: 0;
+  left: 1rem;
+  width: auto;
+  height: auto;
+  min-height: 3.5rem;
+  margin: 0;
+  clip-path: none;
+  overflow: visible;
+  transform: translateY(0.85rem);
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--color-cocoa);
+  background: var(--color-paper-raised);
+  color: var(--color-ink);
+  outline: 3px solid var(--color-cinnamon-deep);
+  outline-offset: 3px;
+}
+
+.skip-link:focus-visible:hover {
   color: var(--color-cinnamon-deep);
   background: var(--color-paper);
-}
-
-.skip-link:active {
-  color: var(--color-cocoa);
-}
-
-.skip-link:focus {
-  transform: translateY(0.85rem);
 }
 
 .kitchen-stir {

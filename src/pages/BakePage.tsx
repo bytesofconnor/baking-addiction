@@ -33,11 +33,14 @@ export function BakePage() {
     status === "in" && slug ? { slug } : "skip",
   );
   const catalog = view.bakes;
+  const teaser = catalog?.find((item) => item.slug === slug);
   const photos = useQuery(
     api.photos.listForBake,
     bake ? { bakeId: bake._id } : "skip",
   );
-  useRecipeTitle(bake && "title" in bake ? bake.title : null);
+  useRecipeTitle(
+    (bake && "title" in bake ? bake.title : null) ?? teaser?.title ?? null,
+  );
 
   if (status === "checking") {
     return (

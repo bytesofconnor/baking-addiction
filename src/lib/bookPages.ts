@@ -112,12 +112,21 @@ export function sectionOf(pathname: string): BookSection {
   return "other";
 }
 
-/** Page turns for Recipes / Add / You. Whole-book turns for Front ↔ Back. */
+/** Page turns for Recipes / Add / You, and for opening a bake from the index. */
 export function isDoorFlip(fromPath: string, toPath: string): boolean {
   const from = sectionOf(fromPath);
   const to = sectionOf(toPath);
   return (
     (from === "join" && to === "faq") || (from === "faq" && to === "join")
+  );
+}
+
+/** Index ↔ recipe, or flipping between recipes in the book. */
+export function isCookbookLeafTurn(fromPath: string, toPath: string): boolean {
+  return (
+    sectionOf(fromPath) === "cookbook" &&
+    sectionOf(toPath) === "cookbook" &&
+    fromPath !== toPath
   );
 }
 
@@ -130,6 +139,9 @@ export function shouldFlip(fromPath: string, toPath: string): boolean {
   }
   if (toPath === "/join") {
     return false;
+  }
+  if (isCookbookLeafTurn(fromPath, toPath)) {
+    return true;
   }
   const from = sectionOf(fromPath);
   const to = sectionOf(toPath);

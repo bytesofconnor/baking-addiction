@@ -12,6 +12,9 @@ function snapshotFace(face: HTMLElement): HTMLElement {
   clone.querySelectorAll("[id]").forEach((node) => {
     node.removeAttribute("id");
   });
+  clone.querySelectorAll(".skip-link").forEach((node) => {
+    node.remove();
+  });
   clone.setAttribute("inert", "");
   const fromSheet = face.querySelector(".book-sheet-inner");
   const toSheet = clone.querySelector(".book-sheet-inner");
@@ -21,10 +24,16 @@ function snapshotFace(face: HTMLElement): HTMLElement {
   return clone;
 }
 
+function resetWindowScroll() {
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+}
+
 export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
   pathname: string;
   flip: FlipPlan | null;
   ghost: HTMLElement | null;
+  /** Pixel height of the outgoing page — sized onto the turning leaf only. */
+  overlayHeightPx: number | null;
 } {
   const location = useLocation();
   const pathRef = useRef(location.pathname);
@@ -36,6 +45,7 @@ export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
   const [pathname, setPathname] = useState(location.pathname);
   const [flip, setFlip] = useState<FlipPlan | null>(null);
   const [ghost, setGhost] = useState<HTMLElement | null>(null);
+  const [overlayHeightPx, setOverlayHeightPx] = useState<number | null>(null);
 
   useLayoutEffect(() => {
     if (location.key === keyRef.current) {
@@ -50,7 +60,9 @@ export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
       window.clearTimeout(midTimer.current);
       setGhost(null);
       setFlip(null);
+      setOverlayHeightPx(null);
       setPathname(location.pathname);
+      resetWindowScroll();
     }
 
     if (location.pathname === pathRef.current) {
@@ -69,6 +81,7 @@ export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
     pathRef.current = location.pathname;
     window.clearTimeout(endTimer.current);
     window.clearTimeout(midTimer.current);
+    resetWindowScroll();
 
     if (plan.kind === "book") {
       // Freeze the outgoing back cover so arrival state changes cannot make
@@ -77,6 +90,7 @@ export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
       const shot = previousPath === "/faq" && face ? snapshotFace(face) : null;
       ghostRef.current = shot;
       setGhost(shot);
+      setOverlayHeightPx(null);
       setFlip(plan);
       midTimer.current = window.setTimeout(() => {
         ghostRef.current = null;
@@ -94,9 +108,15 @@ export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
     }
 
     const face = liveFace.current;
+    const pages = face?.closest(".book-pages");
+    const overlayHeight =
+      pages instanceof HTMLElement
+        ? Math.round(pages.getBoundingClientRect().height)
+        : null;
     const shot = face ? snapshotFace(face) : null;
     ghostRef.current = shot;
     setGhost(shot);
+    setOverlayHeightPx(overlayHeight && overlayHeight > 0 ? overlayHeight : null);
     setPathname(location.pathname);
     setFlip(plan);
 
@@ -104,6 +124,7 @@ export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
       ghostRef.current = null;
       setGhost(null);
       setFlip(null);
+      setOverlayHeightPx(null);
     }, plan.durationMs);
 
     return () => {
@@ -112,5 +133,5 @@ export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
     };
   }, [liveFace, location.key, location.pathname]);
 
-  return { pathname, flip, ghost };
+  return { pathname, flip, ghost, overlayHeightPx };
 }
