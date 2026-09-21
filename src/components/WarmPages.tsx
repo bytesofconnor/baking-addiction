@@ -60,7 +60,7 @@ export function WarmPages({ pathname }: { pathname: string }) {
         <YouPage />
       </WarmPage>
       {extra ? (
-        <div key={pathname} className="book-page-arrive">
+        <div key={pathname} className={onBake ? undefined : "book-page-arrive"}>
           {outlet}
         </div>
       ) : null}

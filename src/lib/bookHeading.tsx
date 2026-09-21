@@ -2,7 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -36,9 +36,10 @@ export function useBookHeading() {
 export function useRecipeTitle(title: string | null) {
   const heading = useBookHeading();
   const setRecipeTitle = heading?.setRecipeTitle;
-  useEffect(() => {
-    if (title) {
-      setRecipeTitle?.(title);
-    }
+  useLayoutEffect(() => {
+    setRecipeTitle?.(title);
+    return () => {
+      setRecipeTitle?.(null);
+    };
   }, [setRecipeTitle, title]);
 }

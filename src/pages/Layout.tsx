@@ -17,13 +17,17 @@ export function Layout() {
   const { open } = usePreview();
   const { phase } = useArrive();
   const liveFace = useRef<HTMLDivElement>(null);
-  const { pathname, flip, ghost } = useBookFlip(liveFace);
+  const { pathname, flip, ghost, overlayHeightPx } = useBookFlip(liveFace);
   const page = pageForPath(pathname);
   const leafTurning =
     flip !== null && flip.kind === "page" && ghost !== null;
   const bookTurning = flip !== null && flip.kind === "book";
   const landingCover = pathname === "/join" && family.status !== "in";
   const backFace = pathname === "/faq" && family.status !== "in";
+  // Signed-in pages grow with content so the window scrolls like a normal page.
+  // Join / FAQ stay fixed to one viewport.
+  const bookGrow =
+    family.status === "in" && !landingCover && !backFace && phase === "in";
 
   useEffect(() => {
     const robots = document.createElement("meta");
@@ -41,6 +45,7 @@ export function Layout() {
       data-preview={preview ? (open ? "open" : "shut") : undefined}
       data-bookmarks="true"
       data-landing-cover={landingCover ? "true" : undefined}
+      data-book-grow={bookGrow ? "true" : undefined}
     >
       {preview ? <AdminShell /> : null}
       <SeasonDoodles />
@@ -81,12 +86,35 @@ export function Layout() {
           data-dir={leafTurning ? flip?.direction : undefined}
           inert={!bookTurning && phase !== "in"}
           aria-hidden={!bookTurning && phase !== "in" ? true : undefined}
+          style={
+            leafTurning
+              ? ({
+                  // Keep room for the outgoing leaf without freezing the
+                  // destination page to the old height (that snap-back is the
+                  // post-flip “second paint”).
+                  minHeight: overlayHeightPx ?? undefined,
+                  overflow: "hidden",
+                  "--book-flip-duration": `${flip.durationMs}ms`,
+                } as CSSProperties)
+              : flip
+                ? ({
+                    "--book-flip-duration": `${flip.durationMs}ms`,
+                  } as CSSProperties)
+                : undefined
+          }
         >
           <div className="book-leaf book-leaf-under">
             <BookFace pathname={pathname} faceRef={liveFace} />
           </div>
           {leafTurning ? (
-            <div className="book-leaf book-leaf-over">
+            <div
+              className="book-leaf book-leaf-over"
+              style={
+                overlayHeightPx
+                  ? { height: overlayHeightPx, bottom: "auto" }
+                  : undefined
+              }
+            >
               <div className="book-leaf-front">
                 <div
                   className="book-flip-ghost"

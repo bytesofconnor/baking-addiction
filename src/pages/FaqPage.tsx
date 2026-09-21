@@ -69,7 +69,7 @@ export function FaqPage() {
             <p className="book-back-cta">
               <Link to="/join" className="book-back-cta-link">
                 <span aria-hidden="true">←</span>
-                Back to the front cover
+                Front cover
               </Link>
             </p>
           ) : null}

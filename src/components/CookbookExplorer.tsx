@@ -1,5 +1,7 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { BakeKind } from "../../convex/lib/kinds";
 import { KIND_LABELS } from "../../convex/lib/kinds";
@@ -23,6 +25,7 @@ import { BakePlate } from "@/components/BakePlate";
 import { RecipeShare } from "@/components/RecipeShare";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useFamily } from "@/lib/family";
 
 const SORTS: Array<{ id: CookbookSort; label: string }> = [
   { id: "newest", label: "Newest" },
@@ -164,7 +167,7 @@ export function CookbookExplorer({
           value={query}
           autoComplete="off"
           enterKeyHint="search"
-          placeholder="Pumpkin, 5 stars, Nana…"
+          placeholder="Pumpkin, 5 stars, bread…"
           aria-describedby={countId}
           className="book-search mt-1 min-h-14 rounded-[4px] px-3 outline-offset-4"
           onChange={(event) => write({ q: event.target.value })}
@@ -412,6 +415,14 @@ function PortalCard({
   selfId?: string;
   search: string;
 }) {
+  const { status } = useFamily();
+  const [warm, setWarm] = useState(false);
+  // Warm the full bake while the card is hovered/focused so the leaf turn
+  // reveals the recipe instead of an “Opening…” flash after the flip.
+  useQuery(
+    api.bakes.getPublishedBySlug,
+    warm && status === "in" ? { slug: bake.slug } : "skip",
+  );
   const kind = bakeKind(bake);
   const hook = bakeHook(bake);
   const hits = ingredientHits(bake, query);
@@ -463,6 +474,9 @@ function PortalCard({
           <Link
             to={{ pathname: `/bakes/${bake.slug}`, search }}
             className="book-portal-make"
+            onPointerEnter={() => setWarm(true)}
+            onPointerDown={() => setWarm(true)}
+            onFocus={() => setWarm(true)}
           >
             View recipe
           </Link>
