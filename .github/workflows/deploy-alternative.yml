@@ -1,13 +1,10 @@
-# Alternative deployment using Vercel GitHub Action (simpler, requires Git integration)
-# This is a backup option if you prefer using the official Vercel GitHub Action
-# To use this, rename to deploy.yml and ensure Git is connected to Vercel
+# Backup path. Prefer deploy.yml — this action pins an old Vercel CLI.
+# Disabled so both workflows don't fight on every push to main.
 
 name: Deploy to Vercel (Alternative)
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
