@@ -10,7 +10,7 @@ Private family book. Unlisted — `robots.txt` disallows everything. Mom writes.
 | Source | GitHub `bytesofconnor/baking-addiction` | https://github.com/bytesofconnor/baking-addiction |
 | App (SPA) | Vercel project `baking-addiction` | Team **Connor's projects** (`team_ynn7qy4sDXJcDEMHSuWLuXXo` / `connors-projects-408eaae2`). Project `prj_aFYDZXk50XMLtWsmraJ6lbd8eTAg` |
 | Backend + DB | Convex project `baking-addiction` | Team **connor-barrett**. Production deployment `beloved-lapwing-642` |
-| Domain | — | Intended: `thatsyum.kitchen` (not purchased). Live URL is the Vercel alias below. |
+| Domain | `thefamilyrecipebook.app` | Live on Vercel. Old alias `baking-addiction.vercel.app` still works. |
 | Kitchen AI | Vercel AI Gateway via Convex action `kitchen.remix` | `AI_GATEWAY_API_KEY` is **not** set. Falls back to notes in `convex/lib/kitchenLetter.ts`. |
 
 Git remote: `github.com-personal:bytesofconnor/baking-addiction.git`
@@ -19,10 +19,13 @@ Git remote: `github.com-personal:bytesofconnor/baking-addiction.git`
 
 | Piece | Address |
 | --- | --- |
-| Site | https://baking-addiction.vercel.app |
+| Site | https://thefamilyrecipebook.app |
+| Vercel alias | https://baking-addiction.vercel.app |
 | Vercel dashboard | https://vercel.com/connors-projects-408eaae2/baking-addiction |
+| Vercel domains | https://vercel.com/connors-projects-408eaae2/baking-addiction/settings/domains |
 | Convex HTTP | https://beloved-lapwing-642.convex.cloud |
 | Convex dashboard | https://dashboard.convex.dev/t/connor-barrett/baking-addiction/beloved-lapwing-642 |
+| Google OAuth credentials | https://console.cloud.google.com/apis/credentials |
 
 Production cookbook starts **empty**. Mom writes the real bakes. Dummy seed is `internalMutation` only — never run it on prod.
 
@@ -117,7 +120,7 @@ Set on the **Convex** deployment, not Vercel.
 | Name | Required | Lives on |
 | --- | --- | --- |
 | `WRITER_PASSWORD` | Yes | Convex. Kitchen door code. Never commit it. Never put the value in this file. Set on local anonymous **and** production `beloved-lapwing-642`. |
-| `SITE_URL` | Yes | Frontend origin. Local: `http://localhost:4821`. Prod: the live site URL. |
+| `SITE_URL` | Yes | Frontend origin. Local: `http://localhost:4821`. Prod: `https://thefamilyrecipebook.app`. |
 | `JWT_PRIVATE_KEY` | Yes | Convex Auth. Generated once per deployment. |
 | `JWKS` | Yes | Convex Auth public key. Generated with the private key. |
 | `AUTH_GOOGLE_ID` | Yes | Google OAuth client ID. |
@@ -131,13 +134,16 @@ npx convex env set AI_GATEWAY_API_KEY --deployment connor-barrett:baking-addicti
 
 Google OAuth (Google Cloud → APIs & Services → Credentials → Web application):
 
-- Authorized JavaScript origins: `http://localhost:4821` and the live site
+- Authorized JavaScript origins:
+  - `http://localhost:4821`
+  - `https://thefamilyrecipebook.app`
+  - `https://baking-addiction.vercel.app` (optional; keep while the alias is still used)
 - Authorized redirect URI: `{CONVEX_SITE_URL}/api/auth/callback/google`
-  - Local site URL is `http://127.0.0.1:3211`
-  - Prod site URL is `https://beloved-lapwing-642.convex.site`
+  - Local: `http://127.0.0.1:3211/api/auth/callback/google`
+  - Prod: `https://beloved-lapwing-642.convex.site/api/auth/callback/google`
 
 ```bash
-npx convex env set SITE_URL http://localhost:4821
+npx convex env set SITE_URL https://thefamilyrecipebook.app
 npx convex env set AUTH_GOOGLE_ID ...
 npx convex env set AUTH_GOOGLE_SECRET ...
 ```
