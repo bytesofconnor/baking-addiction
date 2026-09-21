@@ -46,6 +46,10 @@ export function JoinPage() {
     if (status === "in") {
       const next = new URLSearchParams(params);
       next.delete("invite");
+      // Drop the OAuth callback leftovers so we don't re-consume the code
+      // (or hand it to the kitchen door as a password) after sign-in.
+      next.delete("code");
+      next.delete("state");
       const query = next.toString();
       return <Navigate to={query ? `/?${query}` : "/"} replace />;
     }

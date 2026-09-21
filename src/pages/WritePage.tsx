@@ -1,11 +1,12 @@
 import { useEffect, useId, useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router";
+import { useLocation, useSearchParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Kicker } from "@/components/Kicker";
 import { WhiskMark } from "@/components/WhiskMark";
 import { WriteDesk } from "@/components/WriteDesk";
+import { DESK_PATH } from "@/lib/desk";
 import { PageTitle } from "@/lib/pageTitle";
 import { SITE_SHORT } from "@/lib/site";
 import { useFamily } from "@/lib/family";
@@ -14,9 +15,13 @@ import { useWriter } from "@/lib/writer";
 export function WritePage() {
   const { status, token, unlock, lock } = useWriter();
   const family = useFamily();
+  const location = useLocation();
   const [params, setParams] = useSearchParams();
-  const [linkCode] = useState(() => params.get("code")?.trim() ?? "");
-  const [openingLink, setOpeningLink] = useState(() => linkCode.length > 0);
+  // Kitchen door links are `?code=` on /add only. Everywhere else that param
+  // is the Google OAuth callback and must not be treated as a desk password.
+  const onDesk = location.pathname === DESK_PATH;
+  const [linkCode, setLinkCode] = useState("");
+  const [openingLink, setOpeningLink] = useState(false);
   const [linkFailed, setLinkFailed] = useState(false);
 
   useEffect(() => {
@@ -30,13 +35,18 @@ export function WritePage() {
   }, []);
 
   useEffect(() => {
-    if (!params.has("code")) {
+    if (!onDesk || !params.has("code")) {
       return;
+    }
+    const code = params.get("code")?.trim() ?? "";
+    if (code) {
+      setLinkCode(code);
+      setOpeningLink(true);
     }
     const next = new URLSearchParams(params);
     next.delete("code");
     setParams(next, { replace: true });
-  }, [params, setParams]);
+  }, [onDesk, params, setParams]);
 
   useEffect(() => {
     if (!linkCode || status !== "locked") {
