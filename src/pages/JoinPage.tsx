@@ -10,8 +10,8 @@ import { SITE_SHORT } from "@/lib/site";
 
 export function JoinPage() {
   const [params] = useSearchParams();
-  const inviteToken =
-    params.get("invite")?.trim() || params.get("code")?.trim() || "";
+  // Invites are `?invite=` only. `?code=` is Google OAuth — never an invite.
+  const inviteToken = params.get("invite")?.trim() || "";
   const invite = useQuery(
     api.familyAuth.peekInvite,
     inviteToken ? { inviteToken } : "skip",
@@ -46,12 +46,10 @@ export function JoinPage() {
     if (status === "in") {
       const next = new URLSearchParams(params);
       next.delete("invite");
-      next.delete("code");
       const query = next.toString();
       return <Navigate to={query ? `/?${query}` : "/"} replace />;
     }
-    // Clear stale OAuth return flag if no actual OAuth params
-    if (isOAuthReturn() && !params.get("code")) {
+    if (status === "out" && isOAuthReturn() && !params.get("code")) {
       clearOAuthReturn();
     }
     return null;

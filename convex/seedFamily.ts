@@ -368,10 +368,22 @@ async function forgetPartnerHomeMix(
   }
 }
 
+function samplesAllowed(): boolean {
+  const site = process.env.SITE_URL ?? "";
+  return (
+    site.includes("localhost") ||
+    site.includes("127.0.0.1") ||
+    site.startsWith("http://192.168.")
+  );
+}
+
 export async function plantSampleFamily(
   ctx: MutationCtx,
   viewerId: Id<"users">,
 ): Promise<{ people: string[] }> {
+  if (!samplesAllowed()) {
+    return { people: [] };
+  }
   const viewer = await ctx.db.get("users", viewerId);
   if (!viewer || viewer.email?.endsWith(SAMPLE_SUFFIX)) {
     return { people: [] };
@@ -426,8 +438,127 @@ export const intoMyBook = mutation({
     people: v.array(v.string()),
   }),
   handler: async (ctx) => {
+    if (!samplesAllowed()) {
+      throw new Error("Sample family is only for local development.");
+    }
     const user = await requireSignedIn(ctx);
     return await plantSampleFamily(ctx, user._id);
+  },
+});
+
+/** Wipe Mom/Nana/Brenda sample cooks and every connection to them. Prod cleanup. */
+export const clearSamples = internalMutation({
+  args: {},
+  returns: v.object({
+    users: v.number(),
+    bakes: v.number(),
+    connections: v.number(),
+  }),
+  handler: async (ctx) => {
+    const sampleUsers = (await ctx.db.query("users").take(200)).filter((user) =>
+      user.email?.endsWith(SAMPLE_SUFFIX),
+    );
+    let bakes = 0;
+    let connections = 0;
+
+    for (const sample of sampleUsers) {
+      const outgoing = await ctx.db
+        .query("connections")
+        .withIndex("by_viewer", (q) => q.eq("viewerId", sample._id))
+        .take(80);
+      for (const link of outgoing) {
+        await ctx.db.delete(link._id);
+        connections += 1;
+      }
+      const incoming = await ctx.db
+        .query("connections")
+        .withIndex("by_other", (q) => q.eq("otherUserId", sample._id))
+        .take(80);
+      for (const link of incoming) {
+        await ctx.db.delete(link._id);
+        connections += 1;
+      }
+
+      const kitchen = await ownedKitchen(ctx, sample._id);
+      if (kitchen) {
+        const kitchenBakes = await ctx.db
+          .query("bakes")
+          .withIndex("by_kitchen_and_status", (q) =>
+            q.eq("kitchenId", kitchen._id).eq("status", "published"),
+          )
+          .take(100);
+        const drafts = await ctx.db
+          .query("bakes")
+          .withIndex("by_kitchen_and_status", (q) =>
+            q.eq("kitchenId", kitchen._id).eq("status", "draft"),
+          )
+          .take(100);
+        for (const bake of [...kitchenBakes, ...drafts]) {
+          const photos = await ctx.db
+            .query("photos")
+            .withIndex("by_bake", (q) => q.eq("bakeId", bake._id))
+            .take(40);
+          for (const photo of photos) {
+            await ctx.db.delete(photo._id);
+          }
+          const makes = await ctx.db
+            .query("bakeMakes")
+            .withIndex("by_bake", (q) => q.eq("bakeId", bake._id))
+            .take(40);
+          for (const make of makes) {
+            await ctx.db.delete(make._id);
+          }
+          const slips = await ctx.db
+            .query("recipeSlips")
+            .withIndex("by_bake_and_creator", (q) =>
+              q.eq("bakeId", bake._id).eq("createdBy", sample._id),
+            )
+            .take(40);
+          for (const slip of slips) {
+            await ctx.db.delete(slip._id);
+          }
+          await ctx.db.delete(bake._id);
+          bakes += 1;
+        }
+        const members = await ctx.db
+          .query("members")
+          .withIndex("by_kitchen", (q) => q.eq("kitchenId", kitchen._id))
+          .take(40);
+        for (const member of members) {
+          await ctx.db.delete(member._id);
+        }
+        const invites = await ctx.db
+          .query("invites")
+          .withIndex("by_kitchen", (q) => q.eq("kitchenId", kitchen._id))
+          .take(40);
+        for (const invite of invites) {
+          await ctx.db.delete(invite._id);
+        }
+        await ctx.db.delete(kitchen._id);
+      }
+
+      const mixes = await ctx.db
+        .query("cookbookMixes")
+        .withIndex("by_viewer", (q) => q.eq("viewerId", sample._id))
+        .take(40);
+      for (const mix of mixes) {
+        await ctx.db.delete(mix._id);
+      }
+
+      await ctx.db.delete(sample._id);
+    }
+
+    // Drop sample user ids from real people's saved mixes.
+    const realMixes = await ctx.db.query("cookbookMixes").take(200);
+    const sampleIds = new Set(sampleUsers.map((user) => user._id));
+    for (const mix of realMixes) {
+      const next = mix.otherUserIds.filter((id) => !sampleIds.has(id));
+      if (next.length !== mix.otherUserIds.length) {
+        await ctx.db.patch(mix._id, { otherUserIds: next });
+      }
+    }
+
+    return { users: sampleUsers.length, bakes, connections };
   },
 });
 
@@ -437,6 +568,9 @@ export const intoAllBooks = internalMutation({
     books: v.number(),
   }),
   handler: async (ctx) => {
+    if (!samplesAllowed()) {
+      return { books: 0 };
+    }
     const users = await ctx.db.query("users").take(40);
     let books = 0;
     for (const user of users) {

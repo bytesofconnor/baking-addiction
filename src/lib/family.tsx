@@ -4,7 +4,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -13,7 +12,11 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { clearKitchenId, readKitchenId, writeKitchenId } from "@/lib/familySession";
-import { clearOAuthReturn, isOAuthReturn } from "@/lib/oauthReturn";
+import {
+  clearOAuthReturn,
+  hasAuthCode,
+  isOAuthReturn,
+} from "@/lib/oauthReturn";
 
 type FamilyStatus = "checking" | "out" | "in";
 
@@ -64,8 +67,6 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
 
   const me = useQuery(api.familyAuth.me, isAuthenticated ? {} : "skip");
   const ensureMine = useMutation(api.kitchens.ensureMine);
-  const plantFamily = useMutation(api.seedFamily.intoMyBook);
-  const planted = useRef(false);
 
   const kitchens = me?.kitchens ?? [];
   const mine = kitchens.find((kitchen) => kitchen.role === "owner") ?? null;
@@ -93,10 +94,21 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isAuthenticated) {
+      // Keep the return marker until ArriveProvider has used it to distinguish
+      // a real sign-in from an ordinary authenticated refresh.
+      setComingBack(false);
+      return;
+    }
+    if (isLoading || !comingBack) {
+      return;
+    }
+    // OAuth finished (or never landed a code) and we're still signed out —
+    // stop blocking the join screen on a stale return flag.
+    if (!hasAuthCode()) {
       clearOAuthReturn();
       setComingBack(false);
     }
-  }, [isAuthenticated]);
+  }, [comingBack, isAuthenticated, isLoading]);
 
   useEffect(() => {
     if (!me) {
@@ -104,27 +116,20 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     }
     let cancelled = false;
     void ensureMine()
-      .then(async (id) => {
+      .then((id) => {
         if (cancelled) {
           return;
         }
         setKitchenState(id);
         writeKitchenId(id);
-        if (!planted.current) {
-          planted.current = true;
-          await plantFamily({}).catch(() => {
-            // Planting sample data is optional, don't block
-          });
-        }
       })
       .catch((error) => {
         console.error("Failed to ensure kitchen:", error);
-        // Don't block on kitchen creation failure - let user proceed
       });
     return () => {
       cancelled = true;
     };
-  }, [ensureMine, me, plantFamily]);
+  }, [ensureMine, me]);
 
   const status: FamilyStatus =
     isLoading ||

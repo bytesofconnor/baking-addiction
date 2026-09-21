@@ -31,6 +31,7 @@ export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
   const keyRef = useRef(location.key);
   const ghostRef = useRef<HTMLElement | null>(null);
   const endTimer = useRef(0);
+  const midTimer = useRef(0);
 
   const [pathname, setPathname] = useState(location.pathname);
   const [flip, setFlip] = useState<FlipPlan | null>(null);
@@ -46,6 +47,7 @@ export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
       pathRef.current = location.pathname;
       ghostRef.current = null;
       window.clearTimeout(endTimer.current);
+      window.clearTimeout(midTimer.current);
       setGhost(null);
       setFlip(null);
       setPathname(location.pathname);
@@ -61,17 +63,43 @@ export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
       return;
     }
 
-    const plan = planFlip(pathRef.current, location.pathname);
+    const previousPath = pathRef.current;
+    const plan = planFlip(previousPath, location.pathname);
+    keyRef.current = location.key;
+    pathRef.current = location.pathname;
+    window.clearTimeout(endTimer.current);
+    window.clearTimeout(midTimer.current);
+
+    if (plan.kind === "book") {
+      // Freeze the outgoing back cover so arrival state changes cannot make
+      // its content disappear before the physical book reaches edge-on.
+      const face = liveFace.current;
+      const shot = previousPath === "/faq" && face ? snapshotFace(face) : null;
+      ghostRef.current = shot;
+      setGhost(shot);
+      setFlip(plan);
+      midTimer.current = window.setTimeout(() => {
+        ghostRef.current = null;
+        setGhost(null);
+        setPathname(location.pathname);
+      }, plan.durationMs / 2);
+      endTimer.current = window.setTimeout(() => {
+        setFlip(null);
+      }, plan.durationMs);
+
+      return () => {
+        window.clearTimeout(endTimer.current);
+        window.clearTimeout(midTimer.current);
+      };
+    }
+
     const face = liveFace.current;
     const shot = face ? snapshotFace(face) : null;
     ghostRef.current = shot;
-    keyRef.current = location.key;
-    pathRef.current = location.pathname;
     setGhost(shot);
     setPathname(location.pathname);
     setFlip(plan);
 
-    window.clearTimeout(endTimer.current);
     endTimer.current = window.setTimeout(() => {
       ghostRef.current = null;
       setGhost(null);
@@ -80,6 +108,7 @@ export function useBookFlip(liveFace: RefObject<HTMLElement | null>): {
 
     return () => {
       window.clearTimeout(endTimer.current);
+      window.clearTimeout(midTimer.current);
     };
   }, [liveFace, location.key, location.pathname]);
 

@@ -2,6 +2,8 @@ import { DESK_PATH } from "@/lib/desk";
 
 /** One turn always takes this long, near or far. */
 export const BOOK_FLIP_MS = 480;
+/** Front ↔ back of the book — a whole-book turn. */
+export const BOOK_OVER_MS = 560;
 
 const RECIPE_START = 8;
 const RECIPE_SPAN = 18;
@@ -16,18 +18,21 @@ export const BOOK_PAGE = {
   family: 32,
   person: 33,
   join: 34,
+  faq: 35,
   desk: 36,
   you: 42,
   lost: 48,
 } as const;
 
 export type FlipDirection = "forward" | "back";
+export type FlipKind = "page" | "book";
 
 export type FlipPlan = {
   from: number;
   to: number;
   direction: FlipDirection;
   durationMs: number;
+  kind: FlipKind;
 };
 
 function slugOffset(slug: string): number {
@@ -51,6 +56,9 @@ export function pageForPath(pathname: string): number {
   if (pathname === "/join") {
     return BOOK_PAGE.join;
   }
+  if (pathname === "/faq") {
+    return BOOK_PAGE.faq;
+  }
   if (
     pathname === DESK_PATH ||
     pathname === "/admin" ||
@@ -68,7 +76,14 @@ export function pageForPath(pathname: string): number {
   return BOOK_PAGE.lost;
 }
 
-export type BookSection = "cookbook" | "family" | "add" | "you" | "join" | "other";
+export type BookSection =
+  | "cookbook"
+  | "family"
+  | "add"
+  | "you"
+  | "join"
+  | "faq"
+  | "other";
 
 export function sectionOf(pathname: string): BookSection {
   if (pathname === "/" || pathname.startsWith("/bakes/")) {
@@ -91,13 +106,27 @@ export function sectionOf(pathname: string): BookSection {
   if (pathname === "/join") {
     return "join";
   }
+  if (pathname === "/faq") {
+    return "faq";
+  }
   return "other";
 }
 
-/** Page turns are for the three leaves: recipe book, add, your page (the back). */
+/** Page turns for Recipes / Add / You. Whole-book turns for Front ↔ Back. */
+export function isDoorFlip(fromPath: string, toPath: string): boolean {
+  const from = sectionOf(fromPath);
+  const to = sectionOf(toPath);
+  return (
+    (from === "join" && to === "faq") || (from === "faq" && to === "join")
+  );
+}
+
 export function shouldFlip(fromPath: string, toPath: string): boolean {
   if (fromPath === toPath) {
     return false;
+  }
+  if (isDoorFlip(fromPath, toPath)) {
+    return true;
   }
   if (toPath === "/join") {
     return false;
@@ -114,11 +143,21 @@ export function shouldFlip(fromPath: string, toPath: string): boolean {
 export function planFlip(fromPath: string, toPath: string): FlipPlan {
   const from = pageForPath(fromPath);
   const to = pageForPath(toPath);
+  const kind: FlipKind = isDoorFlip(fromPath, toPath) ? "book" : "page";
+  const direction: FlipDirection =
+    kind === "book"
+      ? toPath === "/faq"
+        ? "forward"
+        : "back"
+      : to >= from
+        ? "forward"
+        : "back";
   return {
     from,
     to,
-    direction: to >= from ? "forward" : "back",
-    durationMs: BOOK_FLIP_MS,
+    direction,
+    durationMs: kind === "book" ? BOOK_OVER_MS : BOOK_FLIP_MS,
+    kind,
   };
 }
 

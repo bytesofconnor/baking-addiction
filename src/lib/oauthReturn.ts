@@ -24,6 +24,18 @@ export function isOAuthReturn(): boolean {
   }
 }
 
+/** True when the URL holds a Convex Auth OAuth `code` (not a kitchen invite). */
+export function hasAuthCode(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  return Boolean(new URLSearchParams(window.location.search).get("code"));
+}
+
+/**
+ * Invites use `?invite=`. Kitchen unlock uses `?code=` on /add only.
+ * Everywhere else, `?code=` is the Google OAuth callback and must be handled.
+ */
 export function shouldHandleAuthCode(): boolean {
   if (typeof window === "undefined") {
     return false;
@@ -34,9 +46,6 @@ export function shouldHandleAuthCode(): boolean {
   }
   const path = window.location.pathname;
   if (path === "/add" || path === "/admin" || path.startsWith("/slip/")) {
-    return false;
-  }
-  if (path === "/join" && !params.get("invite") && !isOAuthReturn()) {
     return false;
   }
   return true;
