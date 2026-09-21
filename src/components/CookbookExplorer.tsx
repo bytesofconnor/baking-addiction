@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { BakeKind } from "../../convex/lib/kinds";
@@ -46,6 +46,7 @@ function isKind(value: string | null): value is BakeKind {
 
 export function CookbookExplorer({
   bakes,
+  refreshing = false,
   hasFamily = false,
   people = [],
   selfId,
@@ -54,6 +55,7 @@ export function CookbookExplorer({
   emptyNote,
 }: {
   bakes: CookbookBake[];
+  refreshing?: boolean;
   hasFamily?: boolean;
   people?: MixPerson[];
   selfId?: string;
@@ -62,8 +64,10 @@ export function CookbookExplorer({
   emptyNote?: string;
 }) {
   const [params, setParams] = useSearchParams();
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const searchId = useId();
   const countId = useId();
+  const filtersId = useId();
   const query = params.get("q") ?? "";
   const sortParam = params.get("sort");
   const kindParam = params.get("kind");
@@ -91,6 +95,11 @@ export function CookbookExplorer({
     () => filterCookbook(scoped, rest, shownKind, sort, stars),
     [rest, scoped, shownKind, sort, stars],
   );
+  const filterSummary = [
+    shownKind === "all" ? "All recipes" : KIND_LABELS[shownKind],
+    SORTS.find((option) => option.id === sort)?.label ?? "Newest",
+    stars === "all" ? "Any rating" : `${stars} stars`,
+  ].join(" · ");
 
   useEffect(() => {
     if (kind !== shownKind) {
@@ -139,6 +148,7 @@ export function CookbookExplorer({
     <section
       className="book-explorer"
       aria-labelledby="cookbook-index-heading"
+      aria-busy={refreshing || undefined}
     >
       <form
         role="search"
@@ -146,7 +156,7 @@ export function CookbookExplorer({
         onSubmit={(event) => event.preventDefault()}
       >
         <Label htmlFor={searchId} id="cookbook-index-heading">
-          Search an ingredient, a person, or stars
+          Search recipes
         </Label>
         <Input
           id={searchId}
@@ -159,6 +169,25 @@ export function CookbookExplorer({
           className="book-search mt-1 min-h-14 rounded-[4px] px-3 outline-offset-4"
           onChange={(event) => write({ q: event.target.value })}
         />
+      </form>
+      <div className="book-filter-bar">
+        <button
+          type="button"
+          className="book-filter-toggle"
+          aria-expanded={filtersOpen}
+          aria-controls={filtersId}
+          onClick={() => setFiltersOpen((open) => !open)}
+        >
+          <span>Filters</span>
+          <span className="book-filter-chevron" aria-hidden="true" />
+        </button>
+        <p className="book-filter-summary">{filterSummary}</p>
+      </div>
+      <div
+        id={filtersId}
+        className="book-filter-drawer"
+        hidden={!filtersOpen}
+      >
         {whose}
         <div className="book-index book-index-tray">
           <FilterTabs labelledBy="tray-filter-label">
@@ -216,7 +245,7 @@ export function CookbookExplorer({
             ))}
           </FilterTabs>
         </div>
-      </form>
+      </div>
 
       <div
         className="book-portal book-portal-scrollable"

@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 
 export function Wordmark({
   linked = true,
-  lead = "That's",
-  accent = "Yum",
+  lead = "The Family Recipe",
+  accent = "Book",
   compact = false,
 }: {
   linked?: boolean;

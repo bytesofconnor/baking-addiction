@@ -4,20 +4,11 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { WarmPages } from "@/components/WarmPages";
 import { BookHeadingProvider } from "@/lib/bookHeading";
 import { pageForPath } from "@/lib/bookPages";
-import { useFamily } from "@/lib/family";
-import { usePeekCalled, usePreview } from "@/lib/preview";
-import { bookSignedName, SITE_LINE } from "@/lib/site";
+import { SITE_SHORT } from "@/lib/site";
 
 export function BookChrome({ pathname }: { pathname?: string }) {
-  const family = useFamily();
   const location = useLocation();
   const path = pathname ?? location.pathname;
-  const { asKey } = usePreview();
-  const peek = usePeekCalled();
-  const peeking = Boolean(asKey);
-  const ownerCalled = peek ?? (peeking ? undefined : family.user?.called);
-  const signed =
-    family.status === "in" ? bookSignedName(ownerCalled) : undefined;
 
   return (
     <div className="book-chrome">
@@ -31,14 +22,6 @@ export function BookChrome({ pathname }: { pathname?: string }) {
         Skip to the recipe book
       </a>
       <SiteHeader
-        showWrite={family.canWrite}
-        showPeople={family.status === "in"}
-        showSignIn={
-          family.status === "out" && path !== "/" && path !== "/join"
-        }
-        signed={signed}
-        signedTo={peeking ? undefined : "/you"}
-        line={SITE_LINE}
         pathname={path}
       />
     </div>
@@ -53,7 +36,7 @@ export function BookColophon({ pathname }: { pathname: string }) {
     <footer className="book-colophon">
       <p className="flex items-baseline justify-between gap-4 text-[16px] leading-6">
         <span className="font-display text-[1.35rem] leading-6 text-cinnamon-deep italic">
-          That&apos;s Yum
+          {SITE_SHORT}
         </span>
         {showPageNumber && (
           <span className="font-display text-[1.05rem] leading-6 text-cocoa tabular-nums">

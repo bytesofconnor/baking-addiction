@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -186,6 +187,30 @@ export function useCookbookView() {
       : "skip",
   );
 
+  const currentBakes = peeking ? peekedBakes : ownBakes;
+  type SettledBakes = Exclude<typeof currentBakes, undefined>;
+  const bookKey = peeking
+    ? asKey
+      ? `peek:${asKey}`
+      : null
+    : status === "in" && user
+      ? `user:${user._id}`
+      : null;
+  const settledBakes = useRef<{
+    key: string;
+    value: SettledBakes;
+  } | null>(null);
+
+  if (bookKey && currentBakes !== undefined) {
+    settledBakes.current = { key: bookKey, value: currentBakes };
+  }
+
+  const bakes =
+    currentBakes ??
+    (settledBakes.current?.key === bookKey
+      ? settledBakes.current.value
+      : undefined);
+
   const applyMix = useCallback(
     (next: MixSelection) => {
       setParams(writeMixParams(params, next, people, mixes), { replace: true });
@@ -201,10 +226,11 @@ export function useCookbookView() {
     family,
     mixes,
     selection,
-    bakes: peeking ? peekedBakes : ownBakes,
+    bakes,
+    bakesRefreshing: currentBakes === undefined && bakes !== undefined,
     ready:
       peopleReady &&
-      (peeking ? peekedBakes !== undefined : ownBakes !== undefined),
+      bakes !== undefined,
     selfCalled: peeking
       ? (dummyBook?.called ?? "Family")
       : (user?.called ?? "You"),

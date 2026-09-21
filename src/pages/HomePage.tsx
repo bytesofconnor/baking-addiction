@@ -5,7 +5,7 @@ import { CookbookExplorer } from "@/components/CookbookExplorer";
 import { RedirectToJoin } from "@/components/RedirectToJoin";
 import { WhoseCards } from "@/components/WhoseCards";
 import { PageTitle } from "@/lib/pageTitle";
-import { SITE_NAME, SITE_SHORT } from "@/lib/site";
+import { SITE_NAME } from "@/lib/site";
 import { useFamily } from "@/lib/family";
 import { mixName, type MixPerson, type MixSelection } from "@/lib/cookbookMix";
 import { useCookbookView } from "@/lib/preview";
@@ -102,9 +102,10 @@ export function HomePage() {
 
   return (
     <>
-      <PageTitle title={`The recipe book · ${SITE_SHORT}`} />
+      <PageTitle title={SITE_NAME} />
       <CookbookExplorer
         bakes={view.bakes}
+        refreshing={view.bakesRefreshing}
         hasFamily={hasFamily}
         people={view.people}
         selfId={view.selfId}

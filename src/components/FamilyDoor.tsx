@@ -4,7 +4,7 @@ import { PageTitle } from "@/lib/pageTitle";
 import { markOAuthReturn } from "@/lib/oauthReturn";
 import { SITE_NAME, SITE_SHORT } from "@/lib/site";
 
-function GoogleComeIn() {
+function GoogleComeIn({ cover = false }: { cover?: boolean }) {
   const { signIn } = useAuthActions();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -24,14 +24,21 @@ function GoogleComeIn() {
   return (
     <>
       {error ? (
-        <p role="alert" className="mt-4 text-[17px] text-cinnamon-deep">
+        <p
+          role="alert"
+          className={cover ? "book-cover-error" : "mt-4 text-[17px] text-cinnamon-deep"}
+        >
           {error}
         </p>
       ) : null}
-      <div className="mt-8">
+      <div className={cover ? "book-cover-cta-wrap" : "mt-8"}>
         <button
           type="button"
-          className="book-press book-press-text book-press-save w-full"
+          className={
+            cover
+              ? "book-cover-cta"
+              : "book-press book-press-text book-press-save w-full"
+          }
           disabled={pending}
           aria-busy={pending}
           onClick={() => void handleGoogle()}
@@ -43,21 +50,25 @@ function GoogleComeIn() {
   );
 }
 
-export function JoinLanding() {
+export function JoinCoverLanding({ invited = false }: { invited?: boolean }) {
   return (
-    <div className="relative z-10 max-w-[36rem] pt-2">
-      <PageTitle title={`${SITE_NAME} · The perfect recipe book`} />
-      <h1 className="font-display mt-3 text-[2.15rem] leading-[1.12] tracking-tight md:text-[2.6rem]">
-        The perfect recipe book
+    <div className="book-cover-copy">
+      <PageTitle title={SITE_NAME} />
+      <p className="book-cover-eyebrow">
+        {invited ? "You’ve been invited" : "For the whole family"}
+      </p>
+      <h1 className="book-cover-headline">
+        {invited ? "Come cook with us." : "Recipes worth keeping."}
       </h1>
-      <p className="mt-4 text-[19px] leading-8 text-ink-soft">
-        All your favorite recipes in one place. Your family&apos;s recipes, 
-        right where you need them.
+      <p className="book-cover-promise">
+        {invited
+          ? "Sign in to share recipes with your family."
+          : "Keep family favorites, photos, and the little changes that make them yours."}
       </p>
-      <p className="mt-4 text-[19px] leading-8 text-ink-soft">
-        Snap a photo. Write later. Done.
+      <p className="book-cover-proof">
+        A photo is enough to start.
       </p>
-      <GoogleComeIn />
+      <GoogleComeIn cover />
     </div>
   );
 }

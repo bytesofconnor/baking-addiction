@@ -1,7 +1,7 @@
 import { DESK_PATH } from "@/lib/desk";
 
 /** One turn always takes this long, near or far. */
-export const BOOK_FLIP_MS = 760;
+export const BOOK_FLIP_MS = 480;
 
 const RECIPE_START = 8;
 const RECIPE_SPAN = 18;

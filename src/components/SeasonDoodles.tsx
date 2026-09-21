@@ -427,6 +427,24 @@ function Spot({ spot }: { spot: DoodleSpot }) {
 export function SeasonDoodles() {
   const theme = useSeason();
 
+  if (theme.artwork) {
+    return (
+      <div
+        aria-hidden="true"
+        className="season-doodles season-artwork-layer pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      >
+        <picture className="season-artwork-picture">
+          <source media="(max-width: 639px)" srcSet={theme.artwork.mobile} />
+          <img
+            className="season-artwork"
+            src={theme.artwork.desktop}
+            alt=""
+          />
+        </picture>
+      </div>
+    );
+  }
+
   return (
     <div
       aria-hidden="true"
