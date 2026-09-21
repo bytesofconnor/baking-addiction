@@ -1,7 +1,7 @@
 # Ops
 
-Family cookbook for Mom: **That's Yum**.
-Private family book. Unlisted — `robots.txt` disallows everything. Mom writes. Family uses the URL. Not a blog. Sally is a source on some cards, not the name of the book. The line under the name is “Keep yours. Flip through theirs.” Colors and header doodles follow the Minnesota month (America/Chicago) on load. Family comes in with Google.
+Family cookbook for Mom: **The Family Recipe Book**.
+Private family book. Unlisted — `robots.txt` disallows everything. Mom writes. Family uses the URL. Not a blog. Sally is a source on some cards, not the name of the book. The line under the name is “Family favorites, all in one place.” Colors, header doodles, and monthly room artwork follow the Minnesota month (America/Chicago) on load. Family comes in with Google.
 
 ## Services
 

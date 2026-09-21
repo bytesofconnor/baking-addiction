@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { FamilyDoor, JoinLanding } from "@/components/FamilyDoor";
+import { FamilyDoor } from "@/components/FamilyDoor";
 import { useFamily } from "@/lib/family";
 import { clearOAuthReturn, isOAuthReturn } from "@/lib/oauthReturn";
 import { PageTitle } from "@/lib/pageTitle";
@@ -54,7 +54,7 @@ export function JoinPage() {
     if (isOAuthReturn() && !params.get("code")) {
       clearOAuthReturn();
     }
-    return <JoinLanding />;
+    return null;
   }
 
   if (invite === undefined || status === "checking") {

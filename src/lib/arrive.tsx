@@ -5,10 +5,13 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { useLocation } from "react-router";
 import { prefersReducedMotion } from "@/lib/bookPages";
+import { useFamily } from "@/lib/family";
 
 export type ArrivePhase = "arrive" | "opening" | "in";
 
@@ -27,8 +30,14 @@ function writeArrive(phase: ArrivePhase) {
 }
 
 export function ArriveProvider({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  const { status } = useFamily();
   const reduced = typeof window !== "undefined" && prefersReducedMotion();
-  const [phase, setPhase] = useState<ArrivePhase>(reduced ? "in" : "arrive");
+  const landingLocked = pathname === "/join" && status !== "in";
+  const wasLanding = useRef(pathname === "/join");
+  const [phase, setPhase] = useState<ArrivePhase>(
+    landingLocked ? "arrive" : reduced ? "in" : "arrive",
+  );
 
   useLayoutEffect(() => {
     writeArrive(phase);
@@ -39,23 +48,32 @@ export function ArriveProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (reduced) {
-      writeArrive("in");
+    if (landingLocked) {
+      wasLanding.current = true;
+      setPhase("arrive");
       return;
     }
 
+    if (reduced) {
+      writeArrive("in");
+      setPhase("in");
+      return;
+    }
+
+    const openingDelay = wasLanding.current ? 180 : LAND_MS;
     const openAt = window.setTimeout(() => {
       setPhase((current) => (current === "in" ? current : "opening"));
-    }, LAND_MS);
+    }, openingDelay);
     const doneAt = window.setTimeout(() => {
       setPhase("in");
-    }, LAND_MS + OPEN_MS);
+      wasLanding.current = false;
+    }, openingDelay + OPEN_MS);
 
     return () => {
       window.clearTimeout(openAt);
       window.clearTimeout(doneAt);
     };
-  }, [reduced]);
+  }, [landingLocked, reduced]);
 
   const value = useMemo(() => ({ phase, skip }), [phase, skip]);
 

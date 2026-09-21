@@ -71,7 +71,7 @@ export function YouPage() {
       <PageTitle
         title={onFamily ? `Family · ${SITE_SHORT}` : `${name} · ${SITE_SHORT}`}
       />
-      <nav className="book-tabs" aria-label="Your page">
+      <nav className="book-tabs" aria-label="Your kitchen">
         <NavLink to={keep("/you")} end className="book-tab">
           You
         </NavLink>

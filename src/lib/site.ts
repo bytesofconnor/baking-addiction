@@ -1,9 +1,9 @@
 import { DESK_PATH } from "@/lib/desk";
 
-export const SITE_NAME = "That's Yum";
-export const SITE_SHORT = "That's Yum";
-export const SITE_LINE = "Keep yours. Flip through theirs.";
-export const FAMILY_LINE = "Keep yours. Flip through theirs.";
+export const SITE_NAME = "The Family Recipe Book";
+export const SITE_SHORT = "The Family Recipe Book";
+export const SITE_LINE = "Family favorites, all in one place.";
+export const FAMILY_LINE = "Family favorites, all in one place.";
 export const BAKER_NAME = "Mom";
 export const BAKER_FULL_NAME = "Mom";
 
@@ -26,15 +26,15 @@ export function pageHeading(
     return { lead: "My", accent: "family", home: false, compact: false };
   }
   if (pathname === DESK_PATH) {
-    return { lead: "Add something", accent: "yum", home: false, compact: false };
+    return { lead: "Add a", accent: "recipe", home: false, compact: false };
   }
   if (pathname === "/join") {
-    return { lead: "That's", accent: "Yum", home: false, compact: false };
+    return { lead: "The Family Recipe", accent: "Book", home: false, compact: false };
   }
   if (pathname === "/you" || pathname.startsWith("/you/")) {
-    return { lead: "Your", accent: "page", home: false, compact: false };
+    return { lead: "Your", accent: "kitchen", home: false, compact: false };
   }
-  return { lead: "That's", accent: "Yum", home: true, compact: false };
+  return { lead: "The Family Recipe", accent: "Book", home: true, compact: false };
 }
 
 function recipeHeading(title: string): { lead: string; accent: string } {

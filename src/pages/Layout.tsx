@@ -1,20 +1,26 @@
 import { useEffect, useRef } from "react";
 import { AdminShell } from "@/components/AdminShell";
 import { BookBinding } from "@/components/BookBinding";
+import { BookBookmarks } from "@/components/BookBookmarks";
 import { BookCover } from "@/components/BookCover";
 import { BookFace } from "@/components/BookSheet";
+import { useArrive } from "@/lib/arrive";
 import { SeasonDoodles } from "@/components/SeasonDoodles";
 import { pageForPath } from "@/lib/bookPages";
+import { useFamily } from "@/lib/family";
 import { usePreview } from "@/lib/preview";
 import { useBookFlip } from "@/lib/useBookFlip";
 
 export function Layout() {
   const preview = import.meta.env.DEV;
+  const family = useFamily();
   const { open } = usePreview();
+  const { phase } = useArrive();
   const liveFace = useRef<HTMLDivElement>(null);
   const { pathname, flip, ghost } = useBookFlip(liveFace);
   const page = pageForPath(pathname);
   const turning = flip !== null && ghost !== null;
+  const landingCover = pathname === "/join" && family.status !== "in";
 
   useEffect(() => {
     const robots = document.createElement("meta");
@@ -30,20 +36,28 @@ export function Layout() {
     <div
       className="room-shell"
       data-preview={preview ? (open ? "open" : "shut") : undefined}
+      data-bookmarks={family.status === "in" ? "true" : undefined}
+      data-landing-cover={landingCover ? "true" : undefined}
     >
       {preview ? <AdminShell /> : null}
       <SeasonDoodles />
       <div
-        className="book relative z-10 mx-auto w-full max-w-[44rem] md:max-w-[52rem] xl:max-w-[58rem]"
+        className="book relative z-10 mx-auto w-full max-w-[44rem] md:max-w-[52rem] xl:max-w-[66rem] 2xl:max-w-[72rem]"
         data-page={page}
         aria-busy={turning ? true : undefined}
       >
+        <BookBookmarks pathname={pathname} />
         <div className="book-foredge book-foredge-back" aria-hidden="true" />
         <div className="book-footedge book-footedge-back" aria-hidden="true" />
         <div className="book-foredge" aria-hidden="true" />
         <div className="book-footedge" aria-hidden="true" />
         <BookCover />
-        <div className="book-pages" data-dir={flip?.direction}>
+        <div
+          className="book-pages"
+          data-dir={flip?.direction}
+          inert={phase !== "in"}
+          aria-hidden={phase !== "in" ? true : undefined}
+        >
           <div className="book-leaf book-leaf-under">
             <BookFace pathname={pathname} faceRef={liveFace} />
           </div>
