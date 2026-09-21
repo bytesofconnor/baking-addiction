@@ -81,7 +81,7 @@ function spot(
 const THEMES: Record<MonthNumber, MonthTheme> = {
   1: {
     month: 1,
-    room: "#172630",
+    room: "#1a3348",
     paper: "#edf2ef",
     paperRaised: "#f8fbf8",
     paperPress: "#c9d5d2",
@@ -92,8 +92,8 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
     cinnamonDeep: "#7e2928",
     cocoa: "#2a201c",
     leaf: "#284b3f",
-    washWarm: "#b66a45",
-    washCool: "#6f929f",
+    washWarm: "#8a6a55",
+    washCool: "#5a8499",
     artwork: {
       desktop: "/themes/january-deep-winter.webp",
       mobile: "/themes/january-deep-winter-mobile.webp",
@@ -109,19 +109,19 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
   },
   2: {
     month: 2,
-    room: "#382329",
-    paper: "#f4ece5",
-    paperRaised: "#fbf6f2",
-    paperPress: "#d8ccc4",
-    ink: "#1c1414",
-    inkSoft: "#5a4444",
-    rule: "#c5a6a2",
+    room: "#243a52",
+    paper: "#f0f4f7",
+    paperRaised: "#f8fbfc",
+    paperPress: "#c8d4de",
+    ink: "#141c24",
+    inkSoft: "#445664",
+    rule: "#a8b8c4",
     cinnamon: "#a63b45",
     cinnamonDeep: "#7f2833",
-    cocoa: "#3a2420",
+    cocoa: "#2a2420",
     leaf: "#2a4a38",
-    washWarm: "#c07168",
-    washCool: "#738795",
+    washWarm: "#9a7068",
+    washCool: "#6a8aa0",
     artwork: {
       desktop: "/themes/february-winter-hearth.webp",
       mobile: "/themes/february-winter-hearth-mobile.webp",
@@ -137,7 +137,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
   },
   3: {
     month: 3,
-    room: "#30372e",
+    room: "#3f4a28",
     paper: "#f3ebe0",
     paperRaised: "#faf4ea",
     paperPress: "#d8c8b0",
@@ -148,8 +148,8 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
     cinnamonDeep: "#86500f",
     cocoa: "#3e2a14",
     leaf: "#3e4e28",
-    washWarm: "#d4922a",
-    washCool: "#7f9ca0",
+    washWarm: "#d4a84a",
+    washCool: "#7a9a70",
     artwork: {
       desktop: "/themes/march-maple-thaw.webp",
       mobile: "/themes/march-maple-thaw-mobile.webp",
@@ -165,7 +165,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
   },
   4: {
     month: 4,
-    room: "#33434a",
+    room: "#2f4a36",
     paper: "#edf2ed",
     paperRaised: "#f6faf6",
     paperPress: "#c8d8c8",
@@ -176,7 +176,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
     cinnamonDeep: "#92363d",
     cocoa: "#2e241c",
     leaf: "#587454",
-    washWarm: "#d17673",
+    washWarm: "#c8b85a",
     washCool: "#6f92a2",
     artwork: {
       desktop: "/themes/april-spring-thaw.webp",
@@ -193,7 +193,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
   },
   5: {
     month: 5,
-    room: "#3f3150",
+    room: "#3a4e32",
     paper: "#f4eef8",
     paperRaised: "#fbf8ff",
     paperPress: "#d4c8e0",
@@ -204,7 +204,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
     cinnamonDeep: "#604075",
     cocoa: "#322440",
     leaf: "#2e6a40",
-    washWarm: "#b58bc5",
+    washWarm: "#c8c06a",
     washCool: "#76a277",
     artwork: {
       desktop: "/themes/may-lilac-rhubarb.webp",
@@ -221,7 +221,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
   },
   6: {
     month: 6,
-    room: "#572632",
+    room: "#6a3d48",
     paper: "#fbf0e9",
     paperRaised: "#fffaf8",
     paperPress: "#f0c8c4",
@@ -232,7 +232,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
     cinnamonDeep: "#9e292c",
     cocoa: "#4a1c1c",
     leaf: "#2e6a32",
-    washWarm: "#df7b85",
+    washWarm: "#e08a90",
     washCool: "#72a663",
     artwork: {
       desktop: "/themes/june-strawberry-peony.webp",
@@ -249,7 +249,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
   },
   7: {
     month: 7,
-    room: "#173c4c",
+    room: "#1a4a5c",
     paper: "#eef6f8",
     paperRaised: "#f6fcfe",
     paperPress: "#c0d8e0",
@@ -277,7 +277,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
   },
   8: {
     month: 8,
-    room: "#3c4323",
+    room: "#5c4a30",
     paper: "#f8f0d9",
     paperRaised: "#fffbeb",
     paperPress: "#ebd4a0",
@@ -305,7 +305,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
   },
   9: {
     month: 9,
-    room: "#3e2935",
+    room: "#6b3218",
     paper: "#f4ead8",
     paperRaised: "#fffaf0",
     paperPress: "#dfcfb3",
@@ -316,8 +316,8 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
     cinnamonDeep: "#8f3b20",
     cocoa: "#4b3027",
     leaf: "#66703a",
-    washWarm: "#c28a2c",
-    washCool: "#6f6b45",
+    washWarm: "#d4882c",
+    washCool: "#8a5a38",
     artwork: {
       desktop: "/themes/september-harvest.webp",
       mobile: "/themes/september-harvest-mobile.webp",
@@ -333,7 +333,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
   },
   10: {
     month: 10,
-    room: "#43241e",
+    room: "#5a2214",
     paper: "#f6e6d0",
     paperRaised: "#fff0dc",
     paperPress: "#e0b888",
@@ -345,7 +345,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
     cocoa: "#4a1808",
     leaf: "#72703d",
     washWarm: "#d17b24",
-    washCool: "#7a7564",
+    washCool: "#8a6040",
     artwork: {
       desktop: "/themes/october-maple-harvest.webp",
       mobile: "/themes/october-maple-harvest-mobile.webp",
@@ -361,7 +361,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
   },
   11: {
     month: 11,
-    room: "#312822",
+    room: "#4a2418",
     paper: "#f0ebe4",
     paperRaised: "#f7f3ee",
     paperPress: "#d0c8be",
@@ -372,8 +372,8 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
     cinnamonDeep: "#77262e",
     cocoa: "#322820",
     leaf: "#6b633f",
-    washWarm: "#b66043",
-    washCool: "#777d72",
+    washWarm: "#c06040",
+    washCool: "#7a6050",
     artwork: {
       desktop: "/themes/november-wild-rice.webp",
       mobile: "/themes/november-wild-rice-mobile.webp",
@@ -389,7 +389,7 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
   },
   12: {
     month: 12,
-    room: "#16342c",
+    room: "#1a3548",
     paper: "#f2efe6",
     paperRaised: "#faf8f0",
     paperPress: "#d4ccb8",
@@ -400,8 +400,8 @@ const THEMES: Record<MonthNumber, MonthTheme> = {
     cinnamonDeep: "#7d1f27",
     cocoa: "#2e1c10",
     leaf: "#1a4a30",
-    washWarm: "#c48e2f",
-    washCool: "#315f49",
+    washWarm: "#8a7060",
+    washCool: "#4a7088",
     artwork: {
       desktop: "/themes/december-pine-pantry.webp",
       mobile: "/themes/december-pine-pantry-mobile.webp",

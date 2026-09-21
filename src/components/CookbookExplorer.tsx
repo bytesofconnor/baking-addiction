@@ -264,6 +264,7 @@ export function CookbookExplorer({
                     ? emptyNote
                     : undefined
                 }
+                welcome={bakes.length === 0 && rest.trim().length === 0}
               />
             </div>
           ) : (
@@ -281,24 +282,28 @@ export function CookbookExplorer({
           )}
 
           <div className="book-portal-footer">
-
-            <p id={countId} role="status" className="book-portal-count">
-              {results.length === 0
-                ? query
+            {results.length === 0 && !query ? null : (
+              <p id={countId} role="status" className="book-portal-count">
+                {results.length === 0
                   ? "Nothing uses that"
-                  : "The tray’s empty"
-                : who && rest
-                  ? `${results.length} · ${who.called} · “${rest}”`
-                  : who
-                    ? `${results.length} · ${who.called}`
-                    : rest
-                      ? `${results.length} with “${rest}”`
-                      : stars !== "all"
-                        ? `${results.length} · ${stars}★`
-                        : mineOnly && hasFamily
-                          ? `${results.length} · just yours`
-                          : `${results.length}`}
-            </p>
+                  : who && rest
+                    ? `${results.length} · ${who.called} · “${rest}”`
+                    : who
+                      ? `${results.length} · ${who.called}`
+                      : rest
+                        ? `${results.length} with “${rest}”`
+                        : stars !== "all"
+                          ? `${results.length} · ${stars}★`
+                          : mineOnly && hasFamily
+                            ? `${results.length} · just yours`
+                            : `${results.length}`}
+              </p>
+            )}
+            {results.length === 0 && !query ? (
+              <span id={countId} className="sr-only">
+                Your book is empty
+              </span>
+            ) : null}
           </div>
         </div>
       </div>
@@ -333,10 +338,12 @@ function PortalMiss({
   query,
   who,
   emptyNote,
+  welcome = false,
 }: {
   query: string;
   who?: string;
   emptyNote?: string;
+  welcome?: boolean;
 }) {
   return (
     <div className="book-portal-miss">
@@ -369,7 +376,10 @@ function PortalMiss({
           strokeLinecap="round"
         />
       </svg>
-      <p className="book-portal-miss-note">
+      <p
+        className="book-portal-miss-note"
+        data-welcome={welcome ? "true" : undefined}
+      >
         {emptyNote ?? missLine(query, who)}
       </p>
     </div>

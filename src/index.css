@@ -3,7 +3,7 @@
 @theme {
   --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --font-sans: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --color-room: #6e2c14;
+  --color-room: #6b3218;
   --color-paper: #f7efe4;
   --color-paper-raised: #fffdf8;
   --color-paper-press: #eadcc6;
@@ -28,6 +28,11 @@
   width: 2.8rem;
 }
 
+.book[data-spine="end"] .book-binding {
+  left: auto;
+  right: 0;
+}
+
 .book-holes {
   position: absolute;
   top: 0.45rem;
@@ -37,6 +42,11 @@
   width: 0.82rem;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.book[data-spine="end"] .book-holes {
+  left: auto;
+  right: calc(var(--book-hinge) - 0.41rem);
 }
 
 .book-hole {
@@ -59,6 +69,11 @@
   width: 2.4rem;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.book[data-spine="end"] .book-coil {
+  left: auto;
+  right: -0.62rem;
 }
 
 .book-coil-ring {
@@ -86,6 +101,13 @@
 .book-sheet-inner {
   padding-left: var(--book-inset);
   padding-right: var(--book-gutter);
+}
+
+.book[data-spine="end"] .book-chrome,
+.book[data-spine="end"] .book-colophon,
+.book[data-spine="end"] .book-sheet-inner {
+  padding-left: var(--book-gutter);
+  padding-right: var(--book-inset);
 }
 
 .book-chrome,
@@ -186,6 +208,7 @@ a.book-sign:focus-visible {
 .book-pages {
   --book-flip-duration: 480ms;
   position: relative;
+  z-index: 1;
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
@@ -543,10 +566,21 @@ html[data-arrive="arrive"] .book {
   animation: book-land 720ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
 }
 
+/* FAQ → Join: cover is already in the room — don't re-land after the flip */
+html[data-arrive="arrive"][data-land="skip"] .book:not([data-book-flip]) {
+  animation: none;
+}
+
 html[data-arrive="arrive"] .book-pages,
 html[data-arrive="arrive"] .book-chrome,
 html[data-arrive="arrive"] .book-colophon {
   opacity: 0;
+}
+
+/* A whole-book turn owns the face swap. Keep the outgoing page painted until
+   the book is edge-on even if the destination has entered cover-arrival mode. */
+html[data-arrive="arrive"] .book[data-book-flip] .book-pages {
+  opacity: 1;
 }
 
 html[data-arrive="opening"] .book-pages,
@@ -644,8 +678,43 @@ html[data-arrive="opening"] .book-colophon {
   color: var(--color-paper-raised);
 }
 
+.book-cover-front-landing::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-ink) 64%, transparent) 0%,
+    color-mix(in srgb, var(--color-ink) 32%, transparent) 34%,
+    transparent 58%
+  );
+}
+
+/* Landing art is full-bleed — the real foredge provides page depth.
+   The short ::after strip was clipping the cover against the stack. */
+.book-cover-front-landing::after {
+  display: none;
+}
+
 .book-cover-landing {
   cursor: default;
+}
+
+/* Keep the page stack flush with the cover on the join door */
+.room-shell[data-landing-cover="true"] .book-foredge {
+  top: 0;
+  bottom: 0;
+}
+
+.room-shell[data-landing-cover="true"] .book-foredge-back {
+  top: 0.35rem;
+  bottom: -0.35rem;
+}
+
+.room-shell[data-landing-cover="true"] .book-footedge {
+  left: 0;
 }
 
 .book-cover-art-picture,
@@ -660,7 +729,7 @@ html[data-arrive="opening"] .book-colophon {
 
 .book-cover-art {
   object-fit: cover;
-  object-position: center;
+  object-position: center right;
   opacity: 0.96;
   filter: saturate(0.88) contrast(0.98);
 }
@@ -668,14 +737,13 @@ html[data-arrive="opening"] .book-colophon {
 .book-cover-copy {
   position: relative;
   z-index: 2;
-  width: min(48%, 34rem);
-  margin-top: auto;
-  margin-bottom: auto;
-  padding: clamp(1.1rem, 2.3vw, 2rem);
-  border: 1px solid color-mix(in srgb, var(--color-rule) 62%, transparent);
-  background: color-mix(in srgb, var(--color-ink) 82%, transparent);
-  box-shadow: 0.35rem 0.45rem 0 color-mix(in srgb, var(--color-cocoa) 62%, transparent);
-  backdrop-filter: blur(2px);
+  width: min(43%, 31rem);
+  margin: clamp(0.6rem, 1.8vw, 1.35rem) 0 0;
+  padding: clamp(0.35rem, 0.8vw, 0.7rem);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  text-shadow: 0 2px 12px color-mix(in srgb, var(--color-ink) 88%, transparent);
 }
 
 .book-cover-eyebrow {
@@ -719,29 +787,37 @@ html[data-arrive="opening"] .book-colophon {
 }
 
 .book-cover-cta {
+  display: flex;
   width: 100%;
-  min-height: 3.3rem;
-  padding: 0.72rem 1rem;
+  min-height: 3.85rem;
+  align-items: center;
+  justify-content: center;
+  /* Slight top padding offsets the thick bottom border so the label sits centered */
+  padding: 0.28rem 1.35rem 0.1rem;
+  text-align: center;
   cursor: pointer;
   border: 2px solid var(--color-cocoa);
-  border-radius: 0.22rem;
+  border-right-width: 3px;
+  border-bottom-width: 5px;
+  border-radius: 4px;
   background: var(--color-cinnamon-deep);
-  box-shadow: 0 0.24rem 0 var(--color-cocoa);
   color: var(--color-paper-raised);
   font-family: var(--font-display);
-  font-size: clamp(0.95rem, 1.5vw, 1.12rem);
+  font-size: clamp(1.08rem, 1.85vw, 1.28rem);
   font-weight: 800;
-  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  touch-action: manipulation;
 }
 
 .book-cover-cta:hover:not(:disabled) {
   background: var(--color-cinnamon);
-  transform: translateY(-1px);
 }
 
 .book-cover-cta:active:not(:disabled) {
-  box-shadow: 0 0.08rem 0 var(--color-cocoa);
-  transform: translateY(0.15rem);
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+  transform: translate(1px, 3px);
 }
 
 .book-cover-cta:focus-visible {
@@ -773,16 +849,38 @@ html[data-arrive="opening"] .book-colophon {
   pointer-events: auto;
 }
 
+/* Join cover: keep the same bookmark shelf as the open book — 1.6rem was clipping Front */
+.room-shell[data-landing-cover="true"] {
+  padding-top: 4.6rem;
+  padding-bottom: 3.85rem;
+}
+
 @media (max-width: 639px) {
   .book-cover-front-landing {
-    padding: 1.1rem 1rem;
+    /* Extra left room for the coils; keep clear of the page edge on the right */
+    padding: 1.15rem 1.2rem 1.4rem calc(var(--book-hinge) + 0.55rem);
   }
 
   .book-cover-copy {
-    width: 100%;
-    margin: 1.2rem 0 auto;
-    padding: 1rem;
-    background: color-mix(in srgb, var(--color-ink) 88%, transparent);
+    width: auto;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0.55rem 0.2rem 0.85rem;
+    padding: 1.15rem 1.05rem 1.2rem;
+    border: 0;
+    background: var(--color-ink);
+    box-shadow: none;
+    text-shadow: none;
+  }
+
+  .book-cover-cta-wrap {
+    margin-top: 1.1rem;
+  }
+
+  .book-cover-cta {
+    min-height: 3.65rem;
+    padding: 0.28rem 1.15rem 0.08rem;
+    font-size: 1.1rem;
   }
 
   .book-cover-headline {
@@ -798,7 +896,6 @@ html[data-arrive="opening"] .book-colophon {
   .book-cover-proof {
     font-size: 0.84rem;
   }
-
 }
 
 .book-cover-plate {
@@ -842,13 +939,15 @@ html[data-arrive="opening"] .book-colophon {
 }
 
 .book-cover-back {
-  background-color: var(--color-paper-press);
+  /* Same seasonal board as the front cover face */
+  background-color: color-mix(in srgb, var(--color-ink) 92%, var(--color-cocoa));
   background-image:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0 1.7rem,
-      color-mix(in srgb, var(--color-cocoa) 12%, transparent) 1.7rem 1.74rem
-    );
+    radial-gradient(
+      90% 70% at 12% 88%,
+      color-mix(in srgb, var(--color-cinnamon-deep) 32%, transparent),
+      transparent 65%
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
   transform: rotateY(180deg);
 }
 
@@ -944,10 +1043,14 @@ body {
   min-height: 100dvh;
   overflow: hidden;
   padding: 1rem 2rem 2rem;
+  perspective: 2000px;
+  perspective-origin: 50% 42%;
 }
 
 .room-shell[data-bookmarks="true"] {
   padding-top: 4.6rem;
+  /* Same floor clearance as the join door — bookmarks used to shove the book into the carpet */
+  padding-bottom: 3.85rem;
 }
 
 .room-shell[data-preview="open"] {
@@ -958,6 +1061,8 @@ body {
   --book-hinge: 1.36rem;
   --book-inset: 3.5rem;
   --book-gutter: 1.25rem;
+  --book-over-duration: 560ms;
+  --book-turn-depth: 4.5rem;
   position: relative;
   isolation: isolate;
   display: flex;
@@ -973,21 +1078,196 @@ body {
   transform-style: preserve-3d;
 }
 
+/* Front ↔ Back: the whole book turns over, not a leaf. */
+.book[data-book-flip] {
+  pointer-events: none;
+  transform-origin: center center;
+  will-change: transform;
+  z-index: 12;
+}
+
+/* One direction-aware side wall supplies the missing volume without creating
+   a full-size compositing layer that could cover the live book face. */
+.book[data-book-flip]::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  top: -0.12rem;
+  bottom: -1.18rem;
+  right: calc(var(--book-turn-depth) / -2);
+  z-index: 28;
+  width: var(--book-turn-depth);
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--color-cocoa) 82%, var(--color-ink));
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-cocoa) 88%, var(--color-ink)) 0 0.28rem,
+      #d2b78f 0.28rem 0.42rem,
+      transparent 0.42rem calc(100% - 0.42rem),
+      #c7a779 calc(100% - 0.42rem) calc(100% - 0.26rem),
+      color-mix(in srgb, var(--color-cocoa) 88%, var(--color-ink)) calc(100% - 0.26rem)
+    ),
+    repeating-linear-gradient(
+      180deg,
+      #f8ecd9 0 3px,
+      #e8d4b6 3px 4px,
+      #f3e2c8 4px 8px,
+      #d6bc96 8px 9px
+    );
+  box-shadow:
+    inset 0.24rem 0 0 color-mix(in srgb, var(--color-ink) 18%, transparent),
+    inset -0.22rem 0 0 color-mix(in srgb, var(--color-paper-raised) 24%, transparent),
+    0 0.55rem 1.1rem color-mix(in srgb, var(--color-ink) 35%, transparent);
+  backface-visibility: visible;
+  transform: translateZ(calc(var(--book-turn-depth) / -2)) rotateY(90deg);
+}
+
+.book[data-book-flip="back"]::after {
+  left: calc(var(--book-turn-depth) / -2);
+  right: auto;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 18%,
+      color-mix(in srgb, var(--color-cinnamon-deep) 48%, var(--color-paper-press)) 18% 18.65%,
+      color-mix(in srgb, var(--color-ink) 88%, var(--color-cocoa)) 18.65% 19.35%,
+      transparent 19.35% 25%
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-ink) 82%, var(--color-cocoa)),
+      color-mix(in srgb, var(--color-cinnamon-deep) 62%, var(--color-ink)) 48%,
+      color-mix(in srgb, var(--color-ink) 84%, var(--color-cocoa))
+    );
+  transform: translateZ(calc(var(--book-turn-depth) / -2)) rotateY(-90deg);
+}
+
+.book-turn-face-ghost {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 27;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-ink) 92%, var(--color-cocoa));
+}
+
+.book-turn-face-ghost > .book-face {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.book[data-book-flip="forward"] {
+  animation: book-over-forward var(--book-over-duration) cubic-bezier(0.45, 0.02, 0.2, 1) both;
+}
+
+.book[data-book-flip="back"] {
+  animation: book-over-back var(--book-over-duration) cubic-bezier(0.45, 0.02, 0.2, 1) both;
+}
+
+html[data-arrive="arrive"] .book[data-book-flip="forward"],
+html[data-arrive="arrive"] .book[data-book-flip="back"] {
+  background-color: var(--color-paper);
+}
+
+html[data-arrive="arrive"] .book[data-book-flip="forward"] {
+  animation: book-over-forward var(--book-over-duration) cubic-bezier(0.45, 0.02, 0.2, 1) both;
+}
+
+html[data-arrive="arrive"] .book[data-book-flip="back"] {
+  animation: book-over-back var(--book-over-duration) cubic-bezier(0.45, 0.02, 0.2, 1) both;
+}
+
+@keyframes book-over-forward {
+  0% {
+    transform: rotateY(0deg) translateZ(0) scale(1);
+  }
+
+  42% {
+    transform: rotateY(-60deg) translateZ(20px) scale(1);
+  }
+
+  50% {
+    transform: rotateY(-68deg) translateZ(24px) scale(1);
+  }
+
+  50.001% {
+    transform: rotateY(68deg) translateZ(24px) scale(1);
+  }
+
+  58% {
+    transform: rotateY(60deg) translateZ(20px) scale(1);
+  }
+
+  100% {
+    transform: rotateY(0deg) translateZ(0) scale(1);
+  }
+}
+
+@keyframes book-over-back {
+  0% {
+    transform: rotateY(0deg) translateZ(0) scale(1);
+  }
+
+  42% {
+    transform: rotateY(60deg) translateZ(20px) scale(1);
+  }
+
+  50% {
+    transform: rotateY(68deg) translateZ(24px) scale(1);
+  }
+
+  50.001% {
+    transform: rotateY(-68deg) translateZ(24px) scale(1);
+  }
+
+  58% {
+    transform: rotateY(-60deg) translateZ(20px) scale(1);
+  }
+
+  100% {
+    transform: rotateY(0deg) translateZ(0) scale(1);
+  }
+}
+
+@media (max-width: 639px) {
+  .book {
+    --book-turn-depth: 3.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book[data-book-flip="forward"],
+  .book[data-book-flip="back"],
+  html[data-arrive="arrive"] .book[data-book-flip="forward"],
+  html[data-arrive="arrive"] .book[data-book-flip="back"] {
+    animation: none;
+  }
+}
+
 .book-bookmarks {
   position: absolute;
   top: -1px;
   right: 1.8rem;
-  z-index: 20;
+  /* Under the cover lip so tabs look slotted into the book, not sitting on it */
+  z-index: 22;
   display: flex;
   max-width: calc(100% - var(--book-inset) - 1rem);
   align-items: flex-end;
   justify-content: flex-end;
   gap: 0.8rem;
-  height: 3.65rem;
+  height: 3.85rem;
   padding: 0 0.4rem;
-  overflow: clip;
-  overflow-clip-margin: 0;
+  overflow: visible;
   transform: translateY(-100%);
+}
+
+/* Stay on the right; just clear the coil when the spine flips */
+.book[data-spine="end"] .book-bookmarks {
+  right: calc(var(--book-hinge) + 1.1rem);
 }
 
 .book-bookmark {
@@ -1023,9 +1303,10 @@ body {
   text-decoration: none;
   text-wrap: balance;
   touch-action: manipulation;
-  transform: translateY(0.2rem);
+  /* Same depth for active + idle — idle used to sit on top of the cover */
+  transform: translateY(0.45rem);
   transform-origin: bottom center;
-  transition: transform 140ms ease, filter 140ms ease;
+  transition: filter 140ms ease;
 }
 
 .book-bookmark::after {
@@ -1047,7 +1328,6 @@ body {
 .book-bookmark:focus-visible {
   color: var(--color-cinnamon-deep);
   filter: brightness(1.025);
-  transform: translateY(0);
 }
 
 .book-bookmark-active,
@@ -1069,7 +1349,7 @@ body {
     3px 0 5px color-mix(in srgb, var(--color-ink) 24%, transparent);
   color: var(--color-paper-raised);
   text-shadow: 0 1px 0 color-mix(in srgb, var(--color-ink) 55%, transparent);
-  transform: translateY(0);
+  transform: translateY(0.45rem);
 }
 
 .book-bookmark-active::after {
@@ -1078,6 +1358,38 @@ body {
 
 .book-bookmark[aria-disabled="true"] {
   cursor: default;
+}
+
+/* Lip that covers the tab roots when the cover isn't on (FAQ / open book) */
+.book::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  top: -1px;
+  right: 0;
+  left: 0;
+  z-index: 25;
+  height: 0.55rem;
+  background-color: var(--color-paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  border-bottom: 1px solid color-mix(in srgb, var(--color-cocoa) 16%, transparent);
+}
+
+.book[data-face="back"]::before {
+  background-color: color-mix(in srgb, var(--color-ink) 92%, var(--color-cocoa));
+  background-image:
+    radial-gradient(
+      90% 70% at 12% 88%,
+      color-mix(in srgb, var(--color-cinnamon-deep) 32%, transparent),
+      transparent 65%
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
+  border-bottom-color: color-mix(in srgb, var(--color-paper-raised) 14%, transparent);
+}
+
+.room-shell[data-landing-cover="true"] .book::before {
+  /* Cover board is the lip on Join */
+  opacity: 0;
 }
 
 .book-bookmark-tuck {
@@ -1098,10 +1410,19 @@ body {
     padding-top: 4.25rem;
   }
 
+  .room-shell[data-landing-cover="true"] {
+    padding-top: 4.25rem;
+  }
+
   .book-bookmarks {
     right: 0.55rem;
     left: calc(var(--book-hinge) + 0.8rem);
     gap: 0.35rem;
+  }
+
+  .book[data-spine="end"] .book-bookmarks {
+    left: 0.55rem;
+    right: calc(var(--book-hinge) + 0.8rem);
   }
 
   .book-bookmark {
@@ -1137,6 +1458,21 @@ body {
   );
 }
 
+.book[data-spine="end"] .book-foredge {
+  right: auto;
+  left: -1.28rem;
+  border-left: 1.5px solid var(--color-cocoa);
+  border-right: 0;
+  background: repeating-linear-gradient(
+    270deg,
+    #f7ead8 0 3px,
+    #ecd9be 3px 4px,
+    #e0c8a6 4px 7px,
+    #d4b790 7px 8px,
+    #c9a87c 8px 11px
+  );
+}
+
 .book-foredge-back {
   top: 0.95rem;
   right: -1.78rem;
@@ -1145,6 +1481,17 @@ body {
   z-index: 11;
   background: repeating-linear-gradient(
     90deg,
+    #d8be96 0 3px,
+    #c9ab7e 3px 5px,
+    #b89468 5px 7px
+  );
+}
+
+.book[data-spine="end"] .book-foredge-back {
+  right: auto;
+  left: -1.78rem;
+  background: repeating-linear-gradient(
+    270deg,
     #d8be96 0 3px,
     #c9ab7e 3px 5px,
     #b89468 5px 7px
@@ -1162,6 +1509,13 @@ body {
   background: inherit;
 }
 
+.book[data-spine="end"] .book-foredge-back::after {
+  right: auto;
+  left: -1.5px;
+  border-right: 0;
+  border-left: 1.5px solid var(--color-cocoa);
+}
+
 .book-footedge {
   left: 0.55rem;
   right: -1.28rem;
@@ -1175,6 +1529,11 @@ body {
     #d6be9a 4px 7px,
     #c9ad84 7px 8px
   );
+}
+
+.book[data-spine="end"] .book-footedge {
+  left: -1.28rem;
+  right: 0.55rem;
 }
 
 .book-footedge-back {
@@ -1191,14 +1550,431 @@ body {
   );
 }
 
+.book[data-spine="end"] .book-footedge-back {
+  left: -1.78rem;
+  right: 0.95rem;
+}
+
+/* Back of the book: same seasonal board as the front cover */
+.book[data-face="back"] {
+  background-color: color-mix(in srgb, var(--color-ink) 92%, var(--color-cocoa));
+  background-image:
+    radial-gradient(
+      90% 70% at 12% 88%,
+      color-mix(in srgb, var(--color-cinnamon-deep) 32%, transparent),
+      transparent 65%
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
+  border-color: color-mix(in srgb, var(--color-cocoa) 72%, var(--color-ink));
+  color: var(--color-paper-raised);
+}
+
+.book[data-face="back"] .book-face {
+  background-color: transparent;
+  background-image: none;
+  color: var(--color-paper-raised);
+}
+
+.book[data-face="back"] .book-pages,
+.book[data-face="back"] .book-leaf-under {
+  background: transparent;
+}
+
+.book[data-face="back"] .book-colophon {
+  border-top-color: color-mix(in srgb, var(--color-paper-raised) 22%, transparent);
+}
+
+.book[data-face="back"] .book-colophon .text-cinnamon-deep,
+.book[data-face="back"] .book-colophon .text-cocoa {
+  color: color-mix(in srgb, var(--color-paper-raised) 78%, var(--color-cinnamon));
+}
+
+.book[data-face="back"] .text-ink-soft {
+  color: color-mix(in srgb, var(--color-paper-raised) 72%, transparent);
+}
+
+.book[data-face="back"] .text-ink,
+.book[data-face="back"] .text-cocoa {
+  color: var(--color-paper-raised);
+}
+
+.book[data-face="back"] .text-cinnamon-deep {
+  color: color-mix(in srgb, var(--color-paper-raised) 55%, var(--color-cinnamon));
+}
+
+.book[data-face="back"] .book-press-save {
+  background-color: var(--color-cinnamon);
+  color: var(--color-paper-raised);
+}
+
+.book[data-face="back"] .book-bookmark-tuck {
+  background-color: color-mix(in srgb, var(--color-ink) 92%, var(--color-cocoa));
+  background-image: none;
+  border-bottom-color: color-mix(in srgb, var(--color-paper-raised) 14%, transparent);
+}
+
+/* Back cover: full-bleed kitchen, type on the page — no plate */
+.book[data-face="back"] .book-chrome,
+.book[data-face="back"] .book-colophon {
+  display: none;
+}
+
+.book[data-face="back"] .book-sheet-inner {
+  padding: 0;
+  overflow: hidden;
+}
+
+.book[data-face="back"] .book-page-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0;
+}
+
+.book[data-face="back"] .book-page-body > * {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.book[data-face="back"] .book-foredge {
+  top: 0;
+  bottom: 0;
+}
+
+.book[data-face="back"] .book-foredge-back {
+  top: 0.35rem;
+  bottom: -0.35rem;
+}
+
+.book-back-cover {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--color-paper-raised);
+}
+
+.book-back-cover-art-picture,
+.book-back-cover-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.book-back-cover-art {
+  object-fit: cover;
+  object-position: center;
+  opacity: 1;
+  filter: saturate(0.9) contrast(0.98);
+}
+
+/* Soft wash so type reads — not a bordered box */
+.book-back-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      105deg,
+      color-mix(in srgb, var(--color-ink) 78%, transparent) 0%,
+      color-mix(in srgb, var(--color-ink) 58%, transparent) 46%,
+      color-mix(in srgb, var(--color-ink) 24%, transparent) 70%,
+      transparent 100%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-ink) 35%, transparent) 0%,
+      transparent 18%,
+      transparent 78%,
+      color-mix(in srgb, var(--color-ink) 45%, transparent) 100%
+    );
+}
+
+.book-back-body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0;
+  overflow-y: auto;
+  padding:
+    clamp(1.6rem, 3.5vw, 2.6rem)
+    clamp(1.5rem, 4vw, 3.2rem)
+    clamp(1.5rem, 3vw, 2.2rem)
+    clamp(1.6rem, 4vw, 3.4rem);
+}
+
+.book-back-intro {
+  width: min(54%, 34rem);
+}
+
+.book[data-spine="end"] .book-back-body {
+  padding-right: clamp(2.2rem, 5vw, 4rem);
+  padding-left: clamp(1.5rem, 4vw, 3rem);
+}
+
+.book-back-eyebrow {
+  margin: 0;
+  font-size: clamp(0.72rem, 1.3vw, 0.9rem);
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-rule) 68%, var(--color-paper-raised));
+}
+
+.book-back-title {
+  max-width: 11ch;
+  margin: 0.55rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.15rem, 5.2vw, 3.8rem);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.book-back-deck {
+  max-width: 30rem;
+  margin: 0.75rem 0 0;
+  font-size: clamp(0.92rem, 1.45vw, 1.08rem);
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--color-paper) 80%, var(--color-rule));
+}
+
+.book-back-list {
+  width: min(56%, 38rem);
+  margin: clamp(1.25rem, 2.8vh, 2rem) 0 0;
+  padding: 0.25rem clamp(0.9rem, 1.8vw, 1.3rem);
+  border: 1px solid color-mix(in srgb, var(--color-rule) 62%, var(--color-cocoa));
+  background: color-mix(in srgb, var(--color-ink) 94%, var(--color-cocoa));
+  box-shadow: 0.32rem 0.4rem 0 color-mix(in srgb, var(--color-cocoa) 76%, var(--color-ink));
+}
+
+.book-back-item {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-rule) 35%, transparent);
+}
+
+.book-back-item:last-child {
+  border-bottom: 0;
+}
+
+.book-back-item summary {
+  display: grid;
+  min-height: 3.65rem;
+  grid-template-columns: 2rem minmax(0, 1fr) 1rem;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.78rem 0;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-display);
+  color: var(--color-paper-raised);
+}
+
+.book-back-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.book-back-item summary:focus-visible {
+  outline: 2px solid var(--color-paper-raised);
+  outline-offset: 4px;
+}
+
+.book-back-number {
+  color: color-mix(in srgb, var(--color-rule) 74%, var(--color-paper-raised));
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.book-back-question {
+  font-size: clamp(1.08rem, 1.7vw, 1.28rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.book-back-chevron {
+  width: 0.62rem;
+  height: 0.62rem;
+  align-self: center;
+  border-right: 2px solid var(--color-rule);
+  border-bottom: 2px solid var(--color-rule);
+  transform: translateY(-0.16rem) rotate(45deg);
+  transition: transform 150ms ease;
+}
+
+.book-back-item[open] .book-back-chevron {
+  transform: translateY(0.16rem) rotate(225deg);
+}
+
+.book-back-answer {
+  margin: -0.15rem 1rem 0.9rem 2.75rem;
+  max-width: 29rem;
+  font-size: clamp(0.95rem, 1.4vw, 1.08rem);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--color-paper) 88%, var(--color-rule));
+}
+
+.book-back-footer {
+  display: flex;
+  width: min(56%, 36rem);
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: clamp(1rem, 2.4vh, 1.7rem);
+}
+
+.book-back-proof {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 1.5vw, 1.12rem);
+  font-style: italic;
+  color: color-mix(in srgb, var(--color-paper-raised) 88%, var(--color-cinnamon));
+}
+
+.book-back-cta {
+  margin: 0;
+}
+
+.book-back-cta-link {
+  display: inline-flex;
+  min-height: 2.8rem;
+  align-items: center;
+  gap: 0.55rem;
+  justify-content: center;
+  padding: 0.42rem 0.9rem 0.3rem;
+  border: 2px solid var(--color-cocoa);
+  border-right-width: 3px;
+  border-bottom-width: 4px;
+  border-radius: 4px;
+  background: var(--color-cinnamon-deep);
+  color: var(--color-paper-raised);
+  font-family: var(--font-display);
+  font-size: clamp(0.8rem, 1.25vw, 0.95rem);
+  font-weight: 700;
+  line-height: 1.15;
+  text-decoration: none;
+}
+
+.book-back-cta-link:hover,
+.book-back-cta-link:focus-visible {
+  background: var(--color-cinnamon);
+}
+
+.book-back-cta-link:focus-visible {
+  outline: 2px solid var(--color-paper-raised);
+  outline-offset: 3px;
+}
+
+@media (max-width: 639px) {
+  .book-back-body {
+    padding: 1.25rem;
+  }
+
+  .book[data-spine="end"] .book-back-body {
+    padding-right: calc(var(--book-hinge) + 0.7rem);
+    padding-left: 1.15rem;
+  }
+
+  .book-back-intro,
+  .book-back-list,
+  .book-back-footer {
+    width: 100%;
+  }
+
+  .book-back-title {
+    font-size: clamp(2rem, 10vw, 2.8rem);
+  }
+
+  .book-back-list {
+    padding: 0.2rem 0.85rem;
+  }
+
+  .book-back-item summary {
+    min-height: 3.4rem;
+    grid-template-columns: 1.7rem minmax(0, 1fr) 0.8rem;
+    gap: 0.55rem;
+    padding: 0.66rem 0;
+  }
+
+  .book-back-question {
+    font-size: 1rem;
+  }
+
+  .book-back-answer {
+    margin-right: 0.4rem;
+    margin-bottom: 0.8rem;
+    margin-left: 2.25rem;
+    font-size: 0.9rem;
+  }
+
+  .book-back-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 9rem;
+  }
+
+  .book-back-cover-art {
+    object-position: center;
+  }
+}
+
+.book[data-spine="end"] {
+  perspective-origin: calc(100% - var(--book-hinge)) 50%;
+}
+
+.book[data-spine="end"] .book-pages {
+  perspective-origin: calc(100% - var(--book-hinge)) 42%;
+}
+
 @media (min-width: 768px) {
   .room-shell {
     padding: 1.25rem 3.75rem 2.1rem 3.25rem;
   }
 
+  .room-shell[data-landing-cover="true"] {
+    padding-top: 4.6rem;
+    padding-bottom: 3.85rem;
+  }
+
+  .room-shell[data-bookmarks="true"] {
+    padding-top: 4.6rem;
+    padding-bottom: 3.85rem;
+  }
+
   .book {
     --book-inset: 5rem;
     --book-gutter: 3rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .room-shell[data-landing-cover="true"] {
+    padding-top: 4.85rem;
+    padding-bottom: 4.35rem;
+  }
+
+  .room-shell[data-bookmarks="true"] {
+    padding-top: 4.85rem;
+    padding-bottom: 4.35rem;
+  }
+
+  .room-shell[data-landing-cover="true"][data-preview="open"],
+  .room-shell[data-bookmarks="true"][data-preview="open"] {
+    padding-bottom: 4.35rem;
   }
 }
 
@@ -1430,9 +2206,9 @@ body {
   background: var(--color-paper-raised);
 }
 
-.book-portal-results,
 .book-portal-empty {
   display: flex;
+  width: 100%;
   flex: 0 0 auto;
   min-height: 0;
   flex-direction: column;
@@ -1440,7 +2216,10 @@ body {
 }
 
 .book-portal-grid .book-portal-results {
+  display: flex;
   min-height: auto;
+  flex-direction: column;
+  overflow: hidden;
   border: 1.5px solid var(--color-rule);
   border-radius: 0.4rem;
   background: var(--color-paper-raised);
@@ -1453,15 +2232,32 @@ body {
   box-shadow: 0 4px 12px color-mix(in srgb, var(--color-cocoa) 15%, transparent);
 }
 
+.book-portal-well-scrollable:has(.book-portal-empty) {
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 0;
+}
+
+.book-portal-well-scrollable:has(.book-portal-empty) .book-portal-footer {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.book-portal-well-scrollable:has(.book-portal-empty) .book-portal-footer:not(:has(.book-portal-count)) {
+  display: none;
+}
+
 .book-portal-miss {
   display: flex;
+  width: 100%;
+  box-sizing: border-box;
   flex: 1 1 auto;
-  min-height: 12rem;
+  min-height: 14rem;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  padding: 1.75rem 1.5rem;
+  padding: 2rem 1.75rem;
   border: 1px solid color-mix(in srgb, var(--color-cocoa) 22%, var(--color-paper));
   background-color: var(--color-paper-press);
   background-image:
@@ -1481,14 +2277,19 @@ body {
 
 .book-portal-miss-note {
   margin: 0;
-  max-width: 18rem;
+  max-width: min(34rem, 100%);
   color: var(--color-cinnamon-deep);
   font-family: "Snell Roundhand", "Apple Chancery", "Palatino Linotype", Palatino, cursive;
-  font-size: clamp(1.7rem, 4vw, 2.35rem);
+  font-size: clamp(1.45rem, 3.4vw, 2.1rem);
   font-style: italic;
-  line-height: 1.2;
+  line-height: 1.25;
   text-align: center;
-  transform: rotate(-5deg);
+  transform: rotate(-3deg);
+}
+
+.book-portal-miss-note[data-welcome="true"] {
+  transform: rotate(-1.5deg);
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
 }
 
 .book-portal-frame {
@@ -2721,6 +3522,11 @@ summary::-webkit-details-marker {
     padding-left: 18rem;
     padding-right: 4.5rem;
     padding-bottom: 1.25rem;
+  }
+
+  .room-shell[data-landing-cover="true"][data-preview="open"],
+  .room-shell[data-bookmarks="true"][data-preview="open"] {
+    padding-bottom: 3.85rem;
   }
 
   .room-shell[data-preview="shut"] {

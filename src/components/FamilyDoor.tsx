@@ -60,13 +60,13 @@ export function JoinCoverLanding({ invited = false }: { invited?: boolean }) {
       <h1 className="book-cover-headline">
         {invited ? "Come cook with us." : "Recipes worth keeping."}
       </h1>
-      <p className="book-cover-promise">
-        {invited
-          ? "Sign in to share recipes with your family."
-          : "Keep family favorites, photos, and the little changes that make them yours."}
-      </p>
+      {invited ? (
+        <p className="book-cover-promise">
+          Sign in to share recipes with your family.
+        </p>
+      ) : null}
       <p className="book-cover-proof">
-        A photo is enough to start.
+        May the pasta salad live on forever.
       </p>
       <GoogleComeIn cover />
     </div>

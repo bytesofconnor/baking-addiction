@@ -196,18 +196,21 @@ export function FamilyBook() {
         {people.length === 0 && !view.peeking ? (
           <div className="mt-5">
             <p className="text-[19px] leading-8 text-ink-soft">
-              Just you so far. Send a link, or put a few folks in for now.
+              Just you so far. Send a link when someone&apos;s ready to cook with
+              you.
             </p>
-            <p className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
-              <button
-                type="button"
-                className="inline-flex min-h-14 items-center underline decoration-cinnamon-deep underline-offset-[6px]"
-                disabled={planting}
-                onClick={() => void fillSample()}
-              >
-                {planting ? "Adding sample recipes…" : "Put some family in"}
-              </button>
-            </p>
+            {import.meta.env.DEV ? (
+              <p className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
+                <button
+                  type="button"
+                  className="inline-flex min-h-14 items-center underline decoration-cinnamon-deep underline-offset-[6px]"
+                  disabled={planting}
+                  onClick={() => void fillSample()}
+                >
+                  {planting ? "Adding sample recipes…" : "Put some family in"}
+                </button>
+              </p>
+            ) : null}
           </div>
         ) : (
           <ul className="mt-3 divide-y divide-rule/80">

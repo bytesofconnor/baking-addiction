@@ -12,12 +12,33 @@ export function BookBookmarks({ pathname }: { pathname: string }) {
   const family = useFamily();
   const { asKey, keep } = usePreview();
   const peekCalled = usePeekCalled();
+  const section = sectionOf(pathname);
+  const onDoor = family.status !== "in";
 
-  if (family.status !== "in") {
-    return null;
+  // Door bookmarks reserve the same top shelf as the signed-in tabs,
+  // so the book doesn't jump when someone comes in from Google.
+  if (onDoor) {
+    return (
+      <nav className="book-bookmarks" aria-label="Book sections">
+        <NavLink
+          to="/join"
+          end
+          aria-current={section === "join" ? "page" : undefined}
+          className={() => bookmarkClass(section === "join")}
+        >
+          Join
+        </NavLink>
+        <NavLink
+          to="/faq"
+          aria-current={section === "faq" ? "page" : undefined}
+          className={() => bookmarkClass(section === "faq")}
+        >
+          FAQ
+        </NavLink>
+      </nav>
+    );
   }
 
-  const section = sectionOf(pathname);
   const settingsActive = section === "you" || section === "family";
   const called = peekCalled ?? family.user?.called ?? "You";
   const settingsTo = asKey ? pathname : "/you";

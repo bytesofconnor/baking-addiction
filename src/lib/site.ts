@@ -31,6 +31,9 @@ export function pageHeading(
   if (pathname === "/join") {
     return { lead: "The Family Recipe", accent: "Book", home: false, compact: false };
   }
+  if (pathname === "/faq") {
+    return { lead: "FAQ", accent: "", home: false, compact: true };
+  }
   if (pathname === "/you" || pathname.startsWith("/you/")) {
     return { lead: "Your", accent: "kitchen", home: false, compact: false };
   }

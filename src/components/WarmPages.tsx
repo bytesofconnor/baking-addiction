@@ -3,6 +3,7 @@ import { useOutlet } from "react-router";
 import { HomePage } from "@/pages/HomePage";
 import { WritePage } from "@/pages/WritePage";
 import { YouPage } from "@/pages/YouPage";
+import { FaqPage } from "@/pages/FaqPage";
 import { PageActiveContext } from "@/lib/pageActive";
 import { useFamily } from "@/lib/family";
 import { sectionOf } from "@/lib/bookPages";
@@ -24,6 +25,13 @@ export function WarmPages({ pathname }: { pathname: string }) {
   const onBake = pathname.startsWith("/bakes/");
   const signedIn = status === "in";
 
+  // The whole-book transition intentionally holds its own pathname until the
+  // midpoint. Render FAQ from that held pathname instead of the router outlet,
+  // which has already advanced to /join and would leave the turning face empty.
+  if (section === "faq") {
+    return <FaqPage />;
+  }
+
   if (!signedIn) {
     if (section === "add") {
       return <WritePage />;
@@ -35,7 +43,10 @@ export function WarmPages({ pathname }: { pathname: string }) {
   }
 
   const extra =
-    onBake || section === "family" || section === "join" || section === "other";
+    onBake ||
+    section === "family" ||
+    section === "join" ||
+    section === "other";
 
   return (
     <>

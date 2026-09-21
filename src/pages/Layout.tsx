@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { AdminShell } from "@/components/AdminShell";
 import { BookBinding } from "@/components/BookBinding";
 import { BookBookmarks } from "@/components/BookBookmarks";
@@ -19,8 +19,11 @@ export function Layout() {
   const liveFace = useRef<HTMLDivElement>(null);
   const { pathname, flip, ghost } = useBookFlip(liveFace);
   const page = pageForPath(pathname);
-  const turning = flip !== null && ghost !== null;
+  const leafTurning =
+    flip !== null && flip.kind === "page" && ghost !== null;
+  const bookTurning = flip !== null && flip.kind === "book";
   const landingCover = pathname === "/join" && family.status !== "in";
+  const backFace = pathname === "/faq" && family.status !== "in";
 
   useEffect(() => {
     const robots = document.createElement("meta");
@@ -36,7 +39,7 @@ export function Layout() {
     <div
       className="room-shell"
       data-preview={preview ? (open ? "open" : "shut") : undefined}
-      data-bookmarks={family.status === "in" ? "true" : undefined}
+      data-bookmarks="true"
       data-landing-cover={landingCover ? "true" : undefined}
     >
       {preview ? <AdminShell /> : null}
@@ -44,7 +47,17 @@ export function Layout() {
       <div
         className="book relative z-10 mx-auto w-full max-w-[44rem] md:max-w-[52rem] xl:max-w-[66rem] 2xl:max-w-[72rem]"
         data-page={page}
-        aria-busy={turning ? true : undefined}
+        data-face={backFace ? "back" : undefined}
+        data-spine={backFace ? "end" : undefined}
+        data-book-flip={bookTurning ? flip.direction : undefined}
+        style={
+          bookTurning
+            ? ({
+                "--book-over-duration": `${flip.durationMs}ms`,
+              } as CSSProperties)
+            : undefined
+        }
+        aria-busy={leafTurning || bookTurning ? true : undefined}
       >
         <BookBookmarks pathname={pathname} />
         <div className="book-foredge book-foredge-back" aria-hidden="true" />
@@ -52,16 +65,27 @@ export function Layout() {
         <div className="book-foredge" aria-hidden="true" />
         <div className="book-footedge" aria-hidden="true" />
         <BookCover />
+        {bookTurning && ghost ? (
+          <div
+            className="book-turn-face-ghost"
+            aria-hidden="true"
+            ref={(node) => {
+              if (node && ghost.parentElement !== node) {
+                node.replaceChildren(ghost);
+              }
+            }}
+          />
+        ) : null}
         <div
           className="book-pages"
-          data-dir={flip?.direction}
-          inert={phase !== "in"}
-          aria-hidden={phase !== "in" ? true : undefined}
+          data-dir={leafTurning ? flip?.direction : undefined}
+          inert={!bookTurning && phase !== "in"}
+          aria-hidden={!bookTurning && phase !== "in" ? true : undefined}
         >
           <div className="book-leaf book-leaf-under">
             <BookFace pathname={pathname} faceRef={liveFace} />
           </div>
-          {turning ? (
+          {leafTurning ? (
             <div className="book-leaf book-leaf-over">
               <div className="book-leaf-front">
                 <div

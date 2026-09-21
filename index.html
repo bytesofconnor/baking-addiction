@@ -4,27 +4,64 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>The Family Recipe Book</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.svg?v=heart" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/favicon.svg?v=heart" />
     <meta name="robots" content="noindex, nofollow" />
     <meta
       name="description"
       content="The Family Recipe Book — family favorites, all in one place."
     />
     <style>
+      html {
+        --color-room: #6b3218;
+      }
       html,
       body,
       #root {
         min-height: 100%;
-        background: #6e2c14;
       }
       body {
         margin: 0;
+        background: var(--color-room);
       }
     </style>
     <script>
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        document.documentElement.dataset.arrive = "in";
-      }
+      (function () {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          document.documentElement.dataset.arrive = "in";
+        }
+        // First paint: use ?month= in DEV, else Minnesota month.
+        var rooms = {
+          1: "#1a3348",
+          2: "#243a52",
+          3: "#3f4a28",
+          4: "#2f4a36",
+          5: "#3a4e32",
+          6: "#6a3d48",
+          7: "#1a4a5c",
+          8: "#5c4a30",
+          9: "#6b3218",
+          10: "#5a2214",
+          11: "#4a2418",
+          12: "#1a3548",
+        };
+        var month = null;
+        try {
+          var q = new URLSearchParams(window.location.search).get("month");
+          var n = q ? Number(q) : NaN;
+          if (n >= 1 && n <= 12) month = n;
+        } catch (e) {}
+        if (!month) {
+          var parts = new Intl.DateTimeFormat("en-US", {
+            timeZone: "America/Chicago",
+            month: "numeric",
+          }).formatToParts(new Date());
+          month = Number(parts.find(function (p) { return p.type === "month"; }).value);
+        }
+        if (rooms[month]) {
+          document.documentElement.style.setProperty("--color-room", rooms[month]);
+        }
+      })();
     </script>
   </head>
   <body>

@@ -13,7 +13,11 @@ import { useCookbookView } from "@/lib/preview";
 function trayNote(
   selection: MixSelection | undefined,
   people: MixPerson[],
+  emptyBook: boolean,
 ): string {
+  if (emptyBook) {
+    return "Welcome in. Start adding your favorites to your book, and then you can share them.";
+  }
   if (!selection) {
     return "Hmm. This tray is empty.";
   }
@@ -111,7 +115,11 @@ export function HomePage() {
         selfId={view.selfId}
         selfCalled={view.selfCalled}
         whose={whose}
-        emptyNote={trayNote(view.selection ?? undefined, view.people)}
+        emptyNote={trayNote(
+          view.selection ?? undefined,
+          view.people,
+          view.bakes.length === 0,
+        )}
       />
     </>
   );
