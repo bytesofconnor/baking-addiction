@@ -113,7 +113,7 @@ function FamilyPerson({
         size="md"
         className="family-person-face"
       />
-      <span className="min-w-0 flex-1">
+      <span className="family-person-copy">
         {canEdit && editing ? (
           <input
             value={draft}
@@ -132,7 +132,7 @@ function FamilyPerson({
                 setEditing(false);
               }
             }}
-            className="w-full min-h-12 border-0 border-b-[1.5px] border-cinnamon bg-transparent px-0 font-display text-[1.35rem] leading-8 text-ink outline-none"
+            className="family-name-field"
           />
         ) : canEdit ? (
           <button
@@ -144,14 +144,10 @@ function FamilyPerson({
             <PencilMark />
           </button>
         ) : (
-          <span className="font-display text-[1.35rem] leading-8">
-            {person.called}
-          </span>
+          <span className="family-name-plain">{person.called}</span>
         )}
         {person.email ? (
-          <span className="mt-0.5 block text-[16px] leading-6 text-ink-soft">
-            {person.email}
-          </span>
+          <span className="family-person-email">{person.email}</span>
         ) : null}
       </span>
       {canEdit ? (
