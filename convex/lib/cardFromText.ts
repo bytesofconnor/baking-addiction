@@ -78,24 +78,35 @@ export function parseCardsJson(text: string): ExtractedCard[] {
     .replace(/^```\s*/i, "")
     .replace(/```$/i, "")
     .trim();
-  try {
-    const parsed: unknown = JSON.parse(trimmed);
-    const rows = Array.isArray(parsed)
-      ? parsed
-      : parsed &&
-          typeof parsed === "object" &&
-          Array.isArray((parsed as { cards?: unknown }).cards)
-        ? (parsed as { cards: unknown[] }).cards
-        : parsed && typeof parsed === "object"
-          ? [parsed]
-          : [];
-    return rows
-      .map((row) => cardFromUnknown(row))
-      .filter((card): card is ExtractedCard => card !== null)
-      .slice(0, 24);
-  } catch {
-    return [];
+  const candidates = [trimmed];
+  const fenced = trimmed.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+  if (fenced?.[0] && fenced[0] !== trimmed) {
+    candidates.push(fenced[0]);
   }
+  for (const candidate of candidates) {
+    try {
+      const parsed: unknown = JSON.parse(candidate);
+      const rows = Array.isArray(parsed)
+        ? parsed
+        : parsed &&
+            typeof parsed === "object" &&
+            Array.isArray((parsed as { cards?: unknown }).cards)
+          ? (parsed as { cards: unknown[] }).cards
+          : parsed && typeof parsed === "object"
+            ? [parsed]
+            : [];
+      const cards = rows
+        .map((row) => cardFromUnknown(row))
+        .filter((card): card is ExtractedCard => card !== null)
+        .slice(0, 24);
+      if (cards.length > 0) {
+        return cards;
+      }
+    } catch {
+      // try next candidate
+    }
+  }
+  return [];
 }
 
 export function parseCardJson(text: string): ExtractedCard | null {

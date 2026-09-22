@@ -1,7 +1,6 @@
 import { useAction } from "convex/react";
 import { useId, useState, type FormEvent } from "react";
 import { api } from "../../convex/_generated/api";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Kicker } from "@/components/Kicker";
@@ -14,12 +13,16 @@ export function KitchenAsk({
   bakerName,
   outcome,
   changes,
+  ingredients = [],
+  steps = [],
 }: {
   title: string;
   sourceTitle: string;
   bakerName: string;
   outcome: string;
   changes: Array<{ move: string; change: string; why: string }>;
+  ingredients?: string[];
+  steps?: string[];
 }) {
   const remix = useAction(api.kitchen.remix);
   const [question, setQuestion] = useState("");
@@ -50,6 +53,8 @@ export function KitchenAsk({
         question: nextQuestion,
         priorNote: previous ?? undefined,
         changes,
+        ingredients,
+        steps,
       });
       const wait = 700 - (Date.now() - started);
       if (wait > 0) {
@@ -65,7 +70,7 @@ export function KitchenAsk({
 
   return (
     <section
-      className="mt-14 rounded-lg border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-6"
+      className="mt-10 rounded-lg border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-5"
       aria-labelledby={headingId}
     >
       <Kicker>If you&apos;re at the counter</Kicker>
@@ -87,14 +92,14 @@ export function KitchenAsk({
           aria-describedby={pending ? statusId : asked ? noteId : undefined}
         />
         <div className="mt-4">
-          <Button
+          <button
             type="submit"
-            className="w-full sm:w-auto"
+            className="book-press book-press-text book-press-save"
             disabled={pending}
             aria-busy={pending}
           >
             {pending ? "Looking through the notes…" : "Ask the kitchen"}
-          </Button>
+          </button>
         </div>
       </form>
 
@@ -111,7 +116,7 @@ export function KitchenAsk({
               className="mt-5 flex items-center gap-3 text-[18px] text-ink-soft"
             >
               <WhiskMark className="kitchen-stir h-9 w-9 text-cinnamon-deep" />
-              Looking through Mom&apos;s notes…
+              Looking through {bakerName}&apos;s notes…
             </p>
           ) : null}
           {error ? (

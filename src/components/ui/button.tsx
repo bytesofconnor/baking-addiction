@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, ReactNode } from "react";
 import { Link, type To } from "react-router";
 import { cn } from "@/lib/utils";
 
@@ -44,14 +44,15 @@ export function ButtonLink({
   variant,
   className,
   children,
+  ...props
 }: {
   to: To;
   variant?: VariantProps<typeof buttonVariants>["variant"];
   className?: string;
   children: ReactNode;
-}) {
+} & Omit<ComponentPropsWithoutRef<typeof Link>, "to" | "className" | "children">) {
   return (
-    <Link to={to} className={cn(buttonVariants({ variant }), className)}>
+    <Link to={to} className={cn(buttonVariants({ variant }), className)} {...props}>
       {children}
     </Link>
   );

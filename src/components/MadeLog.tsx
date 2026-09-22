@@ -1,11 +1,41 @@
-import { useQuery } from "convex/react";
+import { useState } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { Link } from "react-router";
 import { api } from "../../convex/_generated/api";
-import { BakeStars } from "@/components/BakeStars";
-import { formatMadeAt } from "@/lib/dates";
+import type { Id } from "../../convex/_generated/dataModel";
+import { RecipeEdit } from "@/components/RecipeEdit";
+import { formatBakeDate } from "@/lib/dates";
 
 export function MadeLog() {
-  const rows = useQuery(api.makes.mine);
+  const rows = useQuery(api.bakes.listPosted);
+  const removeMine = useMutation(api.bakes.removeMine);
+  const [removingId, setRemovingId] = useState<Id<"bakes"> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function remove(bakeId: Id<"bakes">, title: string) {
+    if (removingId) {
+      return;
+    }
+    const ok = window.confirm(
+      `Delete “${title}” from the book? This can’t be undone.`,
+    );
+    if (!ok) {
+      return;
+    }
+    setError(null);
+    setRemovingId(bakeId);
+    try {
+      await removeMine({ bakeId });
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Couldn’t delete that recipe.",
+      );
+    } finally {
+      setRemovingId(null);
+    }
+  }
 
   if (rows === undefined) {
     return (
@@ -38,30 +68,57 @@ export function MadeLog() {
         <ol className="made-log-list">
           {rows.map((row) => (
             <li key={row._id} className="made-log-item">
-              <time
-                className="text-[16px] leading-6 text-ink-soft"
-                dateTime={new Date(row.madeAt).toISOString()}
-              >
-                {formatMadeAt(row.madeAt)}
-              </time>
-              <p className="font-display mt-1 text-[1.35rem] leading-8 tracking-tight">
-                <Link
-                  to={`/bakes/${row.slug}`}
-                  className="made-log-title inline-flex min-h-12 items-center"
-                >
-                  {row.title}
-                </Link>
-              </p>
-              <BakeStars value={row.rating} size="card" />
-              {row.note ? (
-                <p className="mt-1 text-[18px] leading-7 text-ink-soft italic">
-                  {row.note}
-                </p>
-              ) : null}
+              <div className="made-log-row">
+                <div className="min-w-0 flex-1">
+                  <time
+                    className="text-[16px] leading-6 text-ink-soft"
+                    dateTime={row.bakedOn}
+                  >
+                    {formatBakeDate(row.bakedOn)}
+                  </time>
+                  <p className="font-display mt-1 text-[1.35rem] leading-8 tracking-tight">
+                    <Link
+                      to={`/bakes/${row.slug}`}
+                      className="made-log-title inline-flex min-h-12 items-center"
+                    >
+                      {row.title}
+                    </Link>
+                  </p>
+                  {row.outcome ? (
+                    <p className="mt-1 text-[18px] leading-7 text-ink-soft italic">
+                      {row.outcome}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="made-log-actions">
+                  <RecipeEdit
+                    bakeId={row._id}
+                    title={row.title}
+                    ownerId={row.ownerId}
+                    className="made-log-edit"
+                  />
+                  <button
+                    type="button"
+                    className="book-press book-press-text made-log-delete"
+                    disabled={removingId === row._id}
+                    aria-busy={removingId === row._id}
+                    aria-label={`Delete ${row.title}`}
+                    onClick={() => void remove(row._id, row.title)}
+                  >
+                    {removingId === row._id ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
+              </div>
             </li>
           ))}
         </ol>
       )}
+
+      {error ? (
+        <p role="alert" className="mt-4 text-[17px] text-cinnamon-deep">
+          {error}
+        </p>
+      ) : null}
     </section>
   );
 }

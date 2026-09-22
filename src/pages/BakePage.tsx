@@ -9,12 +9,12 @@ import { RecipeSource } from "@/components/RecipeSource";
 import { SecretSauce } from "@/components/SecretSauce";
 import { CookbookBack } from "@/components/CookbookBack";
 import { RecipeShare } from "@/components/RecipeShare";
+import { RecipeEdit } from "@/components/RecipeEdit";
+import { RecipeDelete } from "@/components/RecipeDelete";
 import { KitchenMethod } from "@/components/KitchenMethod";
-import { BakeStars } from "@/components/BakeStars";
 import { KitchenAsk } from "@/components/KitchenAsk";
 import { HowItWent } from "@/components/HowItWent";
 import { formatBakeDate } from "@/lib/dates";
-import { accordingTo } from "@/lib/cookbook";
 import { inferKind, KIND_LABELS } from "../../convex/lib/kinds";
 import { PageTitle } from "@/lib/pageTitle";
 import { SITE_NAME, SITE_SHORT } from "@/lib/site";
@@ -87,46 +87,72 @@ export function BakePage() {
   const older = index >= 0 ? catalog?.[index + 1] : null;
 
   const kind = bake.kind ?? inferKind(bake.title, bake.sourceTitle);
+  const hasIntro =
+    Boolean(firstParagraph) ||
+    restParagraphs.length > 0 ||
+    Boolean(bake.outcome);
 
   return (
-    <article>
+    <article className="bake-leaf">
       <PageTitle title={`${bake.title} · ${SITE_SHORT}`} />
       <div className="bake-leaf-bar">
         <CookbookBack />
-        <RecipeShare bakeId={bake._id} title={bake.title} />
-      </div>
-      {heroSrc ? (
-        <PhotoFrame
-          src={heroSrc}
-          alt={heroAlt}
-          size="hero"
-          className="mt-8"
-        />
-      ) : (
-        <div className="book-portal-frame book-plate-hero mt-8">
-          <BakePlate kind={kind} seed={bake.slug} />
+        <div className="bake-leaf-actions">
+          <RecipeShare bakeId={bake._id} title={bake.title} />
+          <RecipeEdit
+            bakeId={bake._id}
+            title={bake.title}
+            ownerId={bake.ownerId}
+          />
+          <RecipeDelete
+            bakeId={bake._id}
+            title={bake.title}
+            ownerId={bake.ownerId}
+          />
         </div>
-      )}
-
-      <Kicker className="mt-6">
-        {KIND_LABELS[kind]}
-        {" · "}
-        {bake.bakerName}
-        {" · "}
-        <time dateTime={bake.bakedOn}>{formatBakeDate(bake.bakedOn)}</time>
-      </Kicker>
-      <h1 className="font-display mt-3 text-[2.15rem] leading-[1.12] tracking-tight md:text-[3.4rem]">
-        {bake.title}
-      </h1>
-      <div className="mt-4">
-        <RecipeSource
-          sourceKind={bake.sourceKind}
-          sourceTitle={bake.sourceTitle}
-          sourceUrl={bake.sourceUrl}
-        />
       </div>
 
-      <div className="mt-10">
+      <header className="bake-leaf-hero">
+        <div className="bake-leaf-hero-photo">
+          {heroSrc ? (
+            <PhotoFrame src={heroSrc} alt={heroAlt} size="hero" />
+          ) : (
+            <div className="book-portal-frame book-plate-hero">
+              <BakePlate kind={kind} seed={bake.slug} />
+            </div>
+          )}
+        </div>
+        <div className="bake-leaf-hero-copy">
+          <Kicker>
+            {KIND_LABELS[kind]}
+            {" · "}
+            {bake.bakerName}
+            {" · "}
+            <time dateTime={bake.bakedOn}>{formatBakeDate(bake.bakedOn)}</time>
+          </Kicker>
+          <h1 className="bake-leaf-title">{bake.title}</h1>
+          <RecipeSource
+            sourceKind={bake.sourceKind}
+            sourceTitle={bake.sourceTitle}
+            sourceUrl={bake.sourceUrl}
+          />
+          {hasIntro ? (
+            <div className="bake-leaf-intro">
+              {firstParagraph ? (
+                <p className="drop-cap">{firstParagraph}</p>
+              ) : null}
+              {restParagraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+              {bake.outcome ? (
+                <p className="bake-leaf-outcome">{bake.outcome}</p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </header>
+
+      <div className="bake-leaf-method">
         <KitchenMethod
           makes={bake.makes}
           ingredients={bake.ingredients}
@@ -137,30 +163,7 @@ export function BakePage() {
         />
       </div>
 
-      <div className="mt-10 flex flex-col gap-8 md:grid md:grid-cols-[1.15fr_0.85fr] md:items-start md:gap-10">
-        <div className="flex max-w-[40rem] flex-col gap-5">
-          {firstParagraph ? (
-            <p className="drop-cap">{firstParagraph}</p>
-          ) : null}
-          {restParagraphs.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-          {bake.rating > 0 ? (
-            <div className="mt-2 border-t border-rule pt-5">
-              <p className="book-according">
-                {accordingTo(bake, view.selfId) ?? `According to ${bake.bakerName}`}
-              </p>
-              <BakeStars value={bake.rating} />
-            </div>
-          ) : null}
-          {bake.outcome ? (
-            <p className="mt-2 font-display text-[1.25rem] leading-8 text-cocoa italic">
-              {bake.outcome}
-            </p>
-          ) : null}
-        </div>
-        <SecretSauce changes={bake.changes} />
-      </div>
+      <SecretSauce changes={bake.changes} />
 
       <KitchenAsk
         title={bake.title}
@@ -168,6 +171,8 @@ export function BakePage() {
         bakerName={bake.bakerName}
         outcome={bake.outcome}
         changes={bake.changes}
+        ingredients={bake.ingredients}
+        steps={bake.steps}
       />
 
       <HowItWent bakeId={bake._id} />

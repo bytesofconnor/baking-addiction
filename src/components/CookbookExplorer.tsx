@@ -1,26 +1,21 @@
-import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import type { BakeKind } from "../../convex/lib/kinds";
 import { KIND_LABELS } from "../../convex/lib/kinds";
 import {
-  accordingTo,
   madeByOthersLine,
   bakeIsWhose,
   bakeKind,
-  bakeStars,
   filterCookbook,
   ingredientHits,
-  kindsInCookbook,
   type CookbookBake,
   type CookbookSort,
 } from "@/lib/cookbook";
-import { BakeStars } from "@/components/BakeStars";
 import { splitWhoQuery, type MixPerson } from "@/lib/cookbookMix";
 import { formatBakeDate } from "@/lib/dates";
-import { FilterSort, FilterSorts, FilterTab, FilterTabs } from "@/components/BookFilters";
+import { FilterSort, FilterSorts } from "@/components/BookFilters";
 import { BakePlate } from "@/components/BakePlate";
 import { RecipeShare } from "@/components/RecipeShare";
 import { Input } from "@/components/ui/input";
@@ -33,18 +28,8 @@ const SORTS: Array<{ id: CookbookSort; label: string }> = [
   { id: "az", label: "A to Z" },
 ];
 
-const STAR_FILTERS = [5, 4, 3, 2, 1] as const;
-
-function isStars(value: string | null): value is "1" | "2" | "3" | "4" | "5" {
-  return value === "1" || value === "2" || value === "3" || value === "4" || value === "5";
-}
-
 function isSort(value: string | null): value is CookbookSort {
   return value === "newest" || value === "oldest" || value === "az";
-}
-
-function isKind(value: string | null): value is BakeKind {
-  return value !== null && value in KIND_LABELS;
 }
 
 export function CookbookExplorer({
@@ -71,13 +56,11 @@ export function CookbookExplorer({
   const searchId = useId();
   const countId = useId();
   const filtersId = useId();
+  const filterSummaryId = useId();
+  const filterPanelRef = useRef<HTMLDivElement>(null);
   const query = params.get("q") ?? "";
   const sortParam = params.get("sort");
-  const kindParam = params.get("kind");
   const sort: CookbookSort = isSort(sortParam) ? sortParam : "newest";
-  const kind: BakeKind | "all" = isKind(kindParam) ? kindParam : "all";
-  const starsParam = params.get("stars");
-  const stars: number | "all" = isStars(starsParam) ? Number(starsParam) : "all";
   const mineOnly = params.get("mine") === "1";
 
   const { who, rest } = useMemo(
@@ -92,58 +75,52 @@ export function CookbookExplorer({
     () => (who ? bakes.filter((bake) => bakeIsWhose(bake, who)) : bakes),
     [bakes, who],
   );
-  const trays = useMemo(() => kindsInCookbook(scoped), [scoped]);
-  const shownKind = kind !== "all" && trays.includes(kind) ? kind : "all";
   const results = useMemo(
-    () => filterCookbook(scoped, rest, shownKind, sort, stars),
-    [rest, scoped, shownKind, sort, stars],
+    () => filterCookbook(scoped, rest, "all", sort),
+    [rest, scoped, sort],
   );
-  const filterSummary = [
-    shownKind === "all" ? "All recipes" : KIND_LABELS[shownKind],
-    SORTS.find((option) => option.id === sort)?.label ?? "Newest",
-    stars === "all" ? "Any rating" : `${stars} stars`,
-  ].join(" · ");
+  const filterSummary =
+    SORTS.find((option) => option.id === sort)?.label ?? "Newest";
 
   useEffect(() => {
-    if (kind !== shownKind) {
-      write({ kind: shownKind });
+    if (params.has("kind") || params.has("stars")) {
+      write({});
     }
-    // write is stable enough for this URL cleanup; kind/trays drive it.
+    // Clear retired filter params from older links.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kind, shownKind]);
+  }, [params]);
+
+  useEffect(() => {
+    if (!filtersOpen) {
+      return;
+    }
+    const panel = filterPanelRef.current;
+    const first = panel?.querySelector<HTMLElement>(
+      "button, [href], input, select, textarea",
+    );
+    first?.focus();
+  }, [filtersOpen]);
 
 
   function write(next: {
     q?: string;
-    kind?: string;
     sort?: string;
-    stars?: number | "all";
   }) {
     const nextParams = new URLSearchParams(params);
     const q = next.q ?? query;
-    const nextKind = next.kind ?? kind;
     const nextSort = next.sort ?? sort;
-    const nextStars = next.stars ?? stars;
     if (q.trim().length > 0) {
       nextParams.set("q", q);
     } else {
       nextParams.delete("q");
-    }
-    if (nextKind !== "all") {
-      nextParams.set("kind", nextKind);
-    } else {
-      nextParams.delete("kind");
     }
     if (nextSort !== "newest") {
       nextParams.set("sort", nextSort);
     } else {
       nextParams.delete("sort");
     }
-    if (nextStars !== "all") {
-      nextParams.set("stars", String(nextStars));
-    } else {
-      nextParams.delete("stars");
-    }
+    nextParams.delete("kind");
+    nextParams.delete("stars");
     setParams(nextParams, { replace: true });
   }
 
@@ -166,8 +143,11 @@ export function CookbookExplorer({
           type="search"
           value={query}
           autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
           enterKeyHint="search"
-          placeholder="Pumpkin, 5 stars, bread…"
+          inputMode="search"
+          placeholder="Pumpkin, bread, chocolate…"
           aria-describedby={countId}
           className="book-search mt-1 min-h-14 rounded-[4px] px-3 outline-offset-4"
           onChange={(event) => write({ q: event.target.value })}
@@ -179,40 +159,24 @@ export function CookbookExplorer({
           className="book-filter-toggle"
           aria-expanded={filtersOpen}
           aria-controls={filtersId}
+          aria-describedby={filterSummaryId}
           onClick={() => setFiltersOpen((open) => !open)}
         >
           <span>Filters</span>
           <span className="book-filter-chevron" aria-hidden="true" />
         </button>
-        <p className="book-filter-summary">{filterSummary}</p>
+        <p id={filterSummaryId} className="book-filter-summary">
+          {filterSummary}
+        </p>
       </div>
       <div
         id={filtersId}
+        ref={filterPanelRef}
         className="book-filter-drawer"
         hidden={!filtersOpen}
       >
         {whose}
         <div className="book-index book-index-tray">
-          <FilterTabs labelledBy="tray-filter-label">
-            <p id="tray-filter-label" className="sr-only">
-              What&apos;s on the tray
-            </p>
-            <FilterTab
-              checked={shownKind === "all"}
-              onChange={() => write({ kind: "all" })}
-            >
-              All
-            </FilterTab>
-            {trays.map((tray) => (
-              <FilterTab
-                key={tray}
-                checked={shownKind === tray}
-                onChange={() => write({ kind: tray })}
-              >
-                {KIND_LABELS[tray]}
-              </FilterTab>
-            ))}
-          </FilterTabs>
           <FilterSorts label="Sort">
             {SORTS.map((option) => (
               <FilterSort
@@ -224,29 +188,6 @@ export function CookbookExplorer({
               </FilterSort>
             ))}
           </FilterSorts>
-        </div>
-        <div className="book-index book-index-stars">
-          <FilterTabs labelledBy="star-filter-label">
-            <p id="star-filter-label" className="sr-only">
-              Their rating
-            </p>
-            <FilterTab
-              checked={stars === "all"}
-              onChange={() => write({ stars: "all" })}
-            >
-              Any stars
-            </FilterTab>
-            {STAR_FILTERS.map((count) => (
-              <FilterTab
-                key={count}
-                checked={stars === count}
-                label={`${count} ${count === 1 ? "star" : "stars"}`}
-                onChange={() => write({ stars: count })}
-              >
-                {`${count} ${count === 1 ? "star" : "stars"}`}
-              </FilterTab>
-            ))}
-          </FilterTabs>
         </div>
       </div>
 
@@ -286,7 +227,12 @@ export function CookbookExplorer({
 
           <div className="book-portal-footer">
             {results.length === 0 && !query ? null : (
-              <p id={countId} role="status" className="book-portal-count">
+              <p
+                id={countId}
+                role="status"
+                aria-live="polite"
+                className="book-portal-count"
+              >
                 {results.length === 0
                   ? "Nothing uses that"
                   : who && rest
@@ -295,9 +241,7 @@ export function CookbookExplorer({
                       ? `${results.length} · ${who.called}`
                       : rest
                         ? `${results.length} with “${rest}”`
-                        : stars !== "all"
-                          ? `${results.length} · ${stars}★`
-                          : mineOnly && hasFamily
+                        : mineOnly && hasFamily
                             ? `${results.length} · just yours`
                             : `${results.length}`}
               </p>
@@ -397,11 +341,8 @@ function fromWhoseBook(bake: CookbookBake, selfId?: string) {
 }
 
 function bakeHook(bake: CookbookBake) {
-  const first = bake.changes[0];
-  if (!first) {
-    return bake.outcome;
-  }
-  return first.change ? `${first.move} ${first.change}` : first.move;
+  const note = bake.outcome?.trim();
+  return note && note.length > 0 ? note : null;
 }
 
 function PortalCard({
@@ -417,6 +358,7 @@ function PortalCard({
 }) {
   const { status } = useFamily();
   const [warm, setWarm] = useState(false);
+  const titleId = useId();
   // Warm the full bake while the card is hovered/focused so the leaf turn
   // reveals the recipe instead of an “Opening…” flash after the flip.
   useQuery(
@@ -428,12 +370,27 @@ function PortalCard({
   const hits = ingredientHits(bake, query);
   const whose = fromWhoseBook(bake, selfId);
   const madeLine = madeByOthersLine(bake.madeByOthers);
+  const href = { pathname: `/bakes/${bake.slug}`, search };
+  const warmHandlers = {
+    onPointerEnter: () => setWarm(true),
+    onPointerDown: () => setWarm(true),
+    onFocus: () => setWarm(true),
+  };
 
   return (
-    <article className="book-portal-results" role="listitem">
+    <article
+      className="book-portal-results"
+      role="listitem"
+      aria-labelledby={titleId}
+    >
       <div className="book-portal-frame">
         {bake.photoUrl ? (
-          <img src={bake.photoUrl} alt="" />
+          <img
+            src={bake.photoUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
           <BakePlate kind={kind} seed={bake.slug} />
         )}
@@ -450,21 +407,18 @@ function PortalCard({
           {KIND_LABELS[kind]}
           {whose ? ` · ${whose}` : ""}
         </p>
-        <h2 className="font-display mt-0.5 text-[1.7rem] leading-8 tracking-tight md:text-[2rem]">
-          {bake.title}
+        <h2
+          id={titleId}
+          className="font-display mt-0.5 text-[1.7rem] leading-8 tracking-tight md:text-[2rem]"
+        >
+          <Link to={href} className="book-portal-title-link" {...warmHandlers}>
+            {bake.title}
+          </Link>
         </h2>
-        {bakeStars(bake) > 0 ? (
-          <p className="book-portal-rating">
-            <BakeStars value={bakeStars(bake)} size="card" />
-            <span className="book-portal-according">
-              {accordingTo(bake, selfId) ?? `According to ${bake.bakerName}`}
-            </span>
-          </p>
-        ) : null}
         {hits.length > 0 ? (
-          <p className="mt-1 text-[17px] leading-6 text-ink-soft">{hits[0]}</p>
+          <p className="book-portal-hook">{hits[0]}</p>
         ) : hook ? (
-          <p className="mt-1 text-[17px] leading-6 text-ink-soft italic">{hook}</p>
+          <p className="book-portal-hook book-portal-hook-note">{hook}</p>
         ) : null}
         {madeLine ? <p className="book-portal-made">{madeLine}</p> : null}
         <div className="book-portal-actions">
@@ -472,11 +426,10 @@ function PortalCard({
             {formatBakeDate(bake.bakedOn)}
           </time>
           <Link
-            to={{ pathname: `/bakes/${bake.slug}`, search }}
+            to={href}
             className="book-portal-make"
-            onPointerEnter={() => setWarm(true)}
-            onPointerDown={() => setWarm(true)}
-            onFocus={() => setWarm(true)}
+            aria-labelledby={titleId}
+            {...warmHandlers}
           >
             View recipe
           </Link>

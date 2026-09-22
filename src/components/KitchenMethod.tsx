@@ -31,7 +31,7 @@ export function KitchenMethod({
   return (
     <section
       aria-labelledby="kitchen-method-heading"
-      className="border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-6 md:px-7 md:py-7"
+      className="kitchen-method border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-3.5 py-5 md:px-7 md:py-7"
     >
       <Kicker>The recipe</Kicker>
       <h2
@@ -50,7 +50,7 @@ export function KitchenMethod({
         <div className="mt-5 grid gap-8 md:grid-cols-2 md:gap-10">
           {whatWentIn.length > 0 ? (
             <div>
-              <h3 className="text-[16px] font-medium tracking-[0.04em] text-ink-soft uppercase">
+              <h3 className="text-[17px] font-medium tracking-[0.02em] text-ink">
                 What went in
               </h3>
               <ul className="mt-3 flex flex-col">
@@ -67,7 +67,7 @@ export function KitchenMethod({
           ) : null}
           {how.length > 0 ? (
             <div>
-              <h3 className="text-[16px] font-medium tracking-[0.04em] text-ink-soft uppercase">
+              <h3 className="text-[17px] font-medium tracking-[0.02em] text-ink">
                 How
               </h3>
               <ol className="mt-3 flex flex-col">

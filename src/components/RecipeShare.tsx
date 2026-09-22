@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -14,6 +14,7 @@ export function RecipeShare({
   className?: string;
 }) {
   const createSlip = useMutation(api.slips.create);
+  const statusId = useId();
   const [state, setState] = useState<"idle" | "working" | "copied" | "error">(
     "idle",
   );
@@ -66,28 +67,36 @@ export function RecipeShare({
           : "Share";
 
   return (
-    <button
-      type="button"
-      className={cn("book-press recipe-share", className)}
-      aria-label={spoken}
-      aria-busy={state === "working"}
-      onClick={() => void share()}
-    >
-      {state === "copied" ? (
-        <svg
-          className="recipe-share-check"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path d="M4.5 12.5 9.5 17.5 19.5 6.5" />
-        </svg>
-      ) : (
-        <span className="recipe-share-deck" aria-hidden="true" data-state={state}>
-          <span className="recipe-share-card recipe-share-card-back" />
-          <span className="recipe-share-card recipe-share-card-front" />
-        </span>
-      )}
-      <span className="recipe-share-words">{label}</span>
-    </button>
+    <>
+      <button
+        type="button"
+        className={cn("book-press recipe-share", className)}
+        aria-label={spoken}
+        aria-busy={state === "working"}
+        aria-describedby={
+          state === "copied" || state === "error" ? statusId : undefined
+        }
+        onClick={() => void share()}
+      >
+        {state === "copied" ? (
+          <svg
+            className="recipe-share-check"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path d="M4.5 12.5 9.5 17.5 19.5 6.5" />
+          </svg>
+        ) : (
+          <span className="recipe-share-deck" aria-hidden="true" data-state={state}>
+            <span className="recipe-share-card recipe-share-card-back" />
+            <span className="recipe-share-card recipe-share-card-front" />
+          </span>
+        )}
+        <span className="recipe-share-words">{label}</span>
+      </button>
+      <span id={statusId} className="sr-only" aria-live="polite" aria-atomic="true">
+        {state === "copied" || state === "error" ? spoken : ""}
+      </span>
+    </>
   );
 }

@@ -10,6 +10,7 @@ export function CookbookBack({ className }: { className?: string }) {
     <button
       type="button"
       className={cn("book-press book-press-back", className)}
+      aria-label="Back to the book"
       onClick={() => {
         const idx = window.history.state?.idx;
         if (typeof idx === "number" && idx > 0) {
@@ -29,7 +30,10 @@ export function CookbookBack({ className }: { className?: string }) {
           strokeLinejoin="round"
         />
       </svg>
-      <span>Back to the book</span>
+      <span className="book-press-back-full">Back to the book</span>
+      <span className="book-press-back-short" aria-hidden="true">
+        Back
+      </span>
     </button>
   );
 }

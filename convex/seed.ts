@@ -37,7 +37,6 @@ export const momSamples = [
     bakerName: "Mom",
     bakedOn: "2026-09-14",
     publishedAt: Date.UTC(2026, 8, 14),
-    rating: 5,
     outcome: "15 muffins. Gone by noon. Doubled spice is the keeper.",
     changes: [
       {
@@ -85,7 +84,6 @@ export const momSamples = [
     bakerName: "Mom",
     bakedOn: "2026-09-02",
     publishedAt: Date.UTC(2026, 8, 2),
-    rating: 5,
     outcome: "One 9×13. Enough for the table, none for tomorrow.",
     changes: [
       {
@@ -128,7 +126,6 @@ export const momSamples = [
     bakerName: "Mom",
     bakedOn: "2026-08-21",
     publishedAt: Date.UTC(2026, 7, 21),
-    rating: 5,
     outcome: "One loaf. Better on day two, toasted.",
     changes: [
       {
@@ -177,7 +174,6 @@ export const momSamples = [
     bakerName: "Mom",
     bakedOn: "2026-08-08",
     publishedAt: Date.UTC(2026, 7, 8),
-    rating: 5,
     outcome: "Two dozen. The salt is not optional.",
     changes: [
       {
@@ -217,7 +213,6 @@ export const momSamples = [
     bakerName: "Mom",
     bakedOn: "2026-07-19",
     publishedAt: Date.UTC(2026, 6, 19),
-    rating: 5,
     outcome: "Two dozen. Traveled. Came home empty.",
     changes: [
       {

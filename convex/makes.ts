@@ -9,13 +9,11 @@ const makeLogValidator = v.object({
   bakeId: v.id("bakes"),
   title: v.string(),
   slug: v.string(),
-  rating: v.number(),
   note: v.string(),
   madeAt: v.number(),
 });
 
 const latestValidator = v.object({
-  rating: v.number(),
   note: v.string(),
   madeAt: v.number(),
 });
@@ -23,14 +21,6 @@ const latestValidator = v.object({
 function clipNote(note: string): string {
   const trimmed = note.trim();
   return trimmed.length > NOTE_MAX ? trimmed.slice(0, NOTE_MAX) : trimmed;
-}
-
-function starRating(value: number): number {
-  const rating = Math.round(value);
-  if (rating < 1 || rating > 5) {
-    throw new Error("Give it one to five stars.");
-  }
-  return rating;
 }
 
 function madeAtFromStamp(stamp: string): number {
@@ -62,9 +52,10 @@ function madeAtFromStamp(stamp: string): number {
 export const save = mutation({
   args: {
     bakeId: v.id("bakes"),
-    rating: v.number(),
     note: v.optional(v.string()),
     madeOn: v.string(),
+    // Ignored — older clients may still send a star rating.
+    rating: v.optional(v.number()),
   },
   returns: v.id("bakeMakes"),
   handler: async (ctx, args) => {
@@ -80,7 +71,6 @@ export const save = mutation({
     return await ctx.db.insert("bakeMakes", {
       bakeId: bake._id,
       userId: user._id,
-      rating: starRating(args.rating),
       note: clipNote(args.note ?? ""),
       madeAt: madeAtFromStamp(args.madeOn),
       title: bake.title,
@@ -107,7 +97,6 @@ export const mine = query({
       bakeId: row.bakeId,
       title: row.title,
       slug: row.slug,
-      rating: row.rating,
       note: row.note,
       madeAt: row.madeAt,
     }));
@@ -150,7 +139,6 @@ export const forBake = query({
       count: rows.length,
       latest: latest
         ? {
-            rating: latest.rating,
             note: latest.note,
             madeAt: latest.madeAt,
           }

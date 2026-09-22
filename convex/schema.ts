@@ -44,7 +44,7 @@ export default defineSchema({
     status: v.union(v.literal("draft"), v.literal("published")),
     publishedAt: v.optional(v.number()),
     bakedOn: v.string(),
-    rating: v.number(),
+    rating: v.optional(v.number()),
     outcome: v.string(),
     changes: v.array(
       v.object({
@@ -130,7 +130,7 @@ export default defineSchema({
   bakeMakes: defineTable({
     bakeId: v.id("bakes"),
     userId: v.id("users"),
-    rating: v.number(),
+    rating: v.optional(v.number()),
     note: v.string(),
     madeAt: v.number(),
     title: v.string(),

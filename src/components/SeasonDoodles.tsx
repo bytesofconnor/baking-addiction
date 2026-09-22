@@ -431,7 +431,7 @@ export function SeasonDoodles() {
     return (
       <div
         aria-hidden="true"
-        className="season-doodles season-artwork-layer pointer-events-none absolute inset-0 z-0 overflow-hidden"
+        className="season-doodles season-artwork-layer pointer-events-none z-0 overflow-hidden"
       >
         <picture className="season-artwork-picture">
           <source media="(max-width: 639px)" srcSet={theme.artwork.mobile} />
@@ -448,7 +448,7 @@ export function SeasonDoodles() {
   return (
     <div
       aria-hidden="true"
-      className="season-doodles pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      className="season-doodles pointer-events-none z-0 overflow-hidden"
     >
       {theme.doodles.map((spot, index) => (
         <Spot key={`${theme.month}-${spot.doodle}-${index}`} spot={spot} />

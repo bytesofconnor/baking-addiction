@@ -41,7 +41,6 @@ export const bakeValidator = v.object({
   status: v.union(v.literal("draft"), v.literal("published")),
   publishedAt: v.optional(v.number()),
   bakedOn: v.string(),
-  rating: v.number(),
   outcome: v.string(),
   changes: v.array(changeValidator),
 });
@@ -57,7 +56,6 @@ export const bakeTeaserValidator = v.object({
   kind: v.optional(kindValidator),
   publishedAt: v.optional(v.number()),
   bakedOn: v.string(),
-  rating: v.number(),
   outcome: v.string(),
   changes: v.array(changeValidator),
   ingredients: v.array(v.string()),
