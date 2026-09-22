@@ -134,35 +134,80 @@ body {
 }
 
 .book-chrome {
+  position: relative;
   padding-top: 1.1rem;
   /* Keep All Recipes / Add a recipe / Your kitchen the same chrome height. */
   min-height: 4.35rem;
 }
 
+.book-chrome-head {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  /* Room for the pinned heart so the title never shoves it. */
+  padding-right: 2.75rem;
+}
+
+.book-chrome-title {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .book-sign {
   position: absolute;
-  top: 0.15rem;
+  top: 0.12rem;
   right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
-  max-width: 7rem;
-  min-height: 2.75rem;
+  padding: 0.15rem;
   color: var(--color-cinnamon-deep);
-  font-family: "Snell Roundhand", "Apple Chancery", "Palatino Linotype", Palatino, cursive;
-  font-size: 1.7rem;
-  font-style: italic;
-  line-height: 1.05;
-  text-align: right;
+  line-height: 0;
   text-decoration: none;
-  cursor: pointer;
-  transform: rotate(-8deg);
-  transform-origin: top right;
-  transition: transform 0.2s ease, color 0.2s ease;
+  transform: rotate(8deg);
+  transform-origin: center;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .book-chrome-head {
+    padding-right: 3.2rem;
+  }
+
+  .book-sign {
+    top: 0.18rem;
+  }
 }
 
 a.book-sign:hover,
 a.book-sign:focus-visible {
-  color: var(--color-cocoa);
-  transform: rotate(-8deg) scale(1.05);
+  opacity: 0.88;
+  transform: rotate(8deg) scale(1.06);
+}
+
+a.book-sign:focus-visible {
+  outline: 2px solid var(--color-cinnamon-deep);
+  outline-offset: 3px;
+  border-radius: 0.35rem;
+}
+
+.book-sign-heart {
+  display: block;
+  /* Sit with the All Recipes display size (~2.25 / 2.7rem). */
+  width: 2.05rem;
+  height: 2.05rem;
+}
+
+@media (min-width: 768px) {
+  .book-sign-heart {
+    width: 2.45rem;
+    height: 2.45rem;
+  }
 }
 
 .book-colophon {
@@ -337,13 +382,35 @@ a.book-press {
   min-height: 0;
 }
 
+/* Shared paper stack — keep the book board on the same sheet as the face. */
+.book,
+.book-face,
+.book-filter-tray,
+.book-bookmark-tuck {
+  background-color: var(--color-paper);
+  /* Whisper of pulp: soft wash + fine grain. Meant to be felt, not noticed. */
+  background-image:
+    radial-gradient(
+      120% 75% at 50% -15%,
+      color-mix(in srgb, var(--color-paper-raised) 88%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 55%,
+      color-mix(in srgb, var(--color-cocoa) 3.5%, transparent) 100%
+    ),
+    url("/paper-whisper.png");
+  background-size: auto, auto, 256px 256px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  background-blend-mode: normal, normal, soft-light;
+}
+
 .book-face {
   display: flex;
   height: 100%;
   min-height: 0;
   flex-direction: column;
-  background-color: var(--color-paper);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
 }
 
 .room-shell[data-book-grow="true"] .book-face,
@@ -1320,27 +1387,10 @@ body {
     scroll-margin-top: 5.5rem;
   }
 
-  .book-filter-bar {
-    top: env(safe-area-inset-top, 0px);
-    min-height: 3.25rem;
-    padding-top: 0.35rem;
-    padding-bottom: 0.35rem;
-  }
-
   .book-filter-tray {
     top: env(safe-area-inset-top, 0px);
     padding-top: 0.45rem;
     padding-bottom: 0.55rem;
-  }
-
-  .book-filter-toggle {
-    min-height: 3rem;
-    min-width: 3rem;
-    padding-inline: 0.95rem;
-  }
-
-  .book-people-toggle {
-    min-height: 3rem;
   }
 
   .book-press-back-full {
@@ -1413,7 +1463,7 @@ body {
   }
 
   .book-portal-grid .book-portal-results {
-    padding: 0.4rem;
+    padding: 0.6rem;
   }
 
   .book-portal-copy h2 {
@@ -1491,8 +1541,6 @@ body {
   overflow: visible;
   perspective: 2400px;
   perspective-origin: var(--book-hinge) 50%;
-  background-color: var(--color-paper);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
   border: 1.5px solid var(--color-cocoa);
   transform-style: preserve-3d;
 }
@@ -1811,7 +1859,8 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   cursor: default;
 }
 
-/* Lip that covers the tab roots when the cover isn't on (FAQ / open book) */
+/* Lip that covers the tab roots when the cover isn't on (FAQ / open book).
+   Match the lightened top of the page face so this isn't a tan band. */
 .book::before {
   content: "";
   pointer-events: none;
@@ -1821,8 +1870,11 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   left: 0;
   z-index: 25;
   height: 0.55rem;
-  background-color: var(--color-paper);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-color: color-mix(in srgb, var(--color-paper-raised) 72%, var(--color-paper));
+  background-image: url("/paper-whisper.png");
+  background-size: 256px 256px;
+  background-repeat: repeat;
+  background-blend-mode: soft-light;
 }
 
 .book[data-face="back"]::before {
@@ -1850,8 +1902,6 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   z-index: 21;
   height: 0.58rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-cocoa) 16%, transparent);
-  background-color: var(--color-paper);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
 }
 
 @media (max-width: 639px) {
@@ -2585,149 +2635,17 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   gap: 0.45rem;
 }
 
-.book-filter-bar {
-  position: sticky;
-  top: 0;
-  z-index: 14;
-  display: flex;
-  min-height: 3rem;
-  align-items: center;
-  gap: 0.7rem 1rem;
-  padding: 0.1rem 0 0.2rem;
-  border-bottom: 1px solid var(--color-rule);
-  background: var(--color-paper);
-  box-shadow: 0 0.55rem 0.7rem -0.75rem color-mix(in srgb, var(--color-cocoa) 55%, transparent);
-}
-
-/* Always-open tray under search — no collapsed Filters fold. */
+/* Always-open tray under search — whose + sort in one voice. */
 .book-filter-tray {
   position: sticky;
   top: 0;
   z-index: 13;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem 0.75rem;
-  padding: 0.55rem 0 0.65rem;
+  gap: 0.2rem 0.75rem;
+  padding: 0.45rem 0 0.55rem;
   border-bottom: 1px solid var(--color-rule);
-  background: var(--color-paper);
   box-shadow: 0 0.55rem 0.7rem -0.75rem color-mix(in srgb, var(--color-cocoa) 45%, transparent);
-}
-
-.book-filter-toggle {
-  display: inline-flex;
-  min-height: 3rem;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  padding: 0 0.8rem 0.12rem;
-  border: 1.5px solid var(--color-cocoa);
-  border-bottom-width: 3px;
-  border-radius: 3px;
-  background: var(--color-paper-raised);
-  color: var(--color-cocoa);
-  cursor: pointer;
-  font: inherit;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 650;
-  line-height: 1;
-  touch-action: manipulation;
-}
-
-.book-filter-toggle:hover {
-  color: var(--color-cinnamon-deep);
-  border-color: var(--color-cinnamon-deep);
-}
-
-.book-filter-toggle:active {
-  border-bottom-width: 1.5px;
-  transform: translateY(1.5px);
-}
-
-.book-filter-toggle:focus-visible {
-  outline: 2px solid var(--color-cinnamon-deep);
-  outline-offset: 3px;
-}
-
-.book-filter-chevron {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: translateY(-0.12rem) rotate(45deg);
-  transition: transform 160ms ease;
-}
-
-.book-filter-toggle[aria-expanded="true"] .book-filter-chevron {
-  transform: translateY(0.12rem) rotate(225deg);
-}
-
-.book-filter-summary {
-  min-width: 0;
-  margin: 0;
-  overflow: hidden;
-  color: var(--color-ink-soft);
-  font-size: 0.98rem;
-  line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.book-filter-drawer {
-  position: sticky;
-  top: 3.05rem;
-  z-index: 13;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  max-height: min(58dvh, 32rem);
-  overflow-y: auto;
-  padding: 0.15rem 0 0.35rem;
-  border-bottom: 1px solid var(--color-rule);
-  background: var(--color-paper);
-  box-shadow: 0 0.8rem 1rem -1rem color-mix(in srgb, var(--color-cocoa) 62%, transparent);
-}
-
-.book-filter-drawer[hidden] {
-  display: none;
-}
-
-.book-filter-drawer .book-check,
-.book-filter-drawer .book-mark,
-.book-filter-drawer .book-tab,
-.book-filter-drawer .book-sort,
-.book-filter-drawer .book-filter-remember {
-  min-height: 42px;
-  font-size: 17px;
-}
-
-@media (max-width: 639px) {
-  .book-filter-bar {
-    min-height: 3.25rem;
-    flex-wrap: wrap;
-    gap: 0.45rem 0.65rem;
-    align-items: flex-start;
-    padding-block: 0.35rem 0.4rem;
-  }
-
-  .book-filter-toggle {
-    min-height: 3rem;
-    min-width: 3rem;
-    padding-inline: 0.85rem;
-    font-size: 1rem;
-  }
-
-  .book-filter-summary {
-    flex: 1 1 10rem;
-    font-size: 0.95rem;
-    line-height: 1.4;
-  }
-
-  .book-filter-drawer {
-    top: 3.25rem;
-    max-height: calc(100dvh - 12rem);
-  }
 }
 
 .book-index {
@@ -2738,7 +2656,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 }
 
 .book-index-tray {
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.25rem 1.35rem;
 }
 
@@ -2827,15 +2745,15 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 .book-portal-stack,
 .book-portal-stack-2 {
   position: absolute;
-  inset: 0.35rem -0.35rem -0.4rem 0.45rem;
+  inset: 0.28rem -0.28rem -0.32rem 0.35rem;
   z-index: 0;
-  border: 1.5px solid color-mix(in srgb, var(--color-cocoa) 38%, var(--color-paper));
+  border: 1px solid color-mix(in srgb, var(--color-cocoa) 22%, var(--color-paper));
   background: var(--color-paper-press);
 }
 
+/* One under-sheet is enough — two felt like a border pile. */
 .book-portal-stack-2 {
-  inset: 0.18rem -0.18rem -0.22rem 0.22rem;
-  background: color-mix(in srgb, var(--color-paper) 70%, var(--color-paper-press));
+  display: none;
 }
 
 .book-portal-well {
@@ -2847,7 +2765,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   flex-direction: column;
   overflow: hidden;
   padding: 0.55rem 0.75rem 0.5rem;
-  border: 1.5px solid var(--color-cocoa);
+  border: 1px solid color-mix(in srgb, var(--color-cocoa) 42%, var(--color-rule));
   background: var(--color-paper-raised);
 }
 
@@ -2875,16 +2793,16 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   height: 100%;
   flex-direction: column;
   overflow: hidden;
-  border: 1.5px solid var(--color-rule);
-  border-radius: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--color-cocoa) 28%, var(--color-rule));
+  border-radius: 0.35rem;
   background: var(--color-paper-raised);
-  padding: 0.55rem;
+  padding: 0.7rem;
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
 .book-portal-grid .book-portal-results:hover,
 .book-portal-grid .book-portal-results:focus-within {
-  border-color: var(--color-cocoa);
+  border-color: color-mix(in srgb, var(--color-cocoa) 55%, var(--color-rule));
   transform: translateY(-1px);
 }
 
@@ -2959,18 +2877,11 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   flex: 0 0 auto;
   width: 100%;
   min-height: 0;
-  padding: 0.4rem;
+  padding: 0;
   overflow: visible;
-  border: 1.5px solid color-mix(in srgb, var(--color-cocoa) 72%, var(--color-rule));
-  border-bottom-width: 3px;
-  border-radius: 0.45rem;
-  background:
-    linear-gradient(
-      165deg,
-      color-mix(in srgb, var(--color-paper-raised) 92%, var(--color-wash-warm)),
-      var(--color-paper-raised) 42%,
-      color-mix(in srgb, var(--color-paper-press) 55%, var(--color-paper-raised))
-    );
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
 }
 
 .book-portal-frame-well {
@@ -2978,7 +2889,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--color-cocoa) 28%, var(--color-rule));
+  border: 1px solid color-mix(in srgb, var(--color-cocoa) 32%, var(--color-rule));
   border-radius: 0.3rem;
   background: var(--color-paper-press);
 }
@@ -3164,7 +3075,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
-  padding-top: 0.35rem;
+  padding: 0.55rem 0.15rem 0.1rem;
 }
 
 .book-portal-hook {
@@ -3479,9 +3390,9 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   width: fit-content;
   align-items: center;
   justify-content: center;
-  padding: 0 1rem 0.12rem;
-  border: 2px solid var(--color-cocoa);
-  border-bottom-width: 5px;
+  padding: 0 1rem 0.08rem;
+  border: 1.5px solid var(--color-cocoa);
+  border-bottom-width: 3px;
   border-radius: 4px;
   background: var(--color-cinnamon-deep);
   color: var(--color-paper-raised);
@@ -3504,9 +3415,9 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 }
 
 .book-portal-make:active {
-  border-bottom-width: 2px;
-  padding-bottom: 0.28rem;
-  transform: translateY(2px);
+  border-bottom-width: 1.5px;
+  padding-bottom: 0.22rem;
+  transform: translateY(1.5px);
 }
 
 .book-portal-title-link {
@@ -3539,36 +3450,6 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   font-variant-numeric: tabular-nums;
 }
 
-.book-filter-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.4rem;
-}
-
-.book-filter-block-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-  min-height: 44px;
-}
-
-.book-filter-kicker {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.4;
-  color: var(--color-ink-soft);
-}
-
-.book-filter-note {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.4;
-  color: var(--color-ink-soft);
-}
-
 .book-search {
   border: 1.5px solid var(--color-cocoa);
   border-radius: 0.4rem;
@@ -3591,169 +3472,22 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   box-shadow: 0 2px 6px color-mix(in srgb, var(--color-cinnamon-deep) 20%, transparent);
 }
 
-.book-checks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.2rem 0.45rem;
-}
-
 .book-whose {
   display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.book-whose-primary {
-  display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem 1rem;
-}
-
-.book-people-toggle {
-  display: inline-flex;
-  min-height: 3rem;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0 0.8rem 0.12rem;
-  border: 1.5px solid var(--color-cocoa);
-  border-bottom-width: 3px;
-  border-radius: 3px;
-  background: var(--color-paper-raised);
-  color: var(--color-cocoa);
-  cursor: pointer;
-  font: inherit;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 650;
-  line-height: 1;
-  touch-action: manipulation;
-}
-
-.book-people-toggle:hover,
-.book-people-toggle[data-active="true"] {
-  color: var(--color-cinnamon-deep);
-  border-color: var(--color-cinnamon-deep);
-}
-
-.book-people-toggle:active {
-  border-bottom-width: 1.5px;
-  transform: translateY(1.5px);
-}
-
-.book-people-toggle:focus-visible {
-  outline: 2px solid var(--color-cinnamon-deep);
-  outline-offset: 3px;
-}
-
-.book-people-count {
-  color: color-mix(in srgb, currentColor 72%, var(--color-ink-soft));
-  font-family: var(--font-sans);
-  font-size: 0.82em;
-  font-weight: 500;
-}
-
-.book-people-chevron {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: translateY(-0.12rem) rotate(45deg);
-  transition: transform 160ms ease;
-}
-
-.book-people-toggle[aria-expanded="true"] .book-people-chevron {
-  transform: translateY(0.12rem) rotate(225deg);
-}
-
-.book-people-picker {
-  max-height: 9.5rem;
-  overflow-y: auto;
-  padding: 0.15rem 0.45rem;
-  border-left: 2px solid var(--color-rule);
-  background: color-mix(in srgb, var(--color-paper-raised) 54%, transparent);
-  scrollbar-color: color-mix(in srgb, var(--color-cocoa) 34%, transparent) transparent;
-  scrollbar-width: thin;
-}
-
-.book-people-picker[hidden],
-.book-whose-primary .book-filter-remember[data-placeholder="true"] {
-  display: none;
-}
-
-.book-check {
-  display: inline-flex;
-  min-height: 52px;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0 0.55rem 0 0.15rem;
-  border: 0;
-  background: transparent;
-  color: var(--color-ink-soft);
-  cursor: pointer;
-  font: inherit;
-  font-size: 19px;
-  line-height: 1.3;
-  text-align: left;
-  touch-action: manipulation;
-}
-
-.book-check:hover {
-  color: var(--color-ink);
-}
-
-.book-check:hover .book-check-box {
-  border-color: var(--color-cocoa);
-}
-
-.book-check[aria-checked="true"] {
-  color: var(--color-cocoa);
-}
-
-.book-check:focus-visible {
-  outline: 2px solid var(--color-cinnamon-deep);
-  outline-offset: 3px;
-}
-
-.book-check-box {
-  position: relative;
-  display: block;
-  width: 1.45rem;
-  height: 1.45rem;
-  flex: 0 0 1.45rem;
-  border: 2px solid var(--color-cocoa);
-  border-radius: 3px;
-  background: var(--color-paper-raised);
-}
-
-.book-check[aria-checked="true"] .book-check-box {
-  border-color: var(--color-cinnamon-deep);
-  background: color-mix(in srgb, var(--color-cinnamon) 14%, var(--color-paper-raised));
-}
-
-.book-check[aria-checked="true"] .book-check-box::after {
-  content: "";
-  position: absolute;
-  top: 0.12rem;
-  left: 0.4rem;
-  width: 0.38rem;
-  height: 0.72rem;
-  border: solid var(--color-cinnamon-deep);
-  border-width: 0 2.4px 2.4px 0;
-  transform: rotate(40deg);
+  gap: 0.35rem 1.25rem;
 }
 
 .book-marks {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.2rem 1.25rem;
+  gap: 0.15rem 1.1rem;
 }
 
 .book-mark {
   display: inline-flex;
-  min-height: 52px;
+  min-height: 2.75rem;
   align-items: center;
   padding: 0;
   border: 0;
@@ -3761,10 +3495,110 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   color: var(--color-ink-soft);
   cursor: pointer;
   font: inherit;
-  font-size: 19px;
-  font-style: italic;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-style: normal;
+  font-weight: 500;
   line-height: 1.3;
   touch-action: manipulation;
+}
+
+.book-mark-who,
+.book-baker-name,
+.bake-leaf-baker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.book-mark-who {
+  gap: 0.5rem;
+}
+
+.book-mark-who .book-baker-face {
+  width: 1.85rem;
+  height: 1.85rem;
+  font-size: 0.78em;
+}
+
+.book-baker-face {
+  display: inline-block;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--color-cocoa) 55%, transparent);
+  background: color-mix(in srgb, var(--color-paper-raised) 70%, var(--color-cinnamon) 30%);
+}
+
+.book-baker-face-sm {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.book-baker-face-md {
+  width: 1.85rem;
+  height: 1.85rem;
+}
+
+.book-baker-face-lg {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-width: 2px;
+}
+
+.book-baker-face-initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-cocoa);
+  font-family: var(--font-display);
+  font-size: 0.72em;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.book-baker-face-lg.book-baker-face-initial {
+  font-size: 1.55rem;
+}
+
+.book-you-portrait {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem 1.25rem;
+}
+
+.book-you-portrait-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.9rem;
+}
+
+.book-you-portrait-clear {
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-cocoa) 35%, transparent);
+  text-underline-offset: 0.28rem;
+}
+
+.book-you-portrait-clear:hover {
+  color: var(--color-cinnamon-deep);
+}
+
+.bake-leaf-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0;
 }
 
 .book-mark:hover {
@@ -3779,31 +3613,14 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 .book-mark[aria-checked="true"] {
   color: var(--color-cocoa);
   font-weight: 600;
+  text-decoration: none;
+}
+
+.book-mark[aria-checked="true"] .book-mark-label {
   text-decoration: underline;
   text-decoration-color: var(--color-cinnamon-deep);
   text-decoration-thickness: 2px;
-  text-underline-offset: 5px;
-}
-
-.book-mark::before {
-  content: "";
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  margin-right: 0.5rem;
-  border: 2px solid color-mix(in srgb, var(--color-cocoa) 38%, var(--color-paper));
-  border-radius: 50%;
-  background: transparent;
-}
-
-.book-mark:hover::before {
-  border-color: var(--color-cocoa);
-}
-
-.book-mark[aria-checked="true"]::before {
-  border-color: var(--color-cinnamon-deep);
-  background: var(--color-cinnamon-deep);
-  box-shadow: inset 0 0 0 2px var(--color-paper-raised);
+  text-underline-offset: 0.35rem;
 }
 
 .book-tabs {
@@ -3854,12 +3671,12 @@ a.book-tab {
 .book-sorts {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.2rem 1.2rem;
+  gap: 0.15rem 1.1rem;
 }
 
 .book-sort {
   display: inline-flex;
-  min-height: 52px;
+  min-height: 2.75rem;
   align-items: center;
   padding: 0;
   border: 0;
@@ -3867,7 +3684,9 @@ a.book-tab {
   color: var(--color-ink-soft);
   cursor: pointer;
   font: inherit;
-  font-size: 19px;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
   line-height: 1.3;
   touch-action: manipulation;
 }
@@ -3887,28 +3706,7 @@ a.book-tab {
   text-decoration: underline;
   text-decoration-color: var(--color-cinnamon-deep);
   text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
-}
-
-.book-filter-remember {
-  min-height: 52px;
-  min-width: 6.2rem;
-  padding: 0 0.2rem;
-  border: 0;
-  background: transparent;
-  color: var(--color-cinnamon-deep);
-  cursor: pointer;
-  font: inherit;
-  font-size: 19px;
-}
-
-.book-filter-remember[data-placeholder="true"] {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.book-filter-remember:hover {
-  color: var(--color-cocoa);
+  text-underline-offset: 0.35rem;
 }
 
 .drop-cap {
@@ -4448,6 +4246,25 @@ summary::-webkit-details-marker {
 
 /* Add / Edit form — photo on top, fields full book width (don’t
    borrow the bake-leaf side-by-side hero; it squeezes the title). */
+.write-desk {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (min-width: 720px) {
+  .write-desk {
+    max-width: min(52rem, 100%);
+  }
+}
+
+@media (min-width: 1100px) {
+  .write-desk {
+    max-width: min(60rem, 100%);
+  }
+}
+
 .write-desk-leaf {
   box-sizing: border-box;
   width: 100%;
@@ -4469,7 +4286,7 @@ summary::-webkit-details-marker {
 .write-desk-hero .bake-leaf-hero-photo {
   flex: 0 0 auto;
   width: 100%;
-  max-width: 22rem;
+  max-width: min(36rem, 100%);
 }
 
 .write-desk-hero .bake-leaf-hero-copy {
@@ -4478,6 +4295,12 @@ summary::-webkit-details-marker {
   min-width: 0;
   max-width: none;
   gap: 1rem;
+}
+
+.write-desk-recipe-cols {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 @media (min-width: 720px) {
@@ -4490,7 +4313,14 @@ summary::-webkit-details-marker {
 
   .write-desk-hero .bake-leaf-hero-photo {
     flex: 0 0 auto;
-    max-width: 22rem;
+    max-width: min(36rem, 100%);
+  }
+
+  .write-desk-recipe-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem 1.75rem;
+    align-items: start;
   }
 }
 
@@ -5136,7 +4966,6 @@ summary::-webkit-details-marker {
   .book-bookmark,
   .book-tab,
   .book-sort,
-  .book-check-box,
   .book-mark,
   .recipe-share,
   .skip-link:focus-visible {
@@ -5164,9 +4993,10 @@ summary::-webkit-details-marker {
     outline-offset: 3px;
   }
 
-  .book-check[aria-checked="true"] .book-check-box,
   .book-tab[aria-checked="true"],
+  .book-tab[aria-current="page"],
   .book-sort[aria-checked="true"],
+  .book-mark[aria-checked="true"],
   .book-bookmark-active {
     outline: 2px solid Highlight;
     outline-offset: 2px;

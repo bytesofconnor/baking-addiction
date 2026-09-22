@@ -18,6 +18,7 @@ import type * as http from "../http.js";
 import type * as kitchen from "../kitchen.js";
 import type * as kitchens from "../kitchens.js";
 import type * as lib_access from "../lib/access.js";
+import type * as lib_avatar from "../lib/avatar.js";
 import type * as lib_cardFromText from "../lib/cardFromText.js";
 import type * as lib_family from "../lib/family.js";
 import type * as lib_kinds from "../lib/kinds.js";
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   kitchen: typeof kitchen;
   kitchens: typeof kitchens;
   "lib/access": typeof lib_access;
+  "lib/avatar": typeof lib_avatar;
   "lib/cardFromText": typeof lib_cardFromText;
   "lib/family": typeof lib_family;
   "lib/kinds": typeof lib_kinds;

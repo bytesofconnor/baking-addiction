@@ -17,7 +17,7 @@ export function Wordmark({
   const mark = (
     <span
       className={cn(
-        "font-display font-extrabold leading-[0.95]",
+        "inline-block min-w-0 font-display font-extrabold leading-[0.95]",
         compact
           ? "min-h-[2.1rem] text-[1.7rem] md:min-h-[2.45rem] md:text-[2.05rem]"
           : "text-[2.25rem] md:text-[2.7rem]",
@@ -42,7 +42,7 @@ export function Wordmark({
   return (
     <Link
       to={keep("/")}
-      className="group inline-block min-w-0 py-1"
+      className="group inline-block min-w-0"
       aria-label={`${SITE_SHORT}, back to the recipe book`}
     >
       {mark}

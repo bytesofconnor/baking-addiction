@@ -26,6 +26,7 @@ import {
 } from "./lib/sources";
 import { sampleCoverUrl } from "./seed";
 import { countMadeByOthers } from "./lib/makeCounts";
+import { avatarUrlForUser } from "./lib/avatar";
 
 export async function photoUrlForBake(
   ctx: QueryCtx,
@@ -63,6 +64,9 @@ export async function toTeaser(
   ctx: QueryCtx,
   bake: Doc<"bakes">,
 ) {
+  const owner = bake.ownerId
+    ? await ctx.db.get("users", bake.ownerId)
+    : null;
   return {
     _id: bake._id,
     slug: bake.slug,
@@ -71,6 +75,7 @@ export async function toTeaser(
     sourceUrl: bake.sourceUrl,
     sourceKind: inferSourceKind(bake.sourceKind, bake.sourceUrl),
     bakerName: bake.bakerName,
+    bakerAvatarUrl: await avatarUrlForUser(ctx, owner),
     kind: bake.kind ?? inferKind(bake.title, bake.sourceTitle),
     publishedAt: bake.publishedAt,
     bakedOn: bake.bakedOn,
@@ -164,7 +169,13 @@ export const getPublishedBySlug = query({
   args: {
     slug: v.string(),
   },
-  returns: v.union(bakeValidator, v.null()),
+  returns: v.union(
+    v.object({
+      ...bakeValidator.fields,
+      bakerAvatarUrl: v.union(v.string(), v.null()),
+    }),
+    v.null(),
+  ),
   handler: async (ctx, args) => {
     const user = await getSignedInUser(ctx);
     if (!user) {
@@ -182,9 +193,13 @@ export const getPublishedBySlug = query({
       }
       if (await canReadBake(ctx, user._id, bake)) {
         const { rating: _rating, ...rest } = bake;
+        const owner = bake.ownerId
+          ? await ctx.db.get("users", bake.ownerId)
+          : null;
         return {
           ...rest,
           coverUrl: bake.coverUrl ?? sampleCoverUrl(bake.slug) ?? undefined,
+          bakerAvatarUrl: await avatarUrlForUser(ctx, owner),
         };
       }
     }

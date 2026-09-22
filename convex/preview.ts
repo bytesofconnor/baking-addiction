@@ -10,6 +10,7 @@ import {
   kitchensForPeople,
 } from "./lib/family";
 import { bakeTeaserValidator } from "./lib/validators";
+import { avatarUrlForUser } from "./lib/avatar";
 import {
   findUserByEmail,
   isSampleKey,
@@ -30,6 +31,7 @@ const dummyPersonReturn = v.object({
   called: v.string(),
   email: v.string(),
   included: v.boolean(),
+  avatarUrl: v.union(v.string(), v.null()),
 });
 
 async function sampleCookOrNull(ctx: QueryCtx, key: SampleKey) {
@@ -77,6 +79,22 @@ async function peopleFor(ctx: QueryCtx, userId: Doc<"users">["_id"]) {
     });
   }
   return uniquifyPeople(people);
+}
+
+async function peopleWithAvatars(
+  ctx: QueryCtx,
+  userId: Doc<"users">["_id"],
+) {
+  const unique = await peopleFor(ctx, userId);
+  const withAvatars = [];
+  for (const person of unique) {
+    const other = await ctx.db.get("users", person.otherUserId);
+    withAvatars.push({
+      ...person,
+      avatarUrl: await avatarUrlForUser(ctx, other),
+    });
+  }
+  return withAvatars;
 }
 
 async function teasersForKitchens(
@@ -141,6 +159,7 @@ export const dummyBook = query({
       key: v.union(v.literal("mom"), v.literal("nana"), v.literal("brenda")),
       userId: v.id("users"),
       called: v.string(),
+      avatarUrl: v.union(v.string(), v.null()),
       people: v.array(dummyPersonReturn),
     }),
   ),
@@ -153,7 +172,8 @@ export const dummyBook = query({
       key: peek.key,
       userId: peek.cook._id,
       called: calledName(peek.cook),
-      people: await peopleFor(ctx, peek.cook._id),
+      avatarUrl: await avatarUrlForUser(ctx, peek.cook),
+      people: await peopleWithAvatars(ctx, peek.cook._id),
     };
   },
 });

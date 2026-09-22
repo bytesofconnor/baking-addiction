@@ -792,7 +792,7 @@ export function WriteDesk({
   }
 
   return (
-    <div className="max-w-[40rem]">
+    <div className="write-desk">
       <PageTitle
         title={`${editingBakeId ? "Edit recipe" : "Add a recipe"} · ${SITE_SHORT}`}
       />
@@ -1210,7 +1210,7 @@ export function WriteDesk({
               className="mt-2 min-h-12 w-full"
             />
 
-            <div className="mt-6 flex flex-col gap-8">
+            <div className="write-desk-recipe-cols mt-6">
               <div>
                 <Label
                   htmlFor="ingredients"

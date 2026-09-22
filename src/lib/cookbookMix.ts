@@ -5,6 +5,7 @@ export type MixPerson = {
   called: string;
   email?: string;
   included?: boolean;
+  avatarUrl?: string | null;
 };
 
 export function whoKey(called: string): string {
@@ -182,13 +183,7 @@ export function resolveMix(
       otherUserIds: fromView.otherUserIds.filter(known),
     };
   }
-  const usual = mixes.find((mix) => mix.isDefault);
-  if (usual) {
-    return {
-      includeMine: usual.includeMine,
-      otherUserIds: usual.otherUserIds.filter(known),
-    };
-  }
+  // Always open on the whole book — no saved default lens.
   return {
     includeMine: true,
     otherUserIds: people.map((person) => person.otherUserId),

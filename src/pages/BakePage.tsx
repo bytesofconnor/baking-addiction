@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { Kicker } from "@/components/Kicker";
 import { PageTurn } from "@/components/PageTurn";
 import { BakePlate } from "@/components/BakePlate";
+import { BakerAvatar } from "@/components/BakerAvatar";
 import { PhotoFrame } from "@/components/PhotoFrame";
 import { RecipeSource } from "@/components/RecipeSource";
 import { SecretSauce } from "@/components/SecretSauce";
@@ -124,10 +125,17 @@ export function BakePage() {
           )}
         </div>
         <div className="bake-leaf-hero-copy">
-          <Kicker>
+          <Kicker className="bake-leaf-kicker">
             {KIND_LABELS[kind]}
             {" · "}
-            {bake.bakerName}
+            <span className="bake-leaf-baker">
+              <BakerAvatar
+                name={bake.bakerName}
+                url={bake.bakerAvatarUrl}
+                size="sm"
+              />
+              {bake.bakerName}
+            </span>
             {" · "}
             <time dateTime={bake.bakedOn}>{formatBakeDate(bake.bakedOn)}</time>
           </Kicker>

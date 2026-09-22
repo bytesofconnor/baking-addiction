@@ -1,13 +1,10 @@
-import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { CookbookExplorer } from "@/components/CookbookExplorer";
 import { RedirectToJoin } from "@/components/RedirectToJoin";
 import { WhoseCards } from "@/components/WhoseCards";
 import { PageTitle } from "@/lib/pageTitle";
 import { SITE_NAME } from "@/lib/site";
 import { useFamily } from "@/lib/family";
-import { mixName, type MixPerson, type MixSelection } from "@/lib/cookbookMix";
+import { type MixPerson, type MixSelection } from "@/lib/cookbookMix";
 import { useCookbookView } from "@/lib/preview";
 
 function trayNote(
@@ -40,35 +37,9 @@ function trayNote(
 }
 
 export function HomePage() {
-  const { status, kitchenId, user } = useFamily();
+  const { status, kitchenId } = useFamily();
   const view = useCookbookView();
-  const saveMix = useMutation(api.mixes.save);
-  const [remembering, setRemembering] = useState(false);
   const hasFamily = view.people.length > 0;
-
-  async function remember() {
-    if (!view.selection || !user || view.peeking) {
-      return;
-    }
-    setRemembering(true);
-    try {
-      const name = mixName(
-        view.selection.includeMine,
-        view.people.filter((person) =>
-          view.selection?.otherUserIds.includes(person.otherUserId),
-        ),
-        user.called,
-      );
-      await saveMix({
-        name: name === "Just me" ? "Just me" : name,
-        includeMine: view.selection.includeMine,
-        otherUserIds: view.selection.otherUserIds,
-        makeDefault: true,
-      });
-    } finally {
-      setRemembering(false);
-    }
-  }
 
   if (status === "checking") {
     return (
@@ -95,12 +66,9 @@ export function HomePage() {
   const whose = hasFamily && view.selection ? (
     <WhoseCards
       people={view.people}
-      mixes={view.mixes}
       selection={view.selection}
       onChange={view.applyMix}
-      onRemember={() => void remember()}
-      remembering={remembering}
-      canRemember={!view.peeking}
+      selfAvatarUrl={view.selfAvatarUrl}
     />
   ) : null;
 
