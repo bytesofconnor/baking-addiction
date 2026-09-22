@@ -3,6 +3,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { PageTitle } from "@/lib/pageTitle";
 import { markOAuthReturn, stashInvite } from "@/lib/oauthReturn";
 import { SITE_NAME, SITE_SHORT } from "@/lib/site";
+import { useToast } from "@/lib/toast";
 
 function GoogleComeIn({
   cover = false,
@@ -12,11 +13,10 @@ function GoogleComeIn({
   inviteToken?: string;
 }) {
   const { signIn } = useAuthActions();
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const toast = useToast();
 
   async function handleGoogle() {
-    setError(null);
     setPending(true);
     try {
       if (inviteToken) {
@@ -32,21 +32,13 @@ function GoogleComeIn({
       markOAuthReturn();
       await signIn("google", { redirectTo: window.location.href });
     } catch {
-      setError("Google didn't open. Try once more.");
+      toast.error("Google didn’t open. Try once more.");
       setPending(false);
     }
   }
 
   return (
     <>
-      {error ? (
-        <p
-          role="alert"
-          className={cover ? "book-cover-error" : "mt-4 text-[17px] text-cinnamon-deep"}
-        >
-          {error}
-        </p>
-      ) : null}
       <div className={cover ? "book-cover-cta-wrap" : "mt-8"}>
         <button
           type="button"

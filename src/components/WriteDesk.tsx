@@ -21,6 +21,7 @@ import {
   type SourceKind,
 } from "@/lib/sources";
 import { kindFromUrl } from "../../convex/lib/sources";
+import { useToast } from "@/lib/toast";
 import {
   CHANGE_MOVES,
   MAKES_HINT,
@@ -74,6 +75,7 @@ export function WriteDesk({
     token || kitchenId ? writeAccess : "skip",
   );
   const navigate = useNavigate();
+  const toast = useToast();
   const [params, setParams] = useSearchParams();
   const editParam = params.get("edit");
   const editBakeId =
@@ -120,7 +122,6 @@ export function WriteDesk({
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [pile, setPile] = useState<DraftCard[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -196,7 +197,6 @@ export function WriteDesk({
     setPile([]);
     setEditingIndex(null);
     setError(null);
-    setStatusMessage(null);
   }, [editBake, editBakeId, params, setParams]);
 
   useEffect(() => {
@@ -430,7 +430,6 @@ export function WriteDesk({
     setCoverCleared(false);
     hydratedEdit.current = null;
     setError(null);
-    setStatusMessage(null);
     if (params.has("edit")) {
       const next = new URLSearchParams(params);
       next.delete("edit");
@@ -531,14 +530,16 @@ export function WriteDesk({
         lastSlug = result.slug;
       }
       if (kept.length === 1 && lastSlug) {
+        toast.success("Recipe added to the book.");
         clearDesk();
         navigate(`/bakes/${lastSlug}`);
         return;
       }
+      toast.success(`${kept.length} recipes added to the book.`);
       clearDesk();
       navigate("/");
     } catch (caught) {
-      setError(
+      toast.error(
         caught instanceof Error
           ? caught.message
           : "Could not put those in the book.",
@@ -550,7 +551,6 @@ export function WriteDesk({
 
   async function onSubmit(status: "draft" | "published") {
     setError(null);
-    setStatusMessage(null);
     if (status === "published") {
       if (title.trim().length < 2) {
         setError("Give it a name so you can find it later.");
@@ -615,6 +615,7 @@ export function WriteDesk({
           });
         }
         const slug = result.slug;
+        toast.success(status === "published" ? "Changes saved." : "Draft saved.");
         clearDesk();
         navigate(`/bakes/${slug}`);
         return;
@@ -652,22 +653,24 @@ export function WriteDesk({
         setPile(remaining);
         setEditingIndex(null);
         if (remaining.length === 0) {
+          toast.success("Recipe added to the book.");
           clearDesk();
           navigate(`/bakes/${result.slug}`);
           return;
         }
-        setStatusMessage("That one is in the book.");
+        toast.success("That one is in the book.");
         setScreen("tray");
         return;
       }
       if (status === "published") {
+        toast.success("Recipe added to the book.");
         clearDesk();
         navigate(`/bakes/${result.slug}`);
       } else {
-        setStatusMessage("Saved. You can come back to this later.");
+        toast.success("Draft saved. You can come back later.");
       }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not save");
+      toast.error(caught instanceof Error ? caught.message : "Could not save");
     } finally {
       setPending(false);
     }
@@ -1237,12 +1240,6 @@ export function WriteDesk({
               {error}
             </p>
           ) : null}
-          {statusMessage ? (
-            <p role="status" className="mt-6 text-[17px] text-ink-soft">
-              {statusMessage}
-            </p>
-          ) : null}
-
           <div className="sticky bottom-0 z-10 mt-8 -mx-2 border-t border-rule bg-paper px-2 py-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <button

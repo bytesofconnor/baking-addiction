@@ -50,6 +50,10 @@ export function BookBookmarks({ pathname }: { pathname: string }) {
           onClick={(event) => {
             if (item.disabled) {
               event.preventDefault();
+              return;
+            }
+            if (!item.active) {
+              window.scrollTo({ top: 0, left: 0, behavior: "auto" });
             }
           }}
           className={() => bookmarkClass(item.active)}

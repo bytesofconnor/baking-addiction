@@ -11,6 +11,7 @@ import { useFamily } from "@/lib/family";
 import { PageTitle } from "@/lib/pageTitle";
 import { usePreview } from "@/lib/preview";
 import { SITE_SHORT } from "@/lib/site";
+import { useToast } from "@/lib/toast";
 
 export function YouPage() {
   const { status, user, signOut } = useFamily();
@@ -18,9 +19,8 @@ export function YouPage() {
   const setCalled = useMutation(api.familyAuth.setCalled);
   const location = useLocation();
   const navigate = useNavigate();
+  const toast = useToast();
   const [called, setCalledDraft] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
   const [pending, setPending] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const onFamily = location.pathname.startsWith("/you/family");
@@ -37,14 +37,12 @@ export function YouPage() {
 
   async function saveName(event: FormEvent) {
     event.preventDefault();
-    setError(null);
-    setSaved(false);
     setPending(true);
     try {
       await setCalled({ called: name });
-      setSaved(true);
+      toast.success("Name saved.");
     } catch (caught) {
-      setError(
+      toast.error(
         caught instanceof Error
           ? caught.message
           : "Couldn’t save that name.",
@@ -56,12 +54,11 @@ export function YouPage() {
 
   async function leave() {
     setLeaving(true);
-    setError(null);
     try {
       await signOut();
       navigate("/join", { replace: true });
     } catch {
-      setError("Couldn’t sign out. Try once more.");
+      toast.error("Couldn’t sign out. Try once more.");
       setLeaving(false);
     }
   }
@@ -94,7 +91,6 @@ export function YouPage() {
               value={name}
               onChange={(event) => {
                 setCalledDraft(event.target.value);
-                setSaved(false);
               }}
               autoComplete="nickname"
               autoCapitalize="words"
@@ -123,17 +119,6 @@ export function YouPage() {
               {user.email || "No email on this Google."}
             </p>
           </div>
-
-          {error ? (
-            <p role="alert" className="mt-6 text-[17px] text-cinnamon-deep">
-              {error}
-            </p>
-          ) : null}
-          {saved ? (
-            <p role="status" className="mt-6 text-[17px] text-ink-soft">
-              Saved.
-            </p>
-          ) : null}
 
           <div className="mt-8">
             <button

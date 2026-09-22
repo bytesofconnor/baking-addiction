@@ -45,6 +45,10 @@ export function Layout() {
 
   return (
     <>
+      {/* Keep seasonal art on the viewport, outside the perspectived room.
+          Otherwise the room's changing content height becomes the fixed
+          layer's containing block and re-crops the illustration per page. */}
+      <SeasonDoodles forceVisible={landingCover} />
       <div
         className="room-shell"
         data-preview={preview ? (open ? "open" : "shut") : undefined}
@@ -54,9 +58,8 @@ export function Layout() {
         data-book-grow={bookGrow ? "true" : undefined}
       >
         {preview ? <AdminShell /> : null}
-        <SeasonDoodles />
         <div
-          className="book relative z-10 mx-auto w-full max-w-[44rem] md:max-w-[52rem] xl:max-w-[66rem] 2xl:max-w-[72rem]"
+          className="book relative z-10 mx-auto w-full max-w-[48rem] md:max-w-[64rem] xl:max-w-[84rem] 2xl:max-w-[96rem]"
           data-page={page}
           data-face={backFace ? "back" : undefined}
           data-spine={backFace ? "end" : undefined}

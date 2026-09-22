@@ -20,6 +20,7 @@ import { ArriveProvider } from "@/lib/arrive";
 import { PreviewProvider } from "@/lib/preview";
 import { SeasonProvider } from "@/lib/SeasonTheme";
 import { useFamily } from "@/lib/family";
+import { ToastProvider } from "@/lib/toast";
 
 function RedirectKeep({ to }: { to: string }) {
   const [params] = useSearchParams();
@@ -96,13 +97,15 @@ export function App() {
   return (
     <BrowserRouter>
       <SeasonProvider>
-        <PreviewProvider>
-          <Routes>
-            <Route path="/slip/:token" element={<SlipPage />} />
-            <Route path="*" element={<BookRoutes />} />
-          </Routes>
-          <VercelAnalytics />
-        </PreviewProvider>
+        <ToastProvider>
+          <PreviewProvider>
+            <Routes>
+              <Route path="/slip/:token" element={<SlipPage />} />
+              <Route path="*" element={<BookRoutes />} />
+            </Routes>
+            <VercelAnalytics />
+          </PreviewProvider>
+        </ToastProvider>
       </SeasonProvider>
     </BrowserRouter>
   );

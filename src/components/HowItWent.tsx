@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatMadeAt, todayStamp } from "@/lib/dates";
+import { useToast } from "@/lib/toast";
 
 export function HowItWent({ bakeId }: { bakeId: Id<"bakes"> }) {
   const mine = useQuery(api.makes.forBake, { bakeId });
@@ -13,22 +14,19 @@ export function HowItWent({ bakeId }: { bakeId: Id<"bakes"> }) {
   const [note, setNote] = useState("");
   const [madeOn, setMadeOn] = useState(todayStamp);
   const [pending, setPending] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const headingId = useId();
+  const toast = useToast();
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    setError(null);
-    setSaved(false);
     setPending(true);
     try {
       await save({ bakeId, note, madeOn });
       setNote("");
       setMadeOn(todayStamp());
-      setSaved(true);
+      toast.success("Added to your page.");
     } catch (caught) {
-      setError(
+      toast.error(
         caught instanceof Error
           ? caught.message
           : "Couldn’t save that. Try once more.",
@@ -92,16 +90,6 @@ export function HowItWent({ bakeId }: { bakeId: Id<"bakes"> }) {
         </div>
       </form>
 
-      {error ? (
-        <p role="alert" className="mt-4 text-[17px] text-cinnamon-deep">
-          {error}
-        </p>
-      ) : null}
-      {saved ? (
-        <p role="status" className="mt-4 text-[17px] text-ink-soft">
-          On your page.
-        </p>
-      ) : null}
     </section>
   );
 }
