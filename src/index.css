@@ -304,13 +304,13 @@ a.book-press {
 }
 
 .book-pages:not([data-dir]) .book-page-arrive {
-  animation: book-page-arrive 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: book-page-arrive 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes book-page-arrive {
   from {
     opacity: 0;
-    transform: translateY(0.85rem);
+    transform: translateY(0.35rem);
   }
   to {
     opacity: 1;
@@ -404,11 +404,29 @@ a.book-press {
   width: 100%;
   min-width: 0;
   height: max-content;
+  opacity: 1;
+  visibility: visible;
+  z-index: 1;
+  transition:
+    opacity 160ms ease,
+    visibility 0s;
 }
 
 .book-warm-page[data-show="false"] {
+  opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  z-index: 0;
+  transition:
+    opacity 160ms ease,
+    visibility 0s linear 160ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-warm-page,
+  .book-warm-page[data-show="false"] {
+    transition: none;
+  }
 }
 
 @media (min-width: 768px) {
@@ -419,7 +437,7 @@ a.book-press {
 }
 
 .book-pages {
-  --book-flip-duration: 480ms;
+  --book-flip-duration: 420ms;
   position: relative;
   z-index: 1;
   display: flex;
@@ -1868,7 +1886,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
     padding-top: var(--room-pad-top);
   }
 
-  /* Signed-in phones: dock replaces top bookmark tabs.
+  /* Phones: dock replaces top bookmark tabs (Join/FAQ + signed-in).
      Flush the book to the top (safe-area only) — no shelf gap for missing tabs. */
   .room-shell[data-dock="true"] {
     --room-pad-top: env(safe-area-inset-top, 0px);
@@ -1888,7 +1906,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
     padding-bottom: var(--room-pad-bottom);
   }
 
-  .book-bookmarks-signed-in {
+  .room-shell[data-dock="true"] .book-bookmarks {
     display: none;
   }
 
@@ -1951,6 +1969,10 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
     box-shadow:
       0 -1px 0 color-mix(in srgb, var(--color-paper-raised) 80%, transparent),
       0 -6px 18px color-mix(in srgb, var(--color-ink) 14%, transparent);
+  }
+
+  .book-dock[data-cols="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .book-dock-tab {

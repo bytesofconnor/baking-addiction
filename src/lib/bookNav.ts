@@ -4,7 +4,7 @@ import { useFamily } from "@/lib/family";
 import { usePeekCalled, usePreview } from "@/lib/preview";
 
 export type BookNavItem = {
-  id: "cookbook" | "add" | "you";
+  id: "cookbook" | "add" | "you" | "join" | "faq";
   to: string;
   label: string;
   shortLabel: string;
@@ -24,8 +24,28 @@ export function useBookNav(pathname: string): {
   const section = sectionOf(pathname);
   const onDoor = family.status !== "in";
 
+  // Join / FAQ share the phone bottom dock with the signed-in tabs.
   if (onDoor) {
-    return { onDoor: true, items: [] };
+    return {
+      onDoor: true,
+      items: [
+        {
+          id: "join",
+          to: "/join",
+          label: "Join",
+          shortLabel: "Join",
+          active: section === "join",
+          end: true,
+        },
+        {
+          id: "faq",
+          to: "/faq",
+          label: "FAQ",
+          shortLabel: "FAQ",
+          active: section === "faq",
+        },
+      ],
+    };
   }
 
   const settingsActive = section === "you" || section === "family";

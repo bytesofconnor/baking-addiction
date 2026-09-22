@@ -26,6 +26,8 @@ export function Layout() {
   const landingCover = pathname === "/join" && family.status !== "in";
   const backFace = pathname === "/faq" && family.status !== "in";
   const signedIn = family.status === "in";
+  // Phones: bottom dock for Join/FAQ and the signed-in tabs (flush top).
+  const useDock = signedIn || landingCover || backFace;
   // Signed-in pages grow with content so the window scrolls like a normal page.
   // Join / FAQ stay fixed to one viewport.
   const bookGrow =
@@ -47,7 +49,7 @@ export function Layout() {
         className="room-shell"
         data-preview={preview ? (open ? "open" : "shut") : undefined}
         data-bookmarks="true"
-        data-dock={signedIn ? "true" : undefined}
+        data-dock={useDock ? "true" : undefined}
         data-landing-cover={landingCover ? "true" : undefined}
         data-book-grow={bookGrow ? "true" : undefined}
       >
@@ -138,7 +140,7 @@ export function Layout() {
         </div>
       </div>
       {/* Outside the perspectived room so position:fixed sticks to the viewport. */}
-      {signedIn ? <BookDock pathname={pathname} /> : null}
+      {useDock ? <BookDock pathname={pathname} /> : null}
     </>
   );
 }

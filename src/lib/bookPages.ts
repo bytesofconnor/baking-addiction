@@ -1,7 +1,7 @@
 import { DESK_PATH } from "@/lib/desk";
 
-/** One turn always takes this long, near or far. */
-export const BOOK_FLIP_MS = 480;
+/** One recipe-leaf turn. */
+export const BOOK_FLIP_MS = 420;
 /** Front ↔ back of the book — a whole-book turn. */
 export const BOOK_OVER_MS = 560;
 
@@ -112,7 +112,7 @@ export function sectionOf(pathname: string): BookSection {
   return "other";
 }
 
-/** Page turns for Recipes / Add / You, and for opening a bake from the index. */
+/** Page turns for the closed cover: Join ↔ FAQ. */
 export function isDoorFlip(fromPath: string, toPath: string): boolean {
   const from = sectionOf(fromPath);
   const to = sectionOf(toPath);
@@ -130,6 +130,11 @@ export function isCookbookLeafTurn(fromPath: string, toPath: string): boolean {
   );
 }
 
+/**
+ * When to run the physical page/book turn.
+ * Primary tabs (Recipes / Add / You) swap instantly via WarmPages —
+ * flipping between them feels like waiting on chrome.
+ */
 export function shouldFlip(fromPath: string, toPath: string): boolean {
   if (fromPath === toPath) {
     return false;
@@ -140,16 +145,7 @@ export function shouldFlip(fromPath: string, toPath: string): boolean {
   if (toPath === "/join") {
     return false;
   }
-  if (isCookbookLeafTurn(fromPath, toPath)) {
-    return true;
-  }
-  const from = sectionOf(fromPath);
-  const to = sectionOf(toPath);
-  if (from === to) {
-    return false;
-  }
-  const tabs = new Set<BookSection>(["cookbook", "add", "you"]);
-  return tabs.has(from) && tabs.has(to);
+  return isCookbookLeafTurn(fromPath, toPath);
 }
 
 export function planFlip(fromPath: string, toPath: string): FlipPlan {

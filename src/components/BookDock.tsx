@@ -5,16 +5,20 @@ function dockClass(active: boolean) {
   return `book-dock-tab${active ? " book-dock-tab-active" : ""}`;
 }
 
-/** Fixed bottom dock for signed-in phones. Hidden from sm and up via CSS. */
+/** Fixed bottom dock for phones (Join/FAQ + signed-in). Hidden from sm and up via CSS. */
 export function BookDock({ pathname }: { pathname: string }) {
-  const { onDoor, items } = useBookNav(pathname);
+  const { items } = useBookNav(pathname);
 
-  if (onDoor || items.length === 0) {
+  if (items.length === 0) {
     return null;
   }
 
   return (
-    <nav className="book-dock" aria-label="Book sections">
+    <nav
+      className="book-dock"
+      data-cols={items.length}
+      aria-label="Book sections"
+    >
       {items.map((item) => (
         <NavLink
           key={item.id}
