@@ -68,11 +68,15 @@ export function SlipPage() {
       <article className="slip-sheet">
         {recipe.photoUrl ? (
           <div className="book-portal-frame slip-frame">
-            <img src={recipe.photoUrl} alt="" />
+            <div className="book-portal-frame-well">
+              <img src={recipe.photoUrl} alt="" />
+            </div>
           </div>
         ) : (
           <div className="book-portal-frame slip-frame">
-            <BakePlate kind={recipe.kind} seed={recipe.title} />
+            <div className="book-portal-frame-well">
+              <BakePlate kind={recipe.kind} seed={recipe.title} />
+            </div>
           </div>
         )}
         <p className="mt-6 text-[16px] font-medium leading-6 text-ink-soft">

@@ -117,7 +117,9 @@ export function BakePage() {
             <PhotoFrame src={heroSrc} alt={heroAlt} size="hero" />
           ) : (
             <div className="book-portal-frame book-plate-hero">
-              <BakePlate kind={kind} seed={bake.slug} />
+              <div className="book-portal-frame-well">
+                <BakePlate kind={kind} seed={bake.slug} />
+              </div>
             </div>
           )}
         </div>

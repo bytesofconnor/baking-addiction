@@ -321,16 +321,18 @@ function PortalCard({
       aria-labelledby={titleId}
     >
       <div className="book-portal-frame">
-        {bake.photoUrl ? (
-          <img
-            src={bake.photoUrl}
-            alt=""
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <BakePlate kind={kind} seed={bake.slug} />
-        )}
+        <div className="book-portal-frame-well">
+          {bake.photoUrl ? (
+            <img
+              src={bake.photoUrl}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <BakePlate kind={kind} seed={bake.slug} />
+          )}
+        </div>
         {bake._id ? (
           <RecipeShare
             className="recipe-share-on-photo"
