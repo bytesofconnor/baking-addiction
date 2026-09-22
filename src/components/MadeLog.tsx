@@ -5,12 +5,13 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { RecipeEdit } from "@/components/RecipeEdit";
 import { formatBakeDate } from "@/lib/dates";
+import { useToast } from "@/lib/toast";
 
 export function MadeLog() {
   const rows = useQuery(api.bakes.listPosted);
   const removeMine = useMutation(api.bakes.removeMine);
   const [removingId, setRemovingId] = useState<Id<"bakes"> | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   async function remove(bakeId: Id<"bakes">, title: string) {
     if (removingId) {
@@ -22,12 +23,12 @@ export function MadeLog() {
     if (!ok) {
       return;
     }
-    setError(null);
     setRemovingId(bakeId);
     try {
       await removeMine({ bakeId });
+      toast.success("Recipe removed from the book.");
     } catch (caught) {
-      setError(
+      toast.error(
         caught instanceof Error
           ? caught.message
           : "Couldn’t delete that recipe.",
@@ -114,11 +115,6 @@ export function MadeLog() {
         </ol>
       )}
 
-      {error ? (
-        <p role="alert" className="mt-4 text-[17px] text-cinnamon-deep">
-          {error}
-        </p>
-      ) : null}
     </section>
   );
 }

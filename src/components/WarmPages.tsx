@@ -56,8 +56,9 @@ export function WarmPages({ pathname }: { pathname: string }) {
   return (
     <>
       {/*
-        Stack the three tab roots in one grid cell so the book stays as tall as
-        the tallest tab. Switching Recipes / Add / You no longer changes height.
+        Keep the three tab roots mounted so their local state stays warm, while
+        CSS removes inactive roots from layout. The active tab alone determines
+        the book's natural height above the shared viewport-height floor.
       */}
       <div className="book-warm-stack" hidden={extra} aria-hidden={extra}>
         <WarmPage show={section === "cookbook" && !onBake}>

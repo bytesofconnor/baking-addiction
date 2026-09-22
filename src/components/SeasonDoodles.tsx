@@ -424,14 +424,19 @@ function Spot({ spot }: { spot: DoodleSpot }) {
   );
 }
 
-export function SeasonDoodles() {
+export function SeasonDoodles({
+  forceVisible = false,
+}: {
+  forceVisible?: boolean;
+}) {
   const theme = useSeason();
+  const visibilityClass = forceVisible ? " season-doodles-visible" : "";
 
   if (theme.artwork) {
     return (
       <div
         aria-hidden="true"
-        className="season-doodles season-artwork-layer pointer-events-none z-0 overflow-hidden"
+        className={`season-doodles season-artwork-layer pointer-events-none z-0 overflow-hidden${visibilityClass}`}
       >
         <picture className="season-artwork-picture">
           <source media="(max-width: 639px)" srcSet={theme.artwork.mobile} />
@@ -448,7 +453,7 @@ export function SeasonDoodles() {
   return (
     <div
       aria-hidden="true"
-      className="season-doodles pointer-events-none z-0 overflow-hidden"
+      className={`season-doodles pointer-events-none z-0 overflow-hidden${visibilityClass}`}
     >
       {theme.doodles.map((spot, index) => (
         <Spot key={`${theme.month}-${spot.doodle}-${index}`} spot={spot} />

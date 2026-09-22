@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { useFamily } from "@/lib/family";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/lib/toast";
 
 export function RecipeDelete({
   bakeId,
@@ -21,7 +22,7 @@ export function RecipeDelete({
   const removeMine = useMutation(api.bakes.removeMine);
   const navigate = useNavigate();
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   if (!user || !ownerId || ownerId !== user._id) {
     return null;
@@ -37,13 +38,13 @@ export function RecipeDelete({
     if (!ok) {
       return;
     }
-    setError(null);
     setPending(true);
     try {
       await removeMine({ bakeId });
+      toast.success("Recipe removed from the book.");
       navigate("/", { replace: true });
     } catch (caught) {
-      setError(
+      toast.error(
         caught instanceof Error
           ? caught.message
           : "Couldn’t delete that recipe.",
@@ -64,11 +65,6 @@ export function RecipeDelete({
       >
         {pending ? "Deleting…" : "Delete"}
       </button>
-      {error ? (
-        <p role="alert" className="mt-2 text-[15px] text-cinnamon-deep">
-          {error}
-        </p>
-      ) : null}
     </div>
   );
 }

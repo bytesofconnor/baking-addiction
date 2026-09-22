@@ -6,6 +6,7 @@ import { Kicker } from "@/components/Kicker";
 import { useFamily } from "@/lib/family";
 import { useCookbookView } from "@/lib/preview";
 import { collapsePeople } from "@/lib/cookbookMix";
+import { useToast } from "@/lib/toast";
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -58,6 +59,7 @@ function FamilyPerson({
   canEdit,
   flipping,
   onFlip,
+  onError,
 }: {
   person: {
     otherUserId: Id<"users">;
@@ -68,6 +70,7 @@ function FamilyPerson({
   canEdit: boolean;
   flipping: boolean;
   onFlip: (included: boolean) => void;
+  onError: (message: string) => void;
 }) {
   const setCalled = useMutation(api.connections.setCalled);
   const [editing, setEditing] = useState(false);
@@ -91,6 +94,10 @@ function FamilyPerson({
     setSaving(true);
     try {
       await setCalled({ otherUserId: person.otherUserId, called: next });
+    } catch (caught) {
+      onError(
+        caught instanceof Error ? caught.message : "Couldn’t save that name.",
+      );
     } finally {
       setSaving(false);
     }
@@ -171,9 +178,8 @@ export function FamilyBook() {
   const createInvite = useMutation(api.kitchens.createInvite);
   const setIncluded = useMutation(api.connections.setIncluded);
   const plantFamily = useMutation(api.seedFamily.intoMyBook);
+  const toast = useToast();
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [planting, setPlanting] = useState(false);
   const [flipping, setFlipping] = useState<string | null>(null);
@@ -187,19 +193,18 @@ export function FamilyBook() {
 
   async function copyLink() {
     setPending(true);
-    setError(null);
-    setCopied(false);
     try {
       const result = await createInvite({ kitchenId, role: "cook" });
       const url = `${window.location.origin}/join?invite=${encodeURIComponent(result.token)}`;
       setInviteUrl(url);
       const ok = await copyText(url);
-      setCopied(ok);
-      if (!ok) {
-        setError("Clipboard blocked — select the link below and copy it.");
+      if (ok) {
+        toast.success("Share link copied.");
+      } else {
+        toast.error("Clipboard blocked — select the link below and copy it.");
       }
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : "Couldn’t make a link.");
+      toast.error(caught instanceof Error ? caught.message : "Couldn’t make a link.");
     } finally {
       setPending(false);
     }
@@ -207,11 +212,11 @@ export function FamilyBook() {
 
   async function fillSample() {
     setPlanting(true);
-    setError(null);
     try {
       await plantFamily({});
+      toast.success("Sample recipes added.");
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : "Couldn’t fill it.");
+      toast.error(caught instanceof Error ? caught.message : "Couldn’t fill it.");
     } finally {
       setPlanting(false);
     }
@@ -248,6 +253,7 @@ export function FamilyBook() {
                 person={person}
                 canEdit={!view.peeking}
                 flipping={flipping === person.otherUserId}
+                onError={(message) => toast.error(message)}
                 onFlip={(included) => {
                   setFlipping(person.otherUserId);
                   void setIncluded({
@@ -255,7 +261,7 @@ export function FamilyBook() {
                     included,
                   })
                     .catch((caught: unknown) => {
-                      setError(
+                      toast.error(
                         caught instanceof Error
                           ? caught.message
                           : "Couldn’t flip that.",
@@ -267,11 +273,6 @@ export function FamilyBook() {
             ))}
           </ul>
         )}
-        {error && people.length > 0 ? (
-          <p role="alert" className="mt-3 text-[17px] text-cinnamon-deep">
-            {error}
-          </p>
-        ) : null}
       </section>
 
       {canInvite && !view.peeking ? (
@@ -283,19 +284,12 @@ export function FamilyBook() {
           <div className="mt-5 rounded-lg border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-6 md:px-7 md:py-7">
             <p className="text-[18px] leading-8 text-ink-soft">
               {inviteUrl
-                ? copied
-                  ? "Copied. Text it to them — when they sign in, you both show up in each other’s books."
-                  : "Good for a month. Select the link if it didn’t copy."
+                ? "Good for a month. Text it to them — when they sign in, you both show up in each other’s books."
                 : "Send a link. They sign in with it, and you both show up in each other’s books."}
             </p>
             {inviteUrl ? (
               <p className="mt-5 break-all rounded-lg border border-dashed border-cocoa/35 bg-paper px-4 py-3 font-mono text-[15px] leading-6 text-ink">
                 {inviteUrl}
-              </p>
-            ) : null}
-            {error ? (
-              <p role="alert" className="mt-4 text-[17px] text-cinnamon-deep">
-                {error}
               </p>
             ) : null}
             <button

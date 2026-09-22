@@ -1,8 +1,9 @@
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/lib/toast";
 
 export function RecipeShare({
   bakeId,
@@ -14,10 +15,8 @@ export function RecipeShare({
   className?: string;
 }) {
   const createSlip = useMutation(api.slips.create);
-  const statusId = useId();
-  const [state, setState] = useState<"idle" | "working" | "copied" | "error">(
-    "idle",
-  );
+  const toast = useToast();
+  const [state, setState] = useState<"idle" | "working">("idle");
 
   async function share() {
     if (state === "working") {
@@ -30,8 +29,8 @@ export function RecipeShare({
       if (typeof navigator.share === "function") {
         try {
           await navigator.share({ url, title, text: title });
-          setState("copied");
-          window.setTimeout(() => setState("idle"), 2400);
+          toast.success("Recipe shared.");
+          setState("idle");
           return;
         } catch (caught: unknown) {
           if (caught instanceof DOMException && caught.name === "AbortError") {
@@ -41,30 +40,16 @@ export function RecipeShare({
         }
       }
       await navigator.clipboard.writeText(url);
-      setState("copied");
-      window.setTimeout(() => setState("idle"), 2400);
+      toast.success("Share link copied.");
+      setState("idle");
     } catch {
-      setState("error");
-      window.setTimeout(() => setState("idle"), 2800);
+      toast.error("Couldn’t share that recipe. Try once more.");
+      setState("idle");
     }
   }
 
-  const spoken =
-    state === "copied"
-      ? "Link copied"
-      : state === "error"
-        ? "Couldn’t copy that link"
-        : state === "working"
-          ? "Making a share slip"
-          : `Share ${title}`;
-  const label =
-    state === "copied"
-      ? "Copied"
-      : state === "error"
-        ? "Try again"
-        : state === "working"
-          ? "One moment"
-          : "Share";
+  const spoken = state === "working" ? "Making a share slip" : `Share ${title}`;
+  const label = state === "working" ? "One moment" : "Share";
 
   return (
     <>
@@ -73,30 +58,14 @@ export function RecipeShare({
         className={cn("book-press recipe-share", className)}
         aria-label={spoken}
         aria-busy={state === "working"}
-        aria-describedby={
-          state === "copied" || state === "error" ? statusId : undefined
-        }
         onClick={() => void share()}
       >
-        {state === "copied" ? (
-          <svg
-            className="recipe-share-check"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path d="M4.5 12.5 9.5 17.5 19.5 6.5" />
-          </svg>
-        ) : (
-          <span className="recipe-share-deck" aria-hidden="true" data-state={state}>
-            <span className="recipe-share-card recipe-share-card-back" />
-            <span className="recipe-share-card recipe-share-card-front" />
-          </span>
-        )}
+        <span className="recipe-share-deck" aria-hidden="true" data-state={state}>
+          <span className="recipe-share-card recipe-share-card-back" />
+          <span className="recipe-share-card recipe-share-card-front" />
+        </span>
         <span className="recipe-share-words">{label}</span>
       </button>
-      <span id={statusId} className="sr-only" aria-live="polite" aria-atomic="true">
-        {state === "copied" || state === "error" ? spoken : ""}
-      </span>
     </>
   );
 }

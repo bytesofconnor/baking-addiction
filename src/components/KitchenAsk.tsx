@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Kicker } from "@/components/Kicker";
 import { useInkReveal } from "@/lib/useInkReveal";
+import { useToast } from "@/lib/toast";
 
 export function KitchenAsk({
   title,
@@ -28,7 +29,7 @@ export function KitchenAsk({
   const [asked, setAsked] = useState<string | null>(null);
   const [letter, setLetter] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
   const headingId = useId();
   const statusId = useId();
   const noteId = useId();
@@ -38,7 +39,6 @@ export function KitchenAsk({
     event.preventDefault();
     const nextQuestion = question.trim();
     const previous = letter;
-    setError(null);
     setAsked(nextQuestion.length > 0 ? nextQuestion : "What would you change?");
     setLetter(null);
     setPending(true);
@@ -61,7 +61,7 @@ export function KitchenAsk({
       }
       setLetter(result.letter);
     } catch {
-      setError("The kitchen went quiet. Try asking once more.");
+      toast.error("The kitchen went quiet. Try asking once more.");
     } finally {
       setPending(false);
     }
@@ -116,11 +116,6 @@ export function KitchenAsk({
                 <span>.</span>
                 <span>.</span>
               </span>
-            </p>
-          ) : null}
-          {error ? (
-            <p role="alert" className="mt-5 text-[17px] text-cinnamon-deep">
-              {error}
             </p>
           ) : null}
           {revealed ? (

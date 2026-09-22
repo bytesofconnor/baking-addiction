@@ -351,7 +351,10 @@ a.book-press {
 .room-shell[data-book-grow="true"] .book-leaf-under,
 .room-shell[data-book-grow="true"] .book-leaf {
   height: auto;
-  min-height: calc(100dvh - var(--room-pad-top) - var(--room-pad-bottom));
+  min-height: calc(
+    100dvh - var(--room-pad-top) - var(--room-pad-bottom) +
+      var(--book-min-overhang, 2rem)
+  );
 }
 
 .room-shell[data-book-grow="true"] .book-pages {
@@ -383,49 +386,31 @@ a.book-press {
   flex-direction: column;
 }
 
-/* Recipes / Add / You share one stacked height — tallest tab wins.
-   Must size to content (not shrink under a viewport floor), or the short
-   Recipes tab collapses while Add/You overflow and the book jumps. */
+/* Keep Recipes / Add / You mounted without letting inactive tabs participate
+   in layout. The active root grows naturally; the book itself supplies the
+   shared viewport floor that prevents short tabs from visually collapsing. */
 .book-warm-stack {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(min-content, auto);
-  grid-template-areas: "warm";
+  display: flex;
   flex: 1 0 auto;
+  flex-direction: column;
   width: 100%;
-  height: auto;
-  min-height: min-content;
-  align-items: start;
+  min-height: 0;
 }
 
 .book-warm-page {
-  grid-area: warm;
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  height: max-content;
-  opacity: 1;
-  visibility: visible;
-  z-index: 1;
-  transition:
-    opacity 160ms ease,
-    visibility 0s;
+  animation: book-page-arrive 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .book-warm-page[data-show="false"] {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  z-index: 0;
-  transition:
-    opacity 160ms ease,
-    visibility 0s linear 160ms;
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .book-warm-page,
-  .book-warm-page[data-show="false"] {
-    transition: none;
+  .book-warm-page {
+    animation: none;
   }
 }
 
@@ -1071,7 +1056,7 @@ html[data-arrive="opening"] .book-colophon {
   color: color-mix(in srgb, var(--color-cinnamon) 42%, var(--color-paper-raised));
 }
 
-.room-shell[data-landing-cover="true"] .season-doodles {
+.season-doodles.season-doodles-visible {
   opacity: 1;
 }
 
@@ -1201,6 +1186,9 @@ html[data-arrive="opening"] .book-colophon {
   position: fixed;
   inset: 0;
   z-index: 0;
+  width: 100%;
+  height: 100dvh;
+  contain: strict;
   opacity: 0;
   transition: opacity 700ms ease;
 }
@@ -1469,6 +1457,7 @@ body {
 
 /* Grow with the recipes — window scroll instead of a trapped inner pane */
 .room-shell[data-book-grow="true"] {
+  --book-min-overhang: 2rem;
   height: auto;
   min-height: 100dvh;
   overflow: visible;
@@ -1510,21 +1499,17 @@ body {
 
 .room-shell[data-book-grow="true"] .book {
   flex: 1 0 auto;
-  /* Keep Recipes / Add / You the same floor height so tab flips don't jump. */
-  min-height: calc(100dvh - var(--room-pad-top) - var(--room-pad-bottom));
+  /* A shared floor keeps short tabs steady; long tabs still size to content. */
+  min-height: calc(
+    100dvh - var(--room-pad-top) - var(--room-pad-bottom) +
+      var(--book-min-overhang)
+  );
 }
 
-/* Tablet: bookmarks + chrome eat more of the viewport, so lift the floor
-   a bit more or Recipes still looks short next to Add / You. */
+/* Give the roomier tablet layout a touch more paper below short content. */
 @media (min-width: 640px) and (max-width: 1023px) {
-  .room-shell[data-book-grow="true"] .book,
-  .room-shell[data-book-grow="true"] .book-face,
-  .room-shell[data-book-grow="true"] .book-pages,
-  .room-shell[data-book-grow="true"] .book-leaf-under,
-  .room-shell[data-book-grow="true"] .book-leaf {
-    min-height: calc(
-      100dvh - var(--room-pad-top) - var(--room-pad-bottom) + 7.5rem
-    );
+  .room-shell[data-book-grow="true"] {
+    --book-min-overhang: 2.75rem;
   }
 }
 
@@ -1690,6 +1675,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
     --book-inset: 0.95rem;
     --book-gutter: 0.95rem;
     --book-turn-depth: 2.35rem;
+    border-top: 0;
     border-left: 0;
     border-right: 0;
     border-radius: 0;
@@ -1732,9 +1718,9 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   max-width: calc(100% - var(--book-inset) - 1rem);
   align-items: flex-end;
   justify-content: flex-end;
-  gap: 0.8rem;
-  height: 3.85rem;
-  padding: 0 0.4rem;
+  gap: 0.45rem;
+  height: 3.65rem;
+  padding: 0 0.3rem;
   overflow: visible;
   transform: translateY(-100%);
 }
@@ -1747,87 +1733,78 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 .book-bookmark {
   position: relative;
   display: inline-flex;
-  min-height: 3.15rem;
+  min-height: 2.95rem;
   min-width: 0;
   align-items: center;
   justify-content: center;
-  padding: 0.65rem 0.95rem 0.8rem;
-  border: 1px solid var(--color-cocoa);
+  padding: 0.68rem 1rem 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--color-cocoa) 58%, transparent);
   border-bottom: 0;
-  border-radius: 2px 5px 0 0;
+  border-radius: 0.7rem 0.7rem 0 0;
   background-color: var(--color-paper-raised);
-  background-image:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent 8%, transparent 94%, rgba(50, 20, 8, 0.12)),
-    linear-gradient(
-      180deg,
-      var(--color-paper-raised),
-      color-mix(in srgb, var(--color-paper-press) 76%, var(--color-paper-raised))
-    );
+  background-image: none;
   box-shadow:
-    inset 0 3px 0 color-mix(in srgb, var(--color-paper-press) 60%, var(--color-cocoa)),
-    inset 0 4px 0 rgba(255, 255, 255, 0.6),
-    2px 1px 0 color-mix(in srgb, var(--color-cocoa) 70%, var(--color-paper)),
-    3px 0 5px color-mix(in srgb, var(--color-ink) 20%, transparent);
+    0 -0.35rem 1.1rem color-mix(in srgb, var(--color-ink) 10%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--color-paper-press) 68%, transparent);
   color: var(--color-cocoa);
   font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.94rem;
+  font-weight: 650;
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
   text-wrap: balance;
   touch-action: manipulation;
   /* Same depth for active + idle — idle used to sit on top of the cover */
-  transform: translateY(0.45rem);
+  transform: translateY(0.38rem);
   transform-origin: bottom center;
-  transition: filter 140ms ease;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .book-bookmark::after {
-  content: none;
+  content: "";
   position: absolute;
-  right: 0.25rem;
-  bottom: -0.7rem;
-  left: 0.25rem;
-  z-index: -1;
-  height: 0.7rem;
-  border-right: 1.5px solid var(--color-cocoa);
-  border-bottom: 1.5px solid var(--color-cocoa);
-  border-left: 1.5px solid var(--color-cocoa);
-  background: color-mix(in srgb, var(--color-cocoa) 42%, var(--color-paper));
-  clip-path: polygon(0 0, 100% 0, 93% 100%, 7% 100%);
+  top: 0.38rem;
+  right: 0.72rem;
+  left: 0.72rem;
+  height: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-cinnamon) 54%, transparent);
+  opacity: 0;
+  transform: scaleX(0.55);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
 }
 
 .book-bookmark:hover,
 .book-bookmark:focus-visible {
   color: var(--color-cinnamon-deep);
-  filter: brightness(1.025);
+  background-color: color-mix(in srgb, var(--color-paper-raised) 90%, white);
+  transform: translateY(0.28rem);
 }
 
 .book-bookmark-active,
 .book-bookmark-active:hover,
 .book-bookmark-active:focus-visible {
   background-color: var(--color-cinnamon-deep);
-  background-image:
-    linear-gradient(90deg, rgba(255, 237, 216, 0.1), transparent 8%, transparent 94%, rgba(50, 20, 8, 0.16)),
-    linear-gradient(
-      180deg,
-      var(--color-cinnamon-deep),
-      var(--color-cinnamon-deep) 66%,
-      color-mix(in srgb, var(--color-cinnamon-deep) 80%, var(--color-ink))
-    );
+  background-image: none;
   box-shadow:
-    inset 0 3px 0 color-mix(in srgb, var(--color-cinnamon-deep) 70%, var(--color-ink)),
-    inset 0 4px 0 rgba(255, 231, 211, 0.25),
-    2px 1px 0 var(--color-cocoa),
-    3px 0 5px color-mix(in srgb, var(--color-ink) 24%, transparent);
+    0 -0.4rem 1.15rem color-mix(in srgb, var(--color-ink) 16%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--color-ink) 24%, transparent);
   color: var(--color-paper-raised);
-  text-shadow: 0 1px 0 color-mix(in srgb, var(--color-ink) 55%, transparent);
-  transform: translateY(0.45rem);
+  text-shadow: none;
+  transform: translateY(0.28rem);
 }
 
 .book-bookmark-active::after {
-  background: color-mix(in srgb, var(--color-cinnamon-deep) 68%, var(--color-ink));
+  background: color-mix(in srgb, var(--color-paper-raised) 72%, transparent);
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .book-bookmark[aria-disabled="true"] {
@@ -1846,7 +1823,6 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   height: 0.55rem;
   background-color: var(--color-paper);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  border-bottom: 1px solid color-mix(in srgb, var(--color-cocoa) 16%, transparent);
 }
 
 .book[data-face="back"]::before {
@@ -1858,7 +1834,6 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
       transparent 65%
     ),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
-  border-bottom-color: color-mix(in srgb, var(--color-paper-raised) 14%, transparent);
 }
 
 .room-shell[data-landing-cover="true"] .book::before {
@@ -1946,29 +1921,21 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 @media (max-width: 639px) {
   .book-dock {
     position: fixed;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    right: max(0.6rem, env(safe-area-inset-right, 0px));
+    bottom: max(0.55rem, env(safe-area-inset-bottom, 0px));
+    left: max(0.6rem, env(safe-area-inset-left, 0px));
     z-index: 40;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.35rem;
-    padding:
-      0.45rem max(0.65rem, env(safe-area-inset-right, 0px))
-      max(0.45rem, env(safe-area-inset-bottom, 0px))
-      max(0.65rem, env(safe-area-inset-left, 0px));
-    border-top: 1.5px solid var(--color-cocoa);
-    background-color: var(--color-paper-raised);
-    background-image:
-      linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--color-paper-press) 55%, var(--color-paper-raised)),
-        var(--color-paper-raised) 42%
-      ),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    gap: 0.2rem;
+    padding: 0.3rem;
+    border: 1px solid color-mix(in srgb, var(--color-cocoa) 32%, transparent);
+    border-radius: 0.9rem;
+    background: color-mix(in srgb, var(--color-paper-raised) 94%, transparent);
     box-shadow:
-      0 -1px 0 color-mix(in srgb, var(--color-paper-raised) 80%, transparent),
-      0 -6px 18px color-mix(in srgb, var(--color-ink) 14%, transparent);
+      0 0.75rem 2rem color-mix(in srgb, var(--color-ink) 18%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 68%, transparent);
+    backdrop-filter: blur(14px);
   }
 
   .book-dock[data-cols="2"] {
@@ -1977,52 +1944,46 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 
   .book-dock-tab {
     display: flex;
-    min-height: 2.85rem;
+    min-height: 3rem;
     align-items: center;
     justify-content: center;
-    padding: 0.55rem 0.4rem;
-    border: 1px solid color-mix(in srgb, var(--color-cocoa) 55%, transparent);
-    border-radius: 3px 3px 2px 2px;
-    background-color: var(--color-paper);
-    background-image: linear-gradient(
-      180deg,
-      var(--color-paper-raised),
-      color-mix(in srgb, var(--color-paper-press) 70%, var(--color-paper))
-    );
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.55),
-      0 1px 0 color-mix(in srgb, var(--color-cocoa) 35%, transparent);
+    padding: 0.6rem 0.4rem 0.65rem;
+    border: 0;
+    border-radius: 0.65rem;
+    background: transparent;
+    box-shadow: none;
     color: var(--color-cocoa);
     font-family: var(--font-display);
-    font-size: 0.98rem;
-    font-weight: 600;
+    font-size: 0.94rem;
+    font-weight: 650;
     line-height: 1.15;
     text-align: center;
     text-decoration: none;
     text-wrap: balance;
     touch-action: manipulation;
+    transition:
+      color 150ms ease,
+      background-color 150ms ease,
+      transform 150ms ease,
+      box-shadow 150ms ease;
   }
 
   .book-dock-tab:hover,
   .book-dock-tab:focus-visible {
     color: var(--color-cinnamon-deep);
+    background: color-mix(in srgb, var(--color-paper-press) 66%, transparent);
   }
 
   .book-dock-tab-active,
   .book-dock-tab-active:hover,
   .book-dock-tab-active:focus-visible {
-    border-color: var(--color-cocoa);
     background-color: var(--color-cinnamon-deep);
-    background-image: linear-gradient(
-      180deg,
-      var(--color-cinnamon-deep),
-      color-mix(in srgb, var(--color-cinnamon-deep) 82%, var(--color-ink))
-    );
+    background-image: none;
     box-shadow:
-      inset 0 1px 0 rgba(255, 231, 211, 0.22),
-      0 1px 0 var(--color-cocoa);
+      0 0.35rem 0.85rem color-mix(in srgb, var(--color-ink) 14%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--color-ink) 24%, transparent);
     color: var(--color-paper-raised);
-    text-shadow: 0 1px 0 color-mix(in srgb, var(--color-ink) 55%, transparent);
+    text-shadow: none;
   }
 
   .book-dock-tab[aria-disabled="true"] {
@@ -2787,6 +2748,8 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   flex: 1 1 auto;
   min-height: 0;
   margin-top: 0.15rem;
+  container-name: recipe-index;
+  container-type: inline-size;
 }
 
 .book-portal-scrollable {
@@ -2822,6 +2785,29 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   /* One card shouldn't leave a blank column beside it */
   .book-portal-grid:has(> :only-child) {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Let the book's usable width, rather than the browser alone, decide how many
+   recipe cards fit. This also stays comfortable beside preview/dev panels. */
+@container recipe-index (min-width: 56rem) {
+  .book-portal-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .book-portal-grid h2 {
+    font-size: 1.6rem;
+    line-height: 1.08;
+  }
+}
+
+@container recipe-index (min-width: 78rem) {
+  .book-portal-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .book-portal-grid h2 {
+    font-size: 1.45rem;
   }
 }
 
@@ -4497,6 +4483,7 @@ summary::-webkit-details-marker {
 @media (min-width: 720px) {
   /* Keep write desk stacked even when bake pages go side-by-side */
   .write-desk-hero.bake-leaf-hero {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
   }
@@ -4632,29 +4619,47 @@ summary::-webkit-details-marker {
 
 @media (min-width: 720px) {
   .bake-leaf-hero {
-    flex-direction: row;
-    align-items: start;
-    gap: 1.35rem 1.6rem;
+    display: flow-root;
   }
 
   .bake-leaf-hero-photo {
-    flex: 0 0 min(42%, 17.5rem);
-    max-width: min(42%, 17.5rem);
+    float: left;
+    width: min(42%, 17.5rem);
+    max-width: none;
+    margin: 0 1.6rem 1rem 0;
   }
 
   .bake-leaf-hero-copy {
+    display: block;
     padding-top: 0.15rem;
+  }
+
+  .bake-leaf-hero-copy > * {
+    margin-bottom: 0;
+  }
+
+  .bake-leaf-hero-copy > * + * {
+    margin-top: 0.65rem;
+  }
+
+  .bake-leaf-intro {
+    display: block;
+    max-width: none;
+  }
+
+  .bake-leaf-intro p {
+    margin: 0;
+  }
+
+  .bake-leaf-intro p + p {
+    margin-top: 0.85rem;
   }
 }
 
 @media (min-width: 960px) {
-  .bake-leaf-hero {
-    gap: 1.5rem 2rem;
-  }
-
   .bake-leaf-hero-photo {
-    flex-basis: min(44%, 20rem);
-    max-width: min(44%, 20rem);
+    width: min(44%, 24rem);
+    margin-right: 2rem;
   }
 
   .bake-leaf-title {
@@ -4891,6 +4896,109 @@ summary::-webkit-details-marker {
 .slip-frame .book-portal-frame-well {
   min-height: 16rem;
   aspect-ratio: 4 / 3;
+}
+
+/* A small paper slip for transient feedback. It belongs to the book without
+   competing with the page or the mobile dock. */
+.book-toast-region {
+  position: fixed;
+  right: max(1.25rem, env(safe-area-inset-right));
+  bottom: max(1.5rem, env(safe-area-inset-bottom));
+  z-index: 1000;
+  display: grid;
+  width: min(25rem, calc(100vw - 2rem));
+  gap: 0.75rem;
+  pointer-events: none;
+}
+
+.book-toast {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr) 2rem;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 4rem;
+  padding: 0.8rem 0.75rem 0.8rem 1rem;
+  border: 1.5px solid var(--color-cocoa);
+  border-left: 4px solid var(--color-cinnamon-deep);
+  background: var(--color-paper-raised);
+  color: var(--color-ink);
+  box-shadow:
+    4px 5px 0 color-mix(in srgb, var(--color-cocoa) 34%, transparent),
+    0 12px 30px color-mix(in srgb, var(--color-ink) 18%, transparent);
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 1rem;
+  line-height: 1.4;
+  pointer-events: auto;
+  animation: book-toast-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.book-toast[data-tone="success"] {
+  border-left-color: var(--color-cinnamon);
+}
+
+.book-toast[data-tone="error"] {
+  border-left-color: var(--color-cinnamon-deep);
+  background: color-mix(in srgb, var(--color-paper-raised) 94%, var(--color-cinnamon) 6%);
+}
+
+.book-toast-mark {
+  display: grid;
+  width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  color: var(--color-cinnamon-deep);
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.book-toast-message {
+  min-width: 0;
+}
+
+.book-toast-close {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--color-cocoa);
+  font-family: Georgia, serif;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.book-toast-close:hover {
+  color: var(--color-cinnamon-deep);
+}
+
+.book-toast-close:focus-visible {
+  outline: 2px solid var(--color-cinnamon-deep);
+  outline-offset: 1px;
+}
+
+@keyframes book-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.65rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 639px) {
+  .book-toast-region {
+    right: 1rem;
+    bottom: calc(5.75rem + env(safe-area-inset-bottom));
+    left: 1rem;
+    width: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
