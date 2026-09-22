@@ -10,8 +10,8 @@ export function BookBookmarks({ pathname }: { pathname: string }) {
   const { onDoor, items } = useBookNav(pathname);
   const section = sectionOf(pathname);
 
-  // Door bookmarks reserve the same top shelf as the signed-in tabs,
-  // so the book doesn't jump when someone comes in from Google.
+  // Door bookmarks on tablet+: same top shelf as the signed-in tabs.
+  // Phones hide these and use the bottom dock instead (see BookDock).
   if (onDoor) {
     return (
       <nav className="book-bookmarks" aria-label="Book sections">
