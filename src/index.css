@@ -2817,6 +2817,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   padding: 0.55rem;
   border: 1.5px solid color-mix(in srgb, var(--color-cocoa) 72%, var(--color-rule));
   border-bottom-width: 3px;
+  border-radius: 0.5rem;
   background:
     linear-gradient(
       165deg,
@@ -2833,6 +2834,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   aspect-ratio: 4 / 3;
   max-height: min(22rem, 48vh);
   border: 1px solid color-mix(in srgb, var(--color-cocoa) 28%, var(--color-rule));
+  border-radius: 0.35rem;
   background: var(--color-paper-press);
 }
 
