@@ -37,7 +37,7 @@ export function pageHeading(
   if (pathname === "/you" || pathname.startsWith("/you/")) {
     return { lead: "Your", accent: "kitchen", home: false, compact: false };
   }
-  return { lead: "The Family Recipe", accent: "Book", home: true, compact: false };
+  return { lead: "All", accent: "Recipes", home: true, compact: false };
 }
 
 function recipeHeading(title: string): { lead: string; accent: string } {

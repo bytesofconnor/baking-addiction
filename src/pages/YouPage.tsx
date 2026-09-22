@@ -97,6 +97,8 @@ export function YouPage() {
                 setSaved(false);
               }}
               autoComplete="nickname"
+              autoCapitalize="words"
+              enterKeyHint="done"
               className="min-h-14"
             />
             <div>
@@ -116,7 +118,8 @@ export function YouPage() {
           </div>
 
           <div className="mt-12">
-            <p className="text-[18px] leading-7 text-ink-soft">
+            <p className="text-[16px] leading-6 text-ink-soft">Signed in as</p>
+            <p className="mt-1 text-[18px] leading-7 text-ink break-words">
               {user.email || "No email on this Google."}
             </p>
           </div>

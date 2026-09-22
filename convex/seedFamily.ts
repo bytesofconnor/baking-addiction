@@ -40,7 +40,6 @@ const nanaSamples = [
     bakerName: "Nana",
     bakedOn: "2026-05-18",
     publishedAt: Date.UTC(2026, 4, 18),
-    rating: 5,
     outcome: "One tin. Tart enough. Corner pieces went first.",
     changes: [
       {
@@ -77,7 +76,6 @@ const nanaSamples = [
     bakerName: "Nana",
     bakedOn: "2026-03-09",
     publishedAt: Date.UTC(2026, 2, 9),
-    rating: 5,
     outcome: "Twelve rolls. Gone before the potluck started.",
     changes: [
       {
@@ -119,7 +117,6 @@ const brendaSamples = [
     bakerName: "Brenda",
     bakedOn: "2026-09-11",
     publishedAt: Date.UTC(2026, 8, 11),
-    rating: 5,
     outcome: "One pan. Corner and middle, both gone.",
     changes: [
       {
@@ -156,7 +153,6 @@ const brendaSamples = [
     bakerName: "Brenda",
     bakedOn: "2026-09-06",
     publishedAt: Date.UTC(2026, 8, 6),
-    rating: 5,
     outcome: "Eight. Two left for later, on a good week.",
     changes: [
       {
@@ -294,7 +290,6 @@ async function writeCard(
     bakerName: string;
     bakedOn: string;
     publishedAt: number;
-    rating: number;
     outcome: string;
     changes: readonly { move: string; change: string; why: string }[];
   },
@@ -330,7 +325,6 @@ async function writeCard(
     status: "published" as const,
     publishedAt: sample.publishedAt,
     bakedOn: sample.bakedOn,
-    rating: sample.rating,
     outcome: sample.outcome,
     changes,
   };

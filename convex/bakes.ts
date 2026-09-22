@@ -74,7 +74,6 @@ export async function toTeaser(
     kind: bake.kind ?? inferKind(bake.title, bake.sourceTitle),
     publishedAt: bake.publishedAt,
     bakedOn: bake.bakedOn,
-    rating: bake.rating,
     outcome: bake.outcome,
     changes: bake.changes,
     ingredients: bake.ingredients ?? [],
@@ -182,8 +181,9 @@ export const getPublishedBySlug = query({
         continue;
       }
       if (await canReadBake(ctx, user._id, bake)) {
+        const { rating: _rating, ...rest } = bake;
         return {
-          ...bake,
+          ...rest,
           coverUrl: bake.coverUrl ?? sampleCoverUrl(bake.slug) ?? undefined,
         };
       }
@@ -261,6 +261,243 @@ export const listMine = query({
   },
 });
 
+export const listPosted = query({
+  args: {},
+  returns: v.array(bakeTeaserValidator),
+  handler: async (ctx) => {
+    const user = await getSignedInUser(ctx);
+    if (!user) {
+      return [];
+    }
+    const bakes = await ctx.db
+      .query("bakes")
+      .withIndex("by_owner_and_status", (q) =>
+        q.eq("ownerId", user._id).eq("status", "published"),
+      )
+      .order("desc")
+      .take(40);
+    const teasers = [];
+    for (const bake of bakes) {
+      teasers.push(await toTeaser(ctx, bake));
+    }
+    return teasers;
+  },
+});
+
+export const removeMine = mutation({
+  args: {
+    bakeId: v.id("bakes"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await requireSignedIn(ctx);
+    const bake = await ctx.db.get("bakes", args.bakeId);
+    if (!bake) {
+      throw new Error("That recipe isn’t in the book.");
+    }
+    if (bake.ownerId !== user._id) {
+      throw new Error("You can only delete recipes you posted.");
+    }
+
+    const photos = await ctx.db
+      .query("photos")
+      .withIndex("by_bake", (q) => q.eq("bakeId", bake._id))
+      .take(40);
+    const storageIds = new Set<
+      NonNullable<Doc<"bakes">["coverStorageId"]>
+    >();
+    for (const photo of photos) {
+      storageIds.add(photo.storageId);
+      await ctx.db.delete(photo._id);
+    }
+    if (bake.coverStorageId) {
+      storageIds.add(bake.coverStorageId);
+    }
+    if (bake.originStorageId) {
+      storageIds.add(bake.originStorageId);
+    }
+    for (const storageId of storageIds) {
+      await ctx.storage.delete(storageId);
+    }
+
+    const makes = await ctx.db
+      .query("bakeMakes")
+      .withIndex("by_bake", (q) => q.eq("bakeId", bake._id))
+      .take(80);
+    for (const make of makes) {
+      await ctx.db.delete(make._id);
+    }
+
+    const slips = await ctx.db
+      .query("recipeSlips")
+      .withIndex("by_bake_and_creator", (q) => q.eq("bakeId", bake._id))
+      .take(40);
+    for (const slip of slips) {
+      await ctx.db.delete(slip._id);
+    }
+
+    await ctx.db.delete(bake._id);
+    return null;
+  },
+});
+
+const editBakeValidator = v.object({
+  _id: v.id("bakes"),
+  slug: v.string(),
+  title: v.string(),
+  story: v.string(),
+  sourceTitle: v.string(),
+  sourceUrl: v.string(),
+  sourceKind: v.optional(sourceKindValidator),
+  kind: v.optional(kindValidator),
+  makes: v.optional(v.string()),
+  ingredients: v.array(v.string()),
+  steps: v.array(v.string()),
+  bakedOn: v.string(),
+  changes: v.array(
+    v.object({
+      move: v.string(),
+      change: v.string(),
+      why: v.string(),
+    }),
+  ),
+  status: v.union(v.literal("draft"), v.literal("published")),
+  photoUrl: v.union(v.string(), v.null()),
+  coverStorageId: v.optional(v.id("_storage")),
+  originStorageId: v.optional(v.id("_storage")),
+});
+
+export const getMineForEdit = query({
+  args: {
+    bakeId: v.id("bakes"),
+  },
+  returns: v.union(editBakeValidator, v.null()),
+  handler: async (ctx, args) => {
+    const user = await getSignedInUser(ctx);
+    if (!user) {
+      return null;
+    }
+    const bake = await ctx.db.get("bakes", args.bakeId);
+    if (!bake || bake.ownerId !== user._id) {
+      return null;
+    }
+    return {
+      _id: bake._id,
+      slug: bake.slug,
+      title: bake.title,
+      story: bake.story,
+      sourceTitle: bake.sourceTitle,
+      sourceUrl: bake.sourceUrl,
+      sourceKind: inferSourceKind(bake.sourceKind, bake.sourceUrl),
+      kind: bake.kind,
+      makes: bake.makes,
+      ingredients: bake.ingredients ?? [],
+      steps: bake.steps ?? [],
+      bakedOn: bake.bakedOn,
+      changes: bake.changes,
+      status: bake.status,
+      photoUrl: await photoUrlForBake(ctx, bake),
+      coverStorageId: bake.coverStorageId,
+      originStorageId: bake.originStorageId,
+    };
+  },
+});
+
+export const updateMine = mutation({
+  args: {
+    bakeId: v.id("bakes"),
+    title: v.string(),
+    story: v.string(),
+    sourceTitle: v.optional(v.string()),
+    sourceUrl: v.optional(v.string()),
+    sourceKind: v.optional(sourceKindValidator),
+    kind: v.optional(kindValidator),
+    makes: v.optional(v.string()),
+    ingredients: v.optional(v.array(v.string())),
+    steps: v.optional(v.array(v.string())),
+    coverStorageId: v.optional(v.id("_storage")),
+    clearCover: v.optional(v.boolean()),
+    bakedOn: v.string(),
+    // Ignored — kept optional so older clients that still send stars don't break edit.
+    rating: v.optional(v.number()),
+    outcome: v.string(),
+    changes: v.array(
+      v.object({
+        move: v.string(),
+        change: v.string(),
+        why: v.string(),
+      }),
+    ),
+    status: v.union(v.literal("draft"), v.literal("published")),
+  },
+  returns: v.object({
+    bakeId: v.id("bakes"),
+    slug: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    const user = await requireSignedIn(ctx);
+    const bake = await ctx.db.get("bakes", args.bakeId);
+    if (!bake) {
+      throw new Error("That recipe isn’t in the book.");
+    }
+    if (bake.ownerId !== user._id) {
+      throw new Error("You can only edit recipes you posted.");
+    }
+
+    const title = args.title.trim();
+    if (title.length < 2) {
+      throw new Error("Give it a name so you can find it later.");
+    }
+    const ingredients = (args.ingredients ?? [])
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    const steps = (args.steps ?? [])
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    const sourceUrl = args.sourceUrl?.trim() ?? "";
+    const sourceKind = inferSourceKind(args.sourceKind, sourceUrl);
+    if (sourceKind === "sally" && !sourceUrl.startsWith("http")) {
+      throw new Error("Sally's recipe needs her full link for the credit.");
+    }
+
+    let coverStorageId = bake.coverStorageId;
+    if (args.clearCover) {
+      coverStorageId = undefined;
+    } else if (args.coverStorageId) {
+      coverStorageId = args.coverStorageId;
+    }
+
+    const publishedAt =
+      args.status === "published"
+        ? (bake.publishedAt ?? Date.now())
+        : undefined;
+
+    await ctx.db.patch(args.bakeId, {
+      title,
+      story: args.story.trim(),
+      sourceTitle: (args.sourceTitle ?? "").trim(),
+      sourceUrl,
+      sourceKind,
+      kind: args.kind ?? inferKind(title, args.sourceTitle ?? ""),
+      makes: args.makes?.trim() || undefined,
+      ingredients,
+      steps,
+      ingredientSearch: ingredientSearchText(ingredients),
+      coverStorageId,
+      status: args.status,
+      publishedAt,
+      bakedOn: args.bakedOn,
+      outcome: args.outcome.trim(),
+      changes: args.changes.filter(
+        (change) =>
+          change.move.trim().length > 0 || change.change.trim().length > 0,
+      ),
+    });
+
+    return { bakeId: bake._id, slug: bake.slug };
+  },
+});
+
 export const save = mutation({
   args: {
     writerToken: v.optional(v.string()),
@@ -279,7 +516,8 @@ export const save = mutation({
     originStorageId: v.optional(v.id("_storage")),
     coverStorageId: v.optional(v.id("_storage")),
     bakedOn: v.string(),
-    rating: v.number(),
+    // Ignored — kept optional so older clients that still send stars don't break save.
+    rating: v.optional(v.number()),
     outcome: v.string(),
     changes: v.array(
       v.object({
@@ -319,7 +557,7 @@ export const save = mutation({
     const existing = await ctx.db
       .query("bakes")
       .withIndex("by_slug", (q) => q.eq("slug", slug))
-      .unique();
+      .first();
     if (existing) {
       slug = `${slug}-${Date.now().toString().slice(-5)}`;
     }
@@ -353,7 +591,6 @@ export const save = mutation({
       status: args.status,
       publishedAt: args.status === "published" ? Date.now() : undefined,
       bakedOn: args.bakedOn,
-      rating: args.rating,
       outcome: args.outcome.trim(),
       changes: args.changes.filter(
         (change) =>

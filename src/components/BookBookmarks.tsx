@@ -56,10 +56,15 @@ export function BookBookmarks({ pathname }: { pathname: string }) {
       <NavLink
         to={keep(DESK_PATH)}
         aria-current={section === "add" ? "page" : undefined}
+        aria-label="Add a recipe"
         className={() => bookmarkClass(section === "add")}
       >
-        <span className="hidden sm:inline">Add a recipe</span>
-        <span className="sm:hidden">Add</span>
+        <span className="hidden sm:inline" aria-hidden="true">
+          Add a recipe
+        </span>
+        <span className="sm:hidden" aria-hidden="true">
+          Add
+        </span>
       </NavLink>
       <NavLink
         to={keep(settingsTo)}

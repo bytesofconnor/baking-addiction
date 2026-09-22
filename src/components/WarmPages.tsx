@@ -11,7 +11,12 @@ import { sectionOf } from "@/lib/bookPages";
 function WarmPage({ show, children }: { show: boolean; children: ReactNode }) {
   return (
     <PageActiveContext.Provider value={show}>
-      <div hidden={!show} inert={!show} className={show ? "contents" : undefined}>
+      <div
+        className="book-warm-page"
+        data-show={show ? "true" : "false"}
+        inert={!show}
+        aria-hidden={!show}
+      >
         {children}
       </div>
     </PageActiveContext.Provider>
@@ -50,15 +55,21 @@ export function WarmPages({ pathname }: { pathname: string }) {
 
   return (
     <>
-      <WarmPage show={section === "cookbook" && !onBake}>
-        <HomePage />
-      </WarmPage>
-      <WarmPage show={section === "add"}>
-        <WritePage />
-      </WarmPage>
-      <WarmPage show={section === "you"}>
-        <YouPage />
-      </WarmPage>
+      {/*
+        Stack the three tab roots in one grid cell so the book stays as tall as
+        the tallest tab. Switching Recipes / Add / You no longer changes height.
+      */}
+      <div className="book-warm-stack" hidden={extra} aria-hidden={extra}>
+        <WarmPage show={section === "cookbook" && !onBake}>
+          <HomePage />
+        </WarmPage>
+        <WarmPage show={section === "add"}>
+          <WritePage />
+        </WarmPage>
+        <WarmPage show={section === "you"}>
+          <YouPage />
+        </WarmPage>
+      </div>
       {extra ? (
         <div key={pathname} className={onBake ? undefined : "book-page-arrive"}>
           {outlet}

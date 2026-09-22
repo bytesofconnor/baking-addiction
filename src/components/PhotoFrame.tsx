@@ -16,23 +16,26 @@ export function PhotoFrame({
   }
 
   return (
-    <figure className={cn("relative", size === "hero" ? "mb-8" : "mb-10", className)}>
-      <span
-        aria-hidden="true"
-        className="absolute -top-2 left-6 h-5 w-16 rotate-[-8deg] bg-cinnamon/25"
-      />
-      <span
-        aria-hidden="true"
-        className="absolute -top-1 right-10 h-5 w-14 rotate-[12deg] bg-cocoa/20"
-      />
-      <img
-        src={src}
-        alt={alt}
-        className={cn(
-          "block w-full border border-rule object-cover",
-          size === "hero" && "aspect-[4/3] max-h-[min(40rem,70vh)]",
-        )}
-      />
+    <figure
+      className={cn(
+        "photo-plate",
+        size === "hero" ? "photo-plate-hero" : "photo-plate-frame",
+        className,
+      )}
+    >
+      <span className="photo-plate-tape photo-plate-tape-left" aria-hidden="true" />
+      <span className="photo-plate-tape photo-plate-tape-right" aria-hidden="true" />
+      <div className="photo-plate-mat">
+        <div className="photo-plate-well">
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            className="photo-plate-img"
+          />
+        </div>
+      </div>
     </figure>
   );
 }

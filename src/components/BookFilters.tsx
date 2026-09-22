@@ -132,7 +132,7 @@ export function FilterSegment({
       role="radio"
       aria-checked={checked}
       className="book-mark"
-      tabIndex={0}
+      tabIndex={checked ? 0 : -1}
       onClick={onChange}
     >
       {children}

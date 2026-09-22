@@ -16,12 +16,13 @@ export function PageTurn({
       aria-label="More bakes in the recipe book"
       className="mt-14 flex flex-col gap-3 border-t border-rule pt-8"
     >
-      <CookbookBack />
+      <CookbookBack className="self-start" />
       {older ? (
         <ButtonLink
           to={`/bakes/${older.slug}${suffix}`}
           variant="secondary"
           className="h-auto w-full flex-col items-start py-3 text-left"
+          aria-label={`The one before: ${older.title}`}
         >
           <span className="text-[16px] font-medium text-ink-soft">
             The one before
@@ -36,6 +37,7 @@ export function PageTurn({
           to={`/bakes/${newer.slug}${suffix}`}
           variant="secondary"
           className="h-auto w-full flex-col items-start py-3 text-left"
+          aria-label={`The one after: ${newer.title}`}
         >
           <span className="text-[16px] font-medium text-ink-soft">
             The one after

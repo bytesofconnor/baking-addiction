@@ -3,8 +3,8 @@ import { useLocation } from "react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { WarmPages } from "@/components/WarmPages";
 import { BookHeadingProvider } from "@/lib/bookHeading";
-import { pageForPath } from "@/lib/bookPages";
-import { SITE_SHORT } from "@/lib/site";
+import { pageForPath, sectionOf } from "@/lib/bookPages";
+import { SITE_LINE, SITE_SHORT } from "@/lib/site";
 
 export function BookChrome({ pathname }: { pathname?: string }) {
   const location = useLocation();
@@ -29,27 +29,68 @@ export function BookChrome({ pathname }: { pathname?: string }) {
   );
 }
 
+function colophonAside(pathname: string): string | null {
+  const section = sectionOf(pathname);
+  if (section === "cookbook") {
+    if (pathname.startsWith("/bakes/")) {
+      return null;
+    }
+    return "Recipes from this kitchen";
+  }
+  if (section === "add") {
+    return "Writing into the book";
+  }
+  if (section === "you") {
+    return "Your kitchen";
+  }
+  if (section === "family") {
+    return "Family in the book";
+  }
+  if (section === "faq") {
+    return "A few answers";
+  }
+  if (section === "join") {
+    return "Come in";
+  }
+  return SITE_LINE;
+}
+
 export function BookColophon({ pathname }: { pathname: string }) {
   const page = pageForPath(pathname);
-  // Cover + recipe leaves stay unnumbered; tabs keep a stable page mark.
+  const aside = colophonAside(pathname);
+  // Always reserve the page-number slot so tab flips don't nudge chrome height.
   const showPageNumber =
-    pathname !== "/join" &&
-    pathname !== "/faq" &&
-    pathname !== "/" &&
-    !pathname.startsWith("/bakes/");
+    pathname !== "/join" && pathname !== "/faq";
 
   return (
     <footer className="book-colophon">
-      <p className="flex items-baseline justify-between gap-4 text-[16px] leading-6">
-        <span className="font-display text-[1.35rem] leading-6 text-cinnamon-deep italic">
-          {SITE_SHORT}
-        </span>
-        {showPageNumber ? (
-          <span className="font-display text-[1.05rem] leading-6 text-cocoa tabular-nums">
-            {page}
-          </span>
-        ) : null}
-      </p>
+      <div className="book-colophon-brand">
+        <img
+          src="/favicon.svg"
+          alt=""
+          width={22}
+          height={22}
+          className="book-colophon-mark"
+          decoding="async"
+        />
+        <div className="book-colophon-copy">
+          <p className="book-colophon-title">{SITE_SHORT}</p>
+          {aside ? <p className="book-colophon-aside">{aside}</p> : null}
+        </div>
+      </div>
+      {showPageNumber ? (
+        <p className="book-colophon-page" aria-hidden="true">
+          <span className="book-colophon-page-rule" />
+          <span className="book-colophon-page-num">{page}</span>
+          <span className="book-colophon-page-rule" />
+        </p>
+      ) : (
+        <p className="book-colophon-page book-colophon-page-quiet" aria-hidden="true">
+          <span className="book-colophon-page-rule" />
+          <span className="book-colophon-page-dot" />
+          <span className="book-colophon-page-rule" />
+        </p>
+      )}
     </footer>
   );
 }

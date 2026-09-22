@@ -1,17 +1,16 @@
 import { useAction, useMutation, useQuery } from "convex/react";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Link } from "react-router";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { BakeStars } from "@/components/BakeStars";
-import { Kicker } from "@/components/Kicker";
 import { formatBakeDate } from "@/lib/dates";
 import { PageTitle } from "@/lib/pageTitle";
-import { BAKER_NAME, SITE_SHORT, bookSignedName } from "@/lib/site";
+import { BAKER_NAME, SITE_SHORT } from "@/lib/site";
+import { DESK_PATH } from "@/lib/desk";
 import { linesFromText } from "@/lib/recipe";
 import {
   SOURCE_KINDS,
@@ -64,6 +63,7 @@ export function WriteDesk({
     ...(kitchenId ? { kitchenId } : {}),
   };
   const saveBake = useMutation(api.bakes.save);
+  const updateBake = useMutation(api.bakes.updateMine);
   const generateUploadUrl = useMutation(api.photos.generateUploadUrl);
   const attachPhoto = useMutation(api.photos.attach);
   const lookupCredit = useAction(api.sallyCredit.lookupCredit);
@@ -73,10 +73,21 @@ export function WriteDesk({
     token || kitchenId ? writeAccess : "skip",
   );
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const editParam = params.get("edit");
+  const editBakeId =
+    editParam && editParam.length > 0
+      ? (editParam as Id<"bakes">)
+      : null;
+  const editBake = useQuery(
+    api.bakes.getMineForEdit,
+    editBakeId ? { bakeId: editBakeId } : "skip",
+  );
   const formErrorId = useId();
   const photoId = useId();
   const fileId = useId();
   const fileInput = useRef<HTMLInputElement>(null);
+  const hydratedEdit = useRef<Id<"bakes"> | null>(null);
 
   const [screen, setScreen] = useState<Screen>("choose");
   const [intake, setIntake] = useState<Intake>("type");
@@ -95,8 +106,6 @@ export function WriteDesk({
     new Date().toISOString().slice(0, 10),
   );
   const [showDate, setShowDate] = useState(false);
-  const [rating, setRating] = useState(0);
-  const outcomeId = useId();
   const [changes, setChanges] = useState<ChangeDraft[]>([]);
   const changeSerial = useRef(0);
   const [makes, setMakes] = useState("");
@@ -114,6 +123,9 @@ export function WriteDesk({
   const [pending, setPending] = useState(false);
   const [pile, setPile] = useState<DraftCard[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingBakeId, setEditingBakeId] = useState<Id<"bakes"> | null>(null);
+  const [editingSlug, setEditingSlug] = useState<string | null>(null);
+  const [coverCleared, setCoverCleared] = useState(false);
 
   useEffect(() => {
     if (!photoFile) {
@@ -126,6 +138,65 @@ export function WriteDesk({
       URL.revokeObjectURL(url);
     };
   }, [photoFile]);
+
+  useEffect(() => {
+    if (!editBakeId) {
+      hydratedEdit.current = null;
+      return;
+    }
+    if (editBake === undefined) {
+      return;
+    }
+    if (editBake === null) {
+      setError("That recipe isn’t yours to edit.");
+      const next = new URLSearchParams(params);
+      next.delete("edit");
+      setParams(next, { replace: true });
+      return;
+    }
+    if (hydratedEdit.current === editBake._id) {
+      return;
+    }
+    hydratedEdit.current = editBake._id;
+    changeSerial.current = 0;
+    setEditingBakeId(editBake._id);
+    setEditingSlug(editBake.slug);
+    setScreen("card");
+    setIntake("type");
+    setSourceKind(editBake.sourceKind ?? "original");
+    setTitle(editBake.title);
+    setSourceTitle(editBake.sourceTitle);
+    setSourceUrl(editBake.sourceUrl);
+    setTitleTouched(true);
+    setLookupState("idle");
+    setExtractNote(null);
+    setStory(editBake.story);
+    setBakedOn(editBake.bakedOn);
+    setShowDate(true);
+    setChanges(
+      editBake.changes.map((change) => {
+        changeSerial.current += 1;
+        return {
+          id: `change-${changeSerial.current}`,
+          move: change.move,
+          change: change.change,
+          why: change.why,
+        };
+      }),
+    );
+    setMakes(editBake.makes ?? "");
+    setIngredients(editBake.ingredients.join("\n"));
+    setSteps(editBake.steps.join("\n"));
+    setOriginStorageId(editBake.originStorageId ?? null);
+    setOriginIsImage(Boolean(editBake.photoUrl));
+    setOriginPreview(editBake.photoUrl);
+    setPhotoFile(null);
+    setCoverCleared(false);
+    setPile([]);
+    setEditingIndex(null);
+    setError(null);
+    setStatusMessage(null);
+  }, [editBake, editBakeId, params, setParams]);
 
   useEffect(() => {
     if (
@@ -327,7 +398,51 @@ export function WriteDesk({
     }, 0);
   }
 
+  function clearDesk() {
+    if (originPreview && originPreview.startsWith("blob:")) {
+      URL.revokeObjectURL(originPreview);
+    }
+    setScreen("choose");
+    setIntake("type");
+    setSourceKind("original");
+    setTitle("");
+    setSourceTitle("");
+    setSourceUrl("");
+    setTitleTouched(false);
+    setLookupState("idle");
+    setExtractNote(null);
+    setStory("");
+    setBakedOn(new Date().toISOString().slice(0, 10));
+    setShowDate(false);
+    setChanges([]);
+    setMakes("");
+    setIngredients("");
+    setSteps("");
+    setOriginStorageId(null);
+    setOriginIsImage(false);
+    setOriginPreview(null);
+    setPhotoFile(null);
+    setPile([]);
+    setEditingIndex(null);
+    setEditingBakeId(null);
+    setEditingSlug(null);
+    setCoverCleared(false);
+    hydratedEdit.current = null;
+    setError(null);
+    setStatusMessage(null);
+    if (params.has("edit")) {
+      const next = new URLSearchParams(params);
+      next.delete("edit");
+      setParams(next, { replace: true });
+    }
+  }
+
   function startOver() {
+    if (editingBakeId && editingSlug) {
+      clearDesk();
+      navigate(`/bakes/${editingSlug}`);
+      return;
+    }
     const dirty =
       title.trim().length > 0 ||
       ingredients.trim().length > 0 ||
@@ -343,34 +458,7 @@ export function WriteDesk({
     ) {
       return;
     }
-    if (originPreview) {
-      URL.revokeObjectURL(originPreview);
-    }
-    setScreen("choose");
-    setIntake("type");
-    setSourceKind("original");
-    setTitle("");
-    setSourceTitle("");
-    setSourceUrl("");
-    setTitleTouched(false);
-    setLookupState("idle");
-    setExtractNote(null);
-    setStory("");
-    setBakedOn(new Date().toISOString().slice(0, 10));
-    setShowDate(false);
-    setRating(0);
-    setChanges([]);
-    setMakes("");
-    setIngredients("");
-    setSteps("");
-    setOriginStorageId(null);
-    setOriginIsImage(false);
-    setOriginPreview(null);
-    setPhotoFile(null);
-    setPile([]);
-    setEditingIndex(null);
-    setError(null);
-    setStatusMessage(null);
+    clearDesk();
   }
 
   function openDraft(index: number) {
@@ -435,7 +523,6 @@ export function WriteDesk({
           steps: linesFromText(draft.steps),
           originStorageId: originStorageId ?? undefined,
           bakedOn,
-          rating: 5,
           outcome: "",
           changes: [],
           status: "published",
@@ -443,9 +530,11 @@ export function WriteDesk({
         lastSlug = result.slug;
       }
       if (kept.length === 1 && lastSlug) {
+        clearDesk();
         navigate(`/bakes/${lastSlug}`);
         return;
       }
+      clearDesk();
       navigate("/");
     } catch (caught) {
       setError(
@@ -484,20 +573,52 @@ export function WriteDesk({
         document.getElementById("story")?.focus();
         return;
       }
-      if (rating < 1 || rating > 5) {
-        setError("Tap how it turned out — one to five stars.");
-        document.getElementById(outcomeId)?.focus();
-        return;
-      }
     }
     setPending(true);
     try {
       const tray = photoFile;
       const coverFromCard =
-        originIsImage && originStorageId ? originStorageId : null;
+        originIsImage && originStorageId && !coverCleared
+          ? originStorageId
+          : null;
       const coverStorageId = tray
         ? await uploadFile(tray)
         : coverFromCard ?? undefined;
+
+      if (editingBakeId) {
+        const result = await updateBake({
+          bakeId: editingBakeId,
+          title,
+          story,
+          sourceTitle,
+          sourceUrl:
+            sourceKind === "sally" ? normalizeSallyUrl(sourceUrl) : sourceUrl,
+          sourceKind,
+          kind: trayFor(title, sourceTitle),
+          makes,
+          ingredients: linesFromText(ingredients),
+          steps: linesFromText(steps),
+          coverStorageId: tray ? coverStorageId : undefined,
+          clearCover: coverCleared && !tray,
+          bakedOn,
+          outcome: "",
+          changes: readyChanges(changes),
+          status,
+        });
+        if (tray && coverStorageId) {
+          await attachPhoto({
+            ...writeAccess,
+            bakeId: result.bakeId,
+            storageId: coverStorageId,
+            alt: title,
+          });
+        }
+        const slug = result.slug;
+        clearDesk();
+        navigate(`/bakes/${slug}`);
+        return;
+      }
+
       const result = await saveBake({
         ...writeAccess,
         title,
@@ -513,7 +634,6 @@ export function WriteDesk({
         originStorageId: originStorageId ?? undefined,
         coverStorageId,
         bakedOn,
-        rating: rating > 0 ? rating : 5,
         outcome: "",
         changes: readyChanges(changes),
         status,
@@ -531,6 +651,7 @@ export function WriteDesk({
         setPile(remaining);
         setEditingIndex(null);
         if (remaining.length === 0) {
+          clearDesk();
           navigate(`/bakes/${result.slug}`);
           return;
         }
@@ -539,6 +660,7 @@ export function WriteDesk({
         return;
       }
       if (status === "published") {
+        clearDesk();
         navigate(`/bakes/${result.slug}`);
       } else {
         setStatusMessage("Saved. You can come back to this later.");
@@ -573,8 +695,9 @@ export function WriteDesk({
 
   return (
     <div className="max-w-[40rem]">
-      <PageTitle title={`Add a recipe · ${SITE_SHORT}`} />
-      <Kicker>For {bookSignedName(bakerName) ?? bakerName}</Kicker>
+      <PageTitle
+        title={`${editingBakeId ? "Edit recipe" : "Add a recipe"} · ${SITE_SHORT}`}
+      />
       <input
         ref={fileInput}
         id={fileId}
@@ -594,12 +717,13 @@ export function WriteDesk({
         }}
       />
 
-      {screen === "choose" ? (
+      {editBakeId && editBake === undefined ? (
+        <p role="status" className="mt-6 text-[18px] text-ink-soft">
+          Opening that recipe…
+        </p>
+      ) : screen === "choose" ? (
         <div>
-          <h1 className="font-display mt-3 text-[2.15rem] leading-[1.12] tracking-tight md:text-[2.6rem]">
-            Add a recipe
-          </h1>
-          <p className="mt-3 text-[19px] leading-8 text-ink-soft">
+          <p className="mt-1 text-[19px] leading-8 text-ink-soft">
             Put it in the book however you already have it. A picture of a
             recipe is enough. A whole PowerPoint of recipes is fine too — you’ll
             see the pile before anything goes in.
@@ -610,10 +734,10 @@ export function WriteDesk({
               minute.
             </p>
           ) : (
-            <div className="mt-8 flex flex-col gap-3">
+            <div className="mt-8 flex flex-col items-start gap-3">
               <button
                 type="button"
-                className="book-press book-press-text book-press-save w-full justify-start"
+                className="book-press book-press-text book-press-save"
                 onClick={() => {
                   setIntake("photo");
                   window.setTimeout(() => fileInput.current?.click(), 0);
@@ -623,24 +747,24 @@ export function WriteDesk({
               </button>
               <button
                 type="button"
-                className="book-press book-press-text w-full justify-start"
+                className="book-press book-press-text"
                 onClick={() => {
                   setIntake("file");
                   window.setTimeout(() => fileInput.current?.click(), 0);
                 }}
               >
-                Upload a file — photo, PDF, PowerPoint
+                Upload a PDF or PowerPoint
               </button>
               <button
                 type="button"
-                className="book-press book-press-text w-full justify-start"
+                className="book-press book-press-text"
                 onClick={() => start("link")}
               >
                 Paste a link — Sally, TikTok, Pinterest
               </button>
               <button
                 type="button"
-                className="w-full justify-start min-h-12 cursor-pointer text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+                className="min-h-12 cursor-pointer text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
                 onClick={() => start("type")}
               >
                 Type it myself
@@ -762,18 +886,30 @@ export function WriteDesk({
             className="self-start min-h-12 cursor-pointer text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
             onClick={pile.length > 1 ? returnToPile : startOver}
           >
-            {pile.length > 1 ? "Back to the pile" : "Add a different way"}
+            {editingBakeId
+              ? "Cancel"
+              : pile.length > 1
+                ? "Back to the pile"
+                : "Add a different way"}
           </button>
+          {editingBakeId ? (
+            <h1 className="font-display mt-4 text-[2.15rem] leading-[1.12] tracking-tight md:text-[2.6rem]">
+              Edit recipe
+            </h1>
+          ) : null}
           {extractNote ? (
             <p className="mt-3 text-[18px] leading-7 text-ink-soft">{extractNote}</p>
           ) : null}
 
           {originPreview ? (
             <div className="mt-6">
+              <p className="text-[16px] leading-6 text-ink-soft">
+                Picture for this recipe
+              </p>
               <img
                 src={originPreview}
-                alt=""
-                className="aspect-[4/3] w-full max-w-[22rem] border border-rule object-cover"
+                alt="Current picture for this recipe"
+                className="mt-2 aspect-[4/3] w-full max-w-[22rem] border border-rule object-cover"
               />
               <button
                 type="button"
@@ -781,18 +917,64 @@ export function WriteDesk({
                 onClick={() => {
                   setOriginStorageId(null);
                   setOriginIsImage(false);
+                  setCoverCleared(true);
                   setOriginPreview((current) => {
-                    if (current) {
+                    if (current?.startsWith("blob:")) {
                       URL.revokeObjectURL(current);
                     }
                     return null;
                   });
+                  setPhotoFile(null);
                 }}
               >
                 Remove this picture
               </button>
             </div>
-          ) : null}
+          ) : (
+            <>
+              <Label htmlFor={photoId} className="mt-6">
+                Picture for this recipe
+              </Label>
+              <p className="mt-1 text-[16px] leading-6 text-ink-soft">
+                Nice if you have it. Old recipes can go in without one.
+              </p>
+              <label
+                htmlFor={photoId}
+                className="mt-3 flex min-h-28 cursor-pointer flex-col items-center justify-center border border-dashed border-cocoa bg-paper-raised px-4 py-5 text-center"
+              >
+                {photoPreview ? (
+                  <img
+                    src={photoPreview}
+                    alt="Selected picture for this recipe"
+                    className="aspect-[4/3] w-full max-w-[22rem] object-cover"
+                  />
+                ) : (
+                  <span className="text-[18px] leading-7">
+                    Tap to add a photo
+                  </span>
+                )}
+                <input
+                  id={photoId}
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(event) => {
+                    setCoverCleared(false);
+                    setPhotoFile(event.target.files?.[0] ?? null);
+                  }}
+                />
+              </label>
+              {photoPreview ? (
+                <button
+                  type="button"
+                  className="mt-2 self-start min-h-12 cursor-pointer text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+                  onClick={() => setPhotoFile(null)}
+                >
+                  Remove this picture
+                </button>
+              ) : null}
+            </>
+          )}
 
           <h1 className="mt-6 text-[1.25rem] font-medium leading-8 text-ink">
             Where did this come from?
@@ -880,7 +1062,10 @@ export function WriteDesk({
             }}
             placeholder="Pumpkin muffins, extra spice"
             required
-            className="font-display mt-2 w-full rounded-[2px] border-0 border-b-[1.5px] border-rule bg-transparent pb-2 text-[2rem] leading-[1.15] tracking-tight text-ink placeholder:text-ink-soft"
+            autoComplete="off"
+            autoCapitalize="sentences"
+            enterKeyHint="next"
+            className="font-display mt-2 min-h-14 w-full rounded-[2px] border-0 border-b-[1.5px] border-rule bg-transparent pb-2 text-[2rem] leading-[1.15] tracking-tight text-ink placeholder:text-ink-soft"
           />
 
           <Label htmlFor="makes" className="mt-6">
@@ -920,47 +1105,6 @@ export function WriteDesk({
             className="mt-2 min-h-28"
           />
 
-          <Label htmlFor={photoId} className="mt-8">
-            A photo of what came out
-          </Label>
-          <p className="mt-1 text-[16px] leading-6 text-ink-soft">
-            Nice if you have it. Old recipes can go in without one.
-          </p>
-          <label
-            htmlFor={photoId}
-            className="mt-3 flex min-h-28 cursor-pointer flex-col items-center justify-center border border-dashed border-cocoa bg-paper-raised px-4 py-5 text-center"
-          >
-            {photoPreview ? (
-              <img
-                src={photoPreview}
-                alt=""
-                className="aspect-[4/3] w-full max-w-[22rem] object-cover"
-              />
-            ) : (
-              <span className="text-[18px] leading-7">
-                Tap to add a photo of the pan
-              </span>
-            )}
-            <input
-              id={photoId}
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              onChange={(event) =>
-                setPhotoFile(event.target.files?.[0] ?? null)
-              }
-            />
-          </label>
-          {photoPreview ? (
-            <button
-              type="button"
-              className="mt-2 self-start min-h-12 cursor-pointer text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
-              onClick={() => setPhotoFile(null)}
-            >
-              Remove the pan photo
-            </button>
-          ) : null}
-
           <p className="mt-6 text-[16px] text-ink-soft">
             {showDate ? null : (
               <>
@@ -999,24 +1143,6 @@ export function WriteDesk({
             required
             className="mt-2 min-h-28"
           />
-
-          <p
-            id={outcomeId}
-            tabIndex={-1}
-            className="mt-8 text-[17px] font-medium leading-6"
-          >
-            How it turned out
-          </p>
-          <p className="mt-1 text-[16px] leading-6 text-ink-soft">
-            Tap a star. One is just okay. Five is the keeper.
-          </p>
-          <div className="mt-2">
-            <BakeStars
-              value={rating}
-              onChange={setRating}
-              labelledBy={outcomeId}
-            />
-          </div>
 
           <details className="write-tweak mt-8">
             <summary className="write-tweak-open">
@@ -1114,16 +1240,24 @@ export function WriteDesk({
                 disabled={pending || extracting}
                 aria-busy={pending}
               >
-                {pending ? "Putting it in the book…" : "Put it in the book"}
+                {pending
+                  ? editingBakeId
+                    ? "Saving…"
+                    : "Putting it in the book…"
+                  : editingBakeId
+                    ? "Save changes"
+                    : "Put it in the book"}
               </button>
-              <button
-                type="button"
-                className="book-press book-press-text"
-                disabled={pending}
-                onClick={() => void onSubmit("draft")}
-              >
-                Save for later
-              </button>
+              {editingBakeId ? null : (
+                <button
+                  type="button"
+                  className="book-press book-press-text"
+                  disabled={pending}
+                  onClick={() => void onSubmit("draft")}
+                >
+                  Save for later
+                </button>
+              )}
             </div>
           </div>
         </form>
@@ -1157,6 +1291,14 @@ export function WriteDesk({
                   {bake.status === "draft"
                     ? "Not in the book yet"
                     : formatBakeDate(bake.bakedOn)}
+                </p>
+                <p className="mt-2">
+                  <Link
+                    to={`${DESK_PATH}?edit=${bake._id}`}
+                    className="inline-flex min-h-12 items-center text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+                  >
+                    Edit
+                  </Link>
                 </p>
               </li>
             ))}
