@@ -70,7 +70,7 @@ export function KitchenAsk({
 
   return (
     <section
-      className="mt-10 rounded-lg border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-5"
+      className="kitchen-ask mt-10 w-full rounded-lg border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-5"
       aria-labelledby={headingId}
     >
       <Kicker>If you&apos;re at the counter</Kicker>
