@@ -3,6 +3,7 @@ import { useMutation } from "convex/react";
 import { useNavigate } from "react-router";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { BookConfirm } from "@/components/BookConfirm";
 import { useFamily } from "@/lib/family";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/lib/toast";
@@ -22,6 +23,7 @@ export function RecipeDelete({
   const removeMine = useMutation(api.bakes.removeMine);
   const navigate = useNavigate();
   const [pending, setPending] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const toast = useToast();
 
   if (!user || !ownerId || ownerId !== user._id) {
@@ -30,12 +32,6 @@ export function RecipeDelete({
 
   async function remove() {
     if (pending) {
-      return;
-    }
-    const ok = window.confirm(
-      `Delete “${title}” from the book? This can’t be undone.`,
-    );
-    if (!ok) {
       return;
     }
     setPending(true);
@@ -50,6 +46,7 @@ export function RecipeDelete({
           : "Couldn’t delete that recipe.",
       );
       setPending(false);
+      setConfirmOpen(false);
     }
   }
 
@@ -61,10 +58,29 @@ export function RecipeDelete({
         disabled={pending}
         aria-busy={pending}
         aria-label={`Delete ${title}`}
-        onClick={() => void remove()}
+        onClick={() => setConfirmOpen(true)}
       >
         {pending ? "Deleting…" : "Delete"}
       </button>
+      <BookConfirm
+        open={confirmOpen}
+        title="Delete this recipe?"
+        body={
+          <>
+            “{title}” will leave the book. This can’t be undone.
+          </>
+        }
+        confirmLabel="Delete"
+        cancelLabel="Keep it"
+        danger
+        busy={pending}
+        onConfirm={() => void remove()}
+        onCancel={() => {
+          if (!pending) {
+            setConfirmOpen(false);
+          }
+        }}
+      />
     </div>
   );
 }

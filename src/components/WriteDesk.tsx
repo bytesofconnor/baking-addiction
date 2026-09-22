@@ -1,9 +1,10 @@
 import { useAction, useMutation, useQuery } from "convex/react";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useBlocker, useNavigate, useSearchParams } from "react-router";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Link } from "react-router";
+import { BookConfirm } from "@/components/BookConfirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,11 +55,14 @@ export function WriteDesk({
   kitchenId,
   bakerName = BAKER_NAME,
   onLock,
+  onPublished,
 }: {
   token?: string;
   kitchenId?: Id<"kitchens">;
   bakerName?: string;
   onLock?: () => Promise<void>;
+  /** Parent remounts a blank desk after a successful publish. */
+  onPublished?: () => void;
 }) {
   const writeAccess = {
     ...(token ? { writerToken: token } : {}),
@@ -128,6 +132,61 @@ export function WriteDesk({
   const [editingBakeId, setEditingBakeId] = useState<Id<"bakes"> | null>(null);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [coverCleared, setCoverCleared] = useState(false);
+  const allowLeave = useRef(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const [startOverOpen, setStartOverOpen] = useState(false);
+  const [lockOpen, setLockOpen] = useState(false);
+
+  const deskDirty =
+    editingBakeId !== null ||
+    screen !== "choose" ||
+    pile.length > 0 ||
+    title.trim().length > 0 ||
+    story.trim().length > 0 ||
+    ingredients.trim().length > 0 ||
+    steps.trim().length > 0 ||
+    originStorageId !== null ||
+    photoFile !== null;
+
+  const leaveTitle = editingBakeId ? "Leave this edit?" : "Leave this recipe?";
+  const leaveBody = editingBakeId
+    ? "Your changes won’t be saved."
+    : pile.length > 1
+      ? "None of these recipes will be saved."
+      : "What you typed here won’t be saved.";
+
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+    if (allowLeave.current || !deskDirty) {
+      return false;
+    }
+    if (currentLocation.pathname !== DESK_PATH) {
+      return false;
+    }
+    if (nextLocation.pathname !== DESK_PATH) {
+      return true;
+    }
+    const curEdit = new URLSearchParams(currentLocation.search).get("edit");
+    const nextEdit = new URLSearchParams(nextLocation.search).get("edit");
+    return Boolean(curEdit && curEdit !== nextEdit);
+  });
+
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      setLeaveOpen(true);
+    }
+  }, [blocker.state]);
+
+  useEffect(() => {
+    if (!deskDirty) {
+      return;
+    }
+    function onBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [deskDirty]);
 
   useEffect(() => {
     if (!photoFile) {
@@ -437,9 +496,22 @@ export function WriteDesk({
     }
   }
 
+  function finishPublished(slug?: string) {
+    allowLeave.current = true;
+    clearDesk();
+    onPublished?.();
+    if (slug) {
+      navigate(`/bakes/${slug}`);
+    } else {
+      navigate("/");
+    }
+  }
+
   function startOver() {
     if (editingBakeId && editingSlug) {
+      allowLeave.current = true;
       clearDesk();
+      onPublished?.();
       navigate(`/bakes/${editingSlug}`);
       return;
     }
@@ -448,17 +520,29 @@ export function WriteDesk({
       ingredients.trim().length > 0 ||
       pile.length > 0 ||
       originStorageId !== null;
-    if (
-      dirty &&
-      !window.confirm(
-        pile.length > 1
-          ? "Leave this pile? None of these recipes will be saved."
-          : "Leave this recipe? What you typed here won’t be saved.",
-      )
-    ) {
+    if (dirty) {
+      setStartOverOpen(true);
       return;
     }
     clearDesk();
+    onPublished?.();
+  }
+
+  function discardAndLeave() {
+    setLeaveOpen(false);
+    allowLeave.current = true;
+    clearDesk();
+    onPublished?.();
+    if (blocker.state === "blocked") {
+      blocker.proceed();
+    }
+  }
+
+  function stayOnDesk() {
+    setLeaveOpen(false);
+    if (blocker.state === "blocked") {
+      blocker.reset();
+    }
   }
 
   function openDraft(index: number) {
@@ -531,13 +615,11 @@ export function WriteDesk({
       }
       if (kept.length === 1 && lastSlug) {
         toast.success("Recipe added to the book.");
-        clearDesk();
-        navigate(`/bakes/${lastSlug}`);
+        finishPublished(lastSlug);
         return;
       }
       toast.success(`${kept.length} recipes added to the book.`);
-      clearDesk();
-      navigate("/");
+      finishPublished();
     } catch (caught) {
       toast.error(
         caught instanceof Error
@@ -607,17 +689,27 @@ export function WriteDesk({
           status,
         });
         if (tray && coverStorageId) {
-          await attachPhoto({
-            ...writeAccess,
-            bakeId: result.bakeId,
-            storageId: coverStorageId,
-            alt: title,
-          });
+          try {
+            await attachPhoto({
+              ...writeAccess,
+              bakeId: result.bakeId,
+              storageId: coverStorageId,
+              alt: title,
+            });
+          } catch {
+            toast.error("Saved, but the photo didn’t attach. You can add it when you edit.");
+          }
         }
         const slug = result.slug;
         toast.success(status === "published" ? "Changes saved." : "Draft saved.");
-        clearDesk();
-        navigate(`/bakes/${slug}`);
+        if (status === "published") {
+          finishPublished(slug);
+        } else {
+          allowLeave.current = true;
+          clearDesk();
+          onPublished?.();
+          navigate(`/bakes/${slug}`);
+        }
         return;
       }
 
@@ -641,12 +733,16 @@ export function WriteDesk({
         status,
       });
       if (coverStorageId) {
-        await attachPhoto({
-          ...writeAccess,
-          bakeId: result.bakeId,
-          storageId: coverStorageId,
-          alt: title,
-        });
+        try {
+          await attachPhoto({
+            ...writeAccess,
+            bakeId: result.bakeId,
+            storageId: coverStorageId,
+            alt: title,
+          });
+        } catch {
+          toast.error("Saved, but the photo didn’t attach. You can add it when you edit.");
+        }
       }
       if (status === "published" && pile.length > 1 && editingIndex !== null) {
         const remaining = pile.filter((_, index) => index !== editingIndex);
@@ -654,8 +750,7 @@ export function WriteDesk({
         setEditingIndex(null);
         if (remaining.length === 0) {
           toast.success("Recipe added to the book.");
-          clearDesk();
-          navigate(`/bakes/${result.slug}`);
+          finishPublished(result.slug);
           return;
         }
         toast.success("That one is in the book.");
@@ -664,8 +759,7 @@ export function WriteDesk({
       }
       if (status === "published") {
         toast.success("Recipe added to the book.");
-        clearDesk();
-        navigate(`/bakes/${result.slug}`);
+        finishPublished(result.slug);
       } else {
         toast.success("Draft saved. You can come back later.");
       }
@@ -1318,19 +1412,53 @@ export function WriteDesk({
         <button
           type="button"
           className="mt-10 min-h-12 cursor-pointer text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
-          onClick={() => {
-            if (
-              window.confirm(
-                "Lock this device? You'll need the kitchen code again to write.",
-              )
-            ) {
-              void onLock();
-            }
-          }}
+          onClick={() => setLockOpen(true)}
         >
           Lock the kitchen
         </button>
       ) : null}
+
+      <BookConfirm
+        open={leaveOpen}
+        title={leaveTitle}
+        body={leaveBody}
+        confirmLabel="Discard"
+        cancelLabel="Keep working"
+        danger
+        onConfirm={discardAndLeave}
+        onCancel={stayOnDesk}
+      />
+      <BookConfirm
+        open={startOverOpen}
+        title={pile.length > 1 ? "Leave this pile?" : "Start over?"}
+        body={
+          pile.length > 1
+            ? "None of these recipes will be saved."
+            : "What you typed here won’t be saved."
+        }
+        confirmLabel="Discard"
+        cancelLabel="Keep working"
+        danger
+        onConfirm={() => {
+          setStartOverOpen(false);
+          clearDesk();
+          onPublished?.();
+        }}
+        onCancel={() => setStartOverOpen(false)}
+      />
+      <BookConfirm
+        open={lockOpen}
+        title="Lock this device?"
+        body="You’ll need the kitchen code again to write."
+        confirmLabel="Lock"
+        cancelLabel="Stay unlocked"
+        danger
+        onConfirm={() => {
+          setLockOpen(false);
+          void onLock?.();
+        }}
+        onCancel={() => setLockOpen(false)}
+      />
     </div>
   );
 }

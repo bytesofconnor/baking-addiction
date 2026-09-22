@@ -23,6 +23,9 @@ export function WritePage() {
   const [linkCode, setLinkCode] = useState("");
   const [openingLink, setOpeningLink] = useState(false);
   const [linkFailed, setLinkFailed] = useState(false);
+  // Bumps after publish so warm Add remounts blank (edit key alone stays "new").
+  const [deskNonce, setDeskNonce] = useState(0);
+  const deskKey = `${params.get("edit") ?? "new"}-${deskNonce}`;
 
   useEffect(() => {
     const robots = document.createElement("meta");
@@ -85,8 +88,10 @@ export function WritePage() {
   if (family.status === "in" && family.canWrite && family.kitchenId) {
     return (
       <WriteDesk
+        key={deskKey}
         kitchenId={family.kitchenId}
         bakerName={family.user?.called}
+        onPublished={() => setDeskNonce((n) => n + 1)}
       />
     );
   }
@@ -109,7 +114,14 @@ export function WritePage() {
     );
   }
 
-  return <WriteDesk token={token} onLock={lock} />;
+  return (
+    <WriteDesk
+      key={deskKey}
+      token={token}
+      onLock={lock}
+      onPublished={() => setDeskNonce((n) => n + 1)}
+    />
+  );
 }
 
 function KitchenDoor({
