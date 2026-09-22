@@ -31,7 +31,7 @@ export function KitchenMethod({
   return (
     <section
       aria-labelledby="kitchen-method-heading"
-      className="kitchen-method border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-3.5 py-5 md:px-7 md:py-7"
+      className="kitchen-method w-full rounded-lg border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-3.5 py-5 md:px-7 md:py-7"
     >
       <Kicker>The recipe</Kicker>
       <h2

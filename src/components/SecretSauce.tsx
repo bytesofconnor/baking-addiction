@@ -14,7 +14,7 @@ export function SecretSauce({
   return (
     <section
       aria-labelledby="secret-sauce-heading"
-      className="secret-sauce border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-5"
+      className="secret-sauce w-full rounded-lg border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-5"
     >
       <Kicker>{shared ? "The tweaks" : "The secret sauce"}</Kicker>
       <h2 id="secret-sauce-heading" className="font-display mt-1 text-[1.65rem] leading-8">
