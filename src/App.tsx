@@ -1,8 +1,9 @@
 import {
-  BrowserRouter,
   Navigate,
   Route,
+  RouterProvider,
   Routes,
+  createBrowserRouter,
   useLocation,
   useSearchParams,
 } from "react-router";
@@ -93,20 +94,26 @@ function VercelAnalytics() {
   return <Analytics path={pathname} route={pathname} />;
 }
 
-export function App() {
+function AppShell() {
   return (
-    <BrowserRouter>
-      <SeasonProvider>
-        <ToastProvider>
-          <PreviewProvider>
-            <Routes>
-              <Route path="/slip/:token" element={<SlipPage />} />
-              <Route path="*" element={<BookRoutes />} />
-            </Routes>
-            <VercelAnalytics />
-          </PreviewProvider>
-        </ToastProvider>
-      </SeasonProvider>
-    </BrowserRouter>
+    <SeasonProvider>
+      <ToastProvider>
+        <PreviewProvider>
+          <Routes>
+            <Route path="/slip/:token" element={<SlipPage />} />
+            <Route path="*" element={<BookRoutes />} />
+          </Routes>
+          <VercelAnalytics />
+        </PreviewProvider>
+      </ToastProvider>
+    </SeasonProvider>
   );
+}
+
+const router = createBrowserRouter([
+  { path: "*", element: <AppShell /> },
+]);
+
+export function App() {
+  return <RouterProvider router={router} />;
 }

@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router";
 import { DESK_PATH } from "@/lib/desk";
 import { sectionOf } from "@/lib/bookPages";
 import { useFamily } from "@/lib/family";
@@ -21,8 +22,10 @@ export function useBookNav(pathname: string): {
   const family = useFamily();
   const { asKey, keep } = usePreview();
   const peekCalled = usePeekCalled();
+  const [params] = useSearchParams();
   const section = sectionOf(pathname);
   const onDoor = family.status !== "in";
+  const editing = section === "add" && Boolean(params.get("edit"));
 
   // Join / FAQ share the phone bottom dock with the signed-in tabs.
   if (onDoor) {
@@ -64,9 +67,9 @@ export function useBookNav(pathname: string): {
     {
       id: "add",
       to: keep(DESK_PATH),
-      label: "Add a recipe",
-      shortLabel: "Add",
-      ariaLabel: "Add a recipe",
+      label: editing ? "Edit a recipe" : "Add a recipe",
+      shortLabel: editing ? "Edit" : "Add",
+      ariaLabel: editing ? "Edit a recipe" : "Add a recipe",
       active: section === "add",
     },
     {

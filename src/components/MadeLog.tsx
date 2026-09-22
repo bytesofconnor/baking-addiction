@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { Link } from "react-router";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { BookConfirm } from "@/components/BookConfirm";
 import { RecipeEdit } from "@/components/RecipeEdit";
 import { formatBakeDate } from "@/lib/dates";
 import { useToast } from "@/lib/toast";
@@ -11,22 +12,22 @@ export function MadeLog() {
   const rows = useQuery(api.bakes.listPosted);
   const removeMine = useMutation(api.bakes.removeMine);
   const [removingId, setRemovingId] = useState<Id<"bakes"> | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: Id<"bakes">;
+    title: string;
+  } | null>(null);
   const toast = useToast();
 
-  async function remove(bakeId: Id<"bakes">, title: string) {
-    if (removingId) {
+  async function remove() {
+    if (!pendingDelete || removingId) {
       return;
     }
-    const ok = window.confirm(
-      `Delete “${title}” from the book? This can’t be undone.`,
-    );
-    if (!ok) {
-      return;
-    }
-    setRemovingId(bakeId);
+    const { id } = pendingDelete;
+    setRemovingId(id);
     try {
-      await removeMine({ bakeId });
+      await removeMine({ bakeId: id });
       toast.success("Recipe removed from the book.");
+      setPendingDelete(null);
     } catch (caught) {
       toast.error(
         caught instanceof Error
@@ -104,7 +105,9 @@ export function MadeLog() {
                     disabled={removingId === row._id}
                     aria-busy={removingId === row._id}
                     aria-label={`Delete ${row.title}`}
-                    onClick={() => void remove(row._id, row.title)}
+                    onClick={() =>
+                      setPendingDelete({ id: row._id, title: row.title })
+                    }
                   >
                     {removingId === row._id ? "Deleting…" : "Delete"}
                   </button>
@@ -115,6 +118,27 @@ export function MadeLog() {
         </ol>
       )}
 
+      <BookConfirm
+        open={pendingDelete !== null}
+        title="Delete this recipe?"
+        body={
+          pendingDelete ? (
+            <>
+              “{pendingDelete.title}” will leave the book. This can’t be undone.
+            </>
+          ) : null
+        }
+        confirmLabel="Delete"
+        cancelLabel="Keep it"
+        danger
+        busy={removingId !== null}
+        onConfirm={() => void remove()}
+        onCancel={() => {
+          if (!removingId) {
+            setPendingDelete(null);
+          }
+        }}
+      />
     </section>
   );
 }
