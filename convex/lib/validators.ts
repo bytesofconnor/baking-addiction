@@ -53,6 +53,7 @@ export const bakeTeaserValidator = v.object({
   sourceUrl: v.string(),
   sourceKind: v.optional(sourceKindValidator),
   bakerName: v.string(),
+  bakerAvatarUrl: v.union(v.string(), v.null()),
   kind: v.optional(kindValidator),
   publishedAt: v.optional(v.number()),
   bakedOn: v.string(),

@@ -12,12 +12,15 @@ import {
   recipesBookName,
   requireSignedIn,
 } from "./lib/family";
+import { avatarUrlForUser } from "./lib/avatar";
 import { startKitchen } from "./kitchens";
 
 const userReturn = v.object({
   _id: v.id("users"),
   called: v.string(),
   email: v.string(),
+  avatarUrl: v.union(v.string(), v.null()),
+  hasCustomAvatar: v.boolean(),
 });
 
 const kitchenReturn = v.object({
@@ -63,6 +66,8 @@ export const me = query({
         _id: user._id,
         called: calledName(user),
         email: user.email ?? "",
+        avatarUrl: await avatarUrlForUser(ctx, user),
+        hasCustomAvatar: Boolean(user.avatarStorageId),
       },
       kitchens,
     };
@@ -182,6 +187,43 @@ export const setCalled = mutation({
     const kitchen = await ownedKitchen(ctx, user._id);
     if (kitchen && called.toLowerCase() !== "mom") {
       await ctx.db.patch(kitchen._id, { name: recipesBookName(called) });
+    }
+    return null;
+  },
+});
+
+export const generateUploadUrl = mutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => {
+    await requireSignedIn(ctx);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const setAvatar = mutation({
+  args: { storageId: v.id("_storage") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await requireSignedIn(ctx);
+    const previous = user.avatarStorageId;
+    await ctx.db.patch(user._id, { avatarStorageId: args.storageId });
+    if (previous && previous !== args.storageId) {
+      await ctx.storage.delete(previous);
+    }
+    return null;
+  },
+});
+
+export const clearAvatar = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const user = await requireSignedIn(ctx);
+    const previous = user.avatarStorageId;
+    await ctx.db.patch(user._id, { avatarStorageId: undefined });
+    if (previous) {
+      await ctx.storage.delete(previous);
     }
     return null;
   },

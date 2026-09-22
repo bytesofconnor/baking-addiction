@@ -166,23 +166,32 @@ export function useCookbookView() {
     ? dummyBook !== undefined
     : ownPeople !== undefined && ownMixes !== undefined;
   const selection = peopleReady ? resolveMix(params, people, mixes) : null;
+  // Typing in search looks at the whole book; person chips only scope browsing.
+  const searching = (params.get("q") ?? "").trim().length > 0;
+  const fetchLens: MixSelection | null =
+    searching && peopleReady
+      ? {
+          includeMine: true,
+          otherUserIds: people.map((person) => person.otherUserId),
+        }
+      : selection;
 
   const ownBakes = useQuery(
     api.bakes.listPublished,
-    status === "in" && !peeking && selection
+    status === "in" && !peeking && fetchLens
       ? {
-          includeMine: selection.includeMine,
-          otherUserIds: selection.otherUserIds,
+          includeMine: fetchLens.includeMine,
+          otherUserIds: fetchLens.otherUserIds,
         }
       : "skip",
   );
   const peekedBakes = useQuery(
     api.preview.dummyBakes,
-    peeking && asKey && selection
+    peeking && asKey && fetchLens
       ? {
           key: asKey,
-          includeMine: selection.includeMine,
-          otherUserIds: selection.otherUserIds,
+          includeMine: fetchLens.includeMine,
+          otherUserIds: fetchLens.otherUserIds,
         }
       : "skip",
   );
@@ -234,6 +243,9 @@ export function useCookbookView() {
     selfCalled: peeking
       ? (dummyBook?.called ?? "Family")
       : (user?.called ?? "You"),
+    selfAvatarUrl: peeking
+      ? (dummyBook?.avatarUrl ?? null)
+      : (user?.avatarUrl ?? null),
     selfId: (peeking ? dummyBook?.userId : user?._id) as
       | Id<"users">
       | undefined,

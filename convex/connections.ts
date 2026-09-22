@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { calledForViewer, requireSignedIn } from "./lib/family";
+import { avatarUrlForUser } from "./lib/avatar";
 import { uniquifyPeople } from "./lib/samples";
 
 const connectionReturn = v.object({
@@ -8,6 +9,7 @@ const connectionReturn = v.object({
   called: v.string(),
   email: v.string(),
   included: v.boolean(),
+  avatarUrl: v.union(v.string(), v.null()),
 });
 
 export const list = query({
@@ -33,7 +35,16 @@ export const list = query({
         user: other,
       });
     }
-    return uniquifyPeople(people);
+    const unique = uniquifyPeople(people);
+    const withAvatars = [];
+    for (const person of unique) {
+      const other = await ctx.db.get("users", person.otherUserId);
+      withAvatars.push({
+        ...person,
+        avatarUrl: await avatarUrlForUser(ctx, other),
+      });
+    }
+    return withAvatars;
   },
 });
 

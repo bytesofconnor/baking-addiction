@@ -32,6 +32,8 @@ type FamilyUser = {
   _id: Id<"users">;
   called: string;
   email: string;
+  avatarUrl: string | null;
+  hasCustomAvatar: boolean;
 };
 
 type FamilyContextValue = {

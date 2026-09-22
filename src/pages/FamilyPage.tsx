@@ -3,6 +3,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Kicker } from "@/components/Kicker";
+import { BakerAvatar } from "@/components/BakerAvatar";
 import { useFamily } from "@/lib/family";
 import { useCookbookView } from "@/lib/preview";
 import { collapsePeople } from "@/lib/cookbookMix";
@@ -66,6 +67,7 @@ function FamilyPerson({
     called: string;
     email?: string;
     included?: boolean;
+    avatarUrl?: string | null;
   };
   canEdit: boolean;
   flipping: boolean;
@@ -105,6 +107,12 @@ function FamilyPerson({
 
   return (
     <li className="family-person" data-on={on}>
+      <BakerAvatar
+        name={person.called}
+        url={person.avatarUrl}
+        size="md"
+        className="family-person-face"
+      />
       <span className="min-w-0 flex-1">
         {canEdit && editing ? (
           <input

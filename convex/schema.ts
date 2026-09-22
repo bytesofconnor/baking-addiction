@@ -15,6 +15,7 @@ export default defineSchema({
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
     called: v.optional(v.string()),
+    avatarStorageId: v.optional(v.id("_storage")),
     createdAt: v.optional(v.number()),
     passwordHash: v.optional(v.string()),
     passwordSalt: v.optional(v.string()),

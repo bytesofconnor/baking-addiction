@@ -10,6 +10,7 @@ export type CookbookBake = {
   sourceTitle: string;
   sourceKind?: SourceKind;
   bakerName: string;
+  bakerAvatarUrl?: string | null;
   ownerId?: string;
   kind?: BakeKind;
   bakedOn: string;

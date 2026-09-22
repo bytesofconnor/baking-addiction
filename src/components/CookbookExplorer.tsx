@@ -16,6 +16,7 @@ import { splitWhoQuery, type MixPerson } from "@/lib/cookbookMix";
 import { formatAddedShort } from "@/lib/dates";
 import { FilterSort, FilterSorts } from "@/components/BookFilters";
 import { BakePlate } from "@/components/BakePlate";
+import { BakerName } from "@/components/BakerAvatar";
 import { RecipeShare } from "@/components/RecipeShare";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,7 +117,7 @@ export function CookbookExplorer({
         className="book-portal-lintel"
         onSubmit={(event) => event.preventDefault()}
       >
-        <Label htmlFor={searchId} id="cookbook-index-heading">
+        <Label htmlFor={searchId} id="cookbook-index-heading" className="sr-only">
           Search recipes
         </Label>
         <Input
@@ -128,9 +129,9 @@ export function CookbookExplorer({
           spellCheck={false}
           enterKeyHint="search"
           inputMode="search"
-          placeholder="Pumpkin, bread, chocolate…"
+          placeholder="Search recipes — pumpkin, chocolate…"
           aria-describedby={countId}
-          className="book-search mt-1 min-h-14 rounded-[4px] px-3 outline-offset-4"
+          className="book-search min-h-14 rounded-[4px] px-3 outline-offset-4"
           onChange={(event) => write({ q: event.target.value })}
         />
       </form>
@@ -343,7 +344,7 @@ function PortalCard({
       </div>
       <div className="book-portal-copy">
         <p className="text-[16px] font-medium leading-6 text-ink-soft">
-          {bake.bakerName}
+          <BakerName name={bake.bakerName} url={bake.bakerAvatarUrl} />
         </p>
         <h2
           id={titleId}

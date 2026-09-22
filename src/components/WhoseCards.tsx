@@ -1,156 +1,91 @@
-import { useState } from "react";
-import type { MixPerson, MixSelection, SavedMix } from "@/lib/cookbookMix";
+import type { MixPerson, MixSelection } from "@/lib/cookbookMix";
 import { collapsePeople, sameMix } from "@/lib/cookbookMix";
-import {
-  FilterCheck,
-  FilterChecks,
-  FilterSegment,
-  FilterSegments,
-} from "@/components/BookFilters";
+import { BakerAvatar } from "@/components/BakerAvatar";
+import { FilterSegment, FilterSegments } from "@/components/BookFilters";
 
 export function WhoseCards({
   people,
-  mixes,
   selection,
   onChange,
-  onRemember,
-  remembering,
-  canRemember = true,
+  selfAvatarUrl,
 }: {
   people: MixPerson[];
-  mixes: SavedMix[];
   selection: MixSelection;
   onChange: (next: MixSelection) => void;
-  onRemember: () => void;
-  remembering?: boolean;
-  canRemember?: boolean;
+  selfAvatarUrl?: string | null;
 }) {
   const unique = collapsePeople(people);
-  const selectedOthers = new Set(selection.otherUserIds);
-  const usual = mixes.find((mix) => mix.isDefault);
-  const matchesUsual =
-    usual !== undefined &&
-    sameMix(selection, {
-      includeMine: usual.includeMine,
-      otherUserIds: usual.otherUserIds,
-    });
   const everyone: MixSelection = {
     includeMine: true,
     otherUserIds: unique.map((person) => person.otherUserId),
   };
   const justMe: MixSelection = { includeMine: true, otherUserIds: [] };
-  const customSelection =
-    !sameMix(selection, everyone) && !sameMix(selection, justMe);
-  const [peopleOpen, setPeopleOpen] = useState(customSelection);
-  const selectedCount =
-    (selection.includeMine ? 1 : 0) +
-    unique.filter((person) => selectedOthers.has(person.otherUserId)).length;
-  const mixChoices = [
+
+  const lenses: Array<{
+    key: string;
+    label: string;
+    avatarUrl?: string | null;
+    selected: boolean;
+    open: () => void;
+  }> = [
     {
-      key: "everyone",
-      label: "Whole family",
+      key: "all",
+      label: "All",
       selected: sameMix(selection, everyone),
-      open: () => {
-        onChange(everyone);
-        setPeopleOpen(false);
-      },
+      open: () => onChange(everyone),
     },
     {
-      key: "just-me",
-      label: "Just me",
+      key: "me",
+      label: "Me",
+      avatarUrl: selfAvatarUrl,
       selected: sameMix(selection, justMe),
-      open: () => {
-        onChange(justMe);
-        setPeopleOpen(false);
-      },
+      open: () => onChange(justMe),
     },
+    ...unique.map((person) => {
+      const alone: MixSelection = {
+        includeMine: false,
+        otherUserIds: [person.otherUserId],
+      };
+      return {
+        key: person.otherUserId,
+        label: person.called,
+        avatarUrl: person.avatarUrl,
+        selected: sameMix(selection, alone),
+        open: () => onChange(alone),
+      };
+    }),
   ];
 
-  function toggleSelf() {
-    onChange({
-      includeMine: !selection.includeMine,
-      otherUserIds: selection.otherUserIds,
-    });
-  }
-
-  function togglePerson(id: MixPerson["otherUserId"]) {
-    const next = selectedOthers.has(id)
-      ? selection.otherUserIds.filter((other) => other !== id)
-      : [...selection.otherUserIds, id];
-    onChange({
-      includeMine: selection.includeMine,
-      otherUserIds: next,
-    });
-  }
+  // Older URLs may still carry a custom mix; fall back to All visually.
+  const anySelected = lenses.some((lens) => lens.selected);
 
   return (
     <div className="book-whose">
-      <div className="book-whose-primary">
-        <FilterSegments labelledBy="whose-mix-label">
-          <p id="whose-mix-label" className="sr-only">
-            Whose recipes
-          </p>
-          {mixChoices.map((mix) => (
-            <FilterSegment
-              key={mix.key}
-              checked={mix.selected}
-              onChange={mix.open}
-            >
-              {mix.label}
-            </FilterSegment>
-          ))}
-        </FilterSegments>
-        <button
-          type="button"
-          className="book-people-toggle"
-          data-active={customSelection || undefined}
-          aria-expanded={peopleOpen}
-          aria-controls="book-people-picker"
-          onClick={() => setPeopleOpen((open) => !open)}
-        >
-          <span>Who&apos;s cooking</span>
-          <span className="book-people-count">
-            {selectedCount === 1 ? "just one" : `${selectedCount}`}
-          </span>
-          <span className="book-people-chevron" aria-hidden="true" />
-        </button>
-        {canRemember ? (
-          <button
-            type="button"
-            className="book-filter-remember"
-            data-placeholder={matchesUsual ? "true" : undefined}
-            aria-hidden={matchesUsual || undefined}
-            tabIndex={matchesUsual ? -1 : undefined}
-            disabled={remembering || matchesUsual}
-            onClick={onRemember}
+      <FilterSegments labelledBy="whose-mix-label">
+        <p id="whose-mix-label" className="sr-only">
+          Whose recipes
+        </p>
+        {lenses.map((lens) => (
+          <FilterSegment
+            key={lens.key}
+            checked={lens.selected || (!anySelected && lens.key === "all")}
+            onChange={lens.open}
           >
-            {remembering ? "Saving…" : "Remember"}
-          </button>
-        ) : null}
-      </div>
-      <div
-        id="book-people-picker"
-        className="book-people-picker"
-        hidden={!peopleOpen}
-      >
-        <FilterChecks labelledBy="whose-cards-label">
-          <p id="whose-cards-label" className="sr-only">
-            Who&apos;s cooking in this tray
-          </p>
-          <FilterCheck checked={selection.includeMine} onChange={toggleSelf}>
-            Me
-          </FilterCheck>
-          {unique.map((person) => (
-            <FilterCheck
-              key={person.otherUserId}
-              checked={selectedOthers.has(person.otherUserId)}
-              onChange={() => togglePerson(person.otherUserId)}
-            >
-              {person.called}
-            </FilterCheck>
-          ))}
-        </FilterChecks>
-      </div>
+            {lens.key !== "all" ? (
+              <span className="book-mark-who">
+                <BakerAvatar
+                  name={lens.label}
+                  url={lens.avatarUrl}
+                  size="sm"
+                />
+                <span className="book-mark-label">{lens.label}</span>
+              </span>
+            ) : (
+              <span className="book-mark-label">{lens.label}</span>
+            )}
+          </FilterSegment>
+        ))}
+      </FilterSegments>
     </div>
   );
 }
