@@ -38,8 +38,18 @@ function BookRoutes() {
   // closed-cover visit and replay the cover-opening animation.
   if (status === "checking") {
     return (
-      <p className="sr-only" role="status">
-        Checking your recipe book…
+      <p
+        role="status"
+        style={{
+          margin: 0,
+          padding: "2.5rem 1.5rem",
+          color: "color-mix(in srgb, #f4ebe0 82%, transparent)",
+          fontFamily: '"Source Serif 4", Georgia, serif',
+          fontSize: "1.15rem",
+          textAlign: "center",
+        }}
+      >
+        Opening your recipe book…
       </p>
     );
   }

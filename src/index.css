@@ -1364,13 +1364,13 @@ body {
   }
 
   .recipe-share-on-photo {
-    top: 0.4rem;
-    right: 0.4rem;
+    top: 0.55rem;
+    right: 0.55rem;
   }
 
   .recipe-share-on-photo.book-press {
-    min-height: 3rem;
-    padding-inline: 0.65rem 0.75rem;
+    min-height: 2.65rem;
+    padding: 0.4rem 0.5rem 0.35rem;
   }
 
   .bake-leaf-bar {
@@ -2972,10 +2972,28 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   position: relative;
   flex: 0 0 auto;
   width: 100%;
-  aspect-ratio: 4 / 3;
   min-height: 0;
+  padding: 0.4rem;
+  overflow: visible;
+  border: 1.5px solid color-mix(in srgb, var(--color-cocoa) 72%, var(--color-rule));
+  border-bottom-width: 3px;
+  border-radius: 0.45rem;
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--color-paper-raised) 92%, var(--color-wash-warm)),
+      var(--color-paper-raised) 42%,
+      color-mix(in srgb, var(--color-paper-press) 55%, var(--color-paper-raised))
+    );
+}
+
+.book-portal-frame-well {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
-  border: 1px solid var(--color-rule);
+  border: 1px solid color-mix(in srgb, var(--color-cocoa) 28%, var(--color-rule));
+  border-radius: 0.3rem;
   background: var(--color-paper-press);
 }
 
@@ -2986,6 +3004,19 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   height: 100%;
   object-fit: cover;
   object-position: center;
+  /* Soft warm grade — same family photos, less flash/tungsten fight */
+  filter: sepia(0.14) saturate(0.84) contrast(0.97) brightness(1.02);
+}
+
+.photo-plate-img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: sepia(0.14) saturate(0.84) contrast(0.97) brightness(1.02);
 }
 
 /* Paste-in photo — soft mat + thin cocoa rule, like a print in the book */
@@ -3030,16 +3061,6 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   border: 1px solid color-mix(in srgb, var(--color-cocoa) 28%, var(--color-rule));
   border-radius: 0.35rem;
   background: var(--color-paper-press);
-}
-
-.photo-plate-img {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
 }
 
 .photo-plate-hero .photo-plate-well {
@@ -3141,9 +3162,15 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 
 .book-plate-hero {
   position: relative;
+  height: auto;
+  min-height: 0;
+  flex: none;
+}
+
+.book-plate-hero .book-portal-frame-well {
   height: 18rem;
   min-height: 18rem;
-  flex: none;
+  aspect-ratio: auto;
 }
 
 .book-portal-copy {
@@ -4417,6 +4444,11 @@ summary::-webkit-details-marker {
 .bake-leaf-hero-photo .book-plate-hero {
   height: auto;
   min-height: 0;
+}
+
+.bake-leaf-hero-photo .book-plate-hero .book-portal-frame-well {
+  height: auto;
+  min-height: 0;
   aspect-ratio: 4 / 3;
 }
 
@@ -4708,9 +4740,52 @@ summary::-webkit-details-marker {
 
 .recipe-share-on-photo {
   position: absolute;
-  top: 0.55rem;
-  right: 0.55rem;
+  top: 0.7rem;
+  right: 0.7rem;
   z-index: 3;
+  min-height: 2.35rem;
+  gap: 0;
+  padding: 0.35rem 0.45rem 0.3rem;
+  border-width: 1.5px;
+  border-bottom-width: 2.5px;
+  background: color-mix(in srgb, var(--color-paper-raised) 82%, transparent);
+  color: color-mix(in srgb, var(--color-cocoa) 88%, var(--color-ink));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--color-cocoa) 18%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.recipe-share-on-photo .recipe-share-words {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.recipe-share-on-photo .recipe-share-deck,
+.recipe-share-on-photo .recipe-share-check {
+  width: 1.15rem;
+  height: 1.2rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .book-portal-results .recipe-share-on-photo {
+    opacity: 0.48;
+    transition: opacity 160ms ease, color 140ms ease, background-color 140ms ease;
+  }
+
+  .book-portal-results:hover .recipe-share-on-photo,
+  .book-portal-results:focus-within .recipe-share-on-photo,
+  .book-portal-results .recipe-share-on-photo:hover,
+  .book-portal-results .recipe-share-on-photo:focus-visible {
+    opacity: 1;
+    background: var(--color-paper-raised);
+    color: var(--color-cocoa);
+  }
 }
 
 .recipe-share:hover:not(:disabled),
@@ -4809,8 +4884,12 @@ summary::-webkit-details-marker {
 }
 
 .slip-frame {
-  min-height: 16rem;
+  min-height: 0;
   flex: none;
+}
+
+.slip-frame .book-portal-frame-well {
+  min-height: 16rem;
   aspect-ratio: 4 / 3;
 }
 

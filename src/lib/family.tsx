@@ -108,7 +108,16 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     if (!hasAuthCode()) {
       clearOAuthReturn();
       setComingBack(false);
+      return;
     }
+    // Stale ?code= that never completes auth — don't blank the room forever.
+    const giveUp = window.setTimeout(() => {
+      clearOAuthReturn();
+      setComingBack(false);
+    }, 8000);
+    return () => {
+      window.clearTimeout(giveUp);
+    };
   }, [comingBack, isAuthenticated, isLoading]);
 
   useEffect(() => {
