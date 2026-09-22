@@ -1868,9 +1868,10 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
     padding-top: var(--room-pad-top);
   }
 
-  /* Signed-in phones: dock replaces top bookmark tabs. */
+  /* Signed-in phones: dock replaces top bookmark tabs.
+     Flush the book to the top (safe-area only) — no shelf gap for missing tabs. */
   .room-shell[data-dock="true"] {
-    --room-pad-top: max(0.85rem, env(safe-area-inset-top, 0px));
+    --room-pad-top: env(safe-area-inset-top, 0px);
     --room-pad-bottom: max(
       4.85rem,
       calc(3.85rem + env(safe-area-inset-bottom, 0px))
@@ -1888,6 +1889,12 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   }
 
   .book-bookmarks-signed-in {
+    display: none;
+  }
+
+  /* No tabs to tuck — hide the paper lip + its hairline. */
+  .room-shell[data-dock="true"] .book::before {
+    content: none;
     display: none;
   }
 
