@@ -16,6 +16,7 @@ import {
   clearOAuthReturn,
   hasAuthCode,
   isOAuthReturn,
+  peekInvite,
 } from "@/lib/oauthReturn";
 
 type FamilyStatus = "checking" | "out" | "in";
@@ -112,6 +113,18 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!me) {
+      return;
+    }
+    // OAuth sometimes returns to `/` without `?invite=` — recover and finish join.
+    const pendingInvite = peekInvite();
+    if (
+      pendingInvite &&
+      typeof window !== "undefined" &&
+      !window.location.pathname.startsWith("/join")
+    ) {
+      window.location.replace(
+        `/join?invite=${encodeURIComponent(pendingInvite)}`,
+      );
       return;
     }
     let cancelled = false;

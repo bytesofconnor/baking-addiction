@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { PageTitle } from "@/lib/pageTitle";
-import { markOAuthReturn } from "@/lib/oauthReturn";
+import { markOAuthReturn, stashInvite } from "@/lib/oauthReturn";
 import { SITE_NAME, SITE_SHORT } from "@/lib/site";
 
-function GoogleComeIn({ cover = false }: { cover?: boolean }) {
+function GoogleComeIn({
+  cover = false,
+  inviteToken,
+}: {
+  cover?: boolean;
+  inviteToken?: string;
+}) {
   const { signIn } = useAuthActions();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -13,6 +19,16 @@ function GoogleComeIn({ cover = false }: { cover?: boolean }) {
     setError(null);
     setPending(true);
     try {
+      if (inviteToken) {
+        stashInvite(inviteToken);
+      } else {
+        const fromUrl = new URLSearchParams(window.location.search)
+          .get("invite")
+          ?.trim();
+        if (fromUrl) {
+          stashInvite(fromUrl);
+        }
+      }
       markOAuthReturn();
       await signIn("google", { redirectTo: window.location.href });
     } catch {
@@ -62,7 +78,7 @@ export function JoinCoverLanding({ invited = false }: { invited?: boolean }) {
       </h1>
       {invited ? (
         <p className="book-cover-promise">
-          Sign in to share recipes with your family.
+          Sign in and you’ll both show up in each other’s books.
         </p>
       ) : null}
       <p className="book-cover-proof">
@@ -74,6 +90,7 @@ export function JoinCoverLanding({ invited = false }: { invited?: boolean }) {
 }
 
 export function FamilyDoor({
+  inviteToken,
   kitchenName,
 }: {
   inviteToken?: string;
@@ -81,7 +98,7 @@ export function FamilyDoor({
 }) {
   const heading = kitchenName ? `${kitchenName}'s recipes` : "Come in";
   const blurb = kitchenName
-    ? "Their recipes come into your book. Use the Google you already have."
+    ? "You’ll both show up in each other’s books. Use the Google you already have."
     : "Use the Google you already have. Same one as Gmail.";
 
   return (
@@ -97,7 +114,7 @@ export function FamilyDoor({
       >
         {blurb}
       </p>
-      <GoogleComeIn />
+      <GoogleComeIn inviteToken={inviteToken} />
     </div>
   );
 }

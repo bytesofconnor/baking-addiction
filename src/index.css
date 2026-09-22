@@ -371,31 +371,39 @@ a.book-press {
 .room-shell[data-book-grow="true"] .book-sheet-inner {
   display: flex;
   overflow: visible;
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 1 0 auto;
+  min-height: min-content;
   flex-direction: column;
 }
 
 .room-shell[data-book-grow="true"] .book-page-body {
   display: flex;
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 1 0 auto;
+  min-height: min-content;
   flex-direction: column;
 }
 
-/* Recipes / Add / You share one stacked height — tallest tab wins. */
+/* Recipes / Add / You share one stacked height — tallest tab wins.
+   Must size to content (not shrink under a viewport floor), or the short
+   Recipes tab collapses while Add/You overflow and the book jumps. */
 .book-warm-stack {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(min-content, auto);
   grid-template-areas: "warm";
-  flex: 1 1 auto;
+  flex: 1 0 auto;
   width: 100%;
-  min-height: 0;
-  align-items: stretch;
+  height: auto;
+  min-height: min-content;
+  align-items: start;
 }
 
 .book-warm-page {
   grid-area: warm;
+  box-sizing: border-box;
+  width: 100%;
   min-width: 0;
+  height: max-content;
 }
 
 .book-warm-page[data-show="false"] {
@@ -1313,6 +1321,12 @@ body {
     padding-bottom: 0.35rem;
   }
 
+  .book-filter-tray {
+    top: env(safe-area-inset-top, 0px);
+    padding-top: 0.45rem;
+    padding-bottom: 0.55rem;
+  }
+
   .book-filter-toggle {
     min-height: 3rem;
     min-width: 3rem;
@@ -1480,6 +1494,20 @@ body {
   flex: 1 0 auto;
   /* Keep Recipes / Add / You the same floor height so tab flips don't jump. */
   min-height: calc(100dvh - var(--room-pad-top) - var(--room-pad-bottom));
+}
+
+/* Tablet: bookmarks + chrome eat more of the viewport, so lift the floor
+   a bit more or Recipes still looks short next to Add / You. */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .room-shell[data-book-grow="true"] .book,
+  .room-shell[data-book-grow="true"] .book-face,
+  .room-shell[data-book-grow="true"] .book-pages,
+  .room-shell[data-book-grow="true"] .book-leaf-under,
+  .room-shell[data-book-grow="true"] .book-leaf {
+    min-height: calc(
+      100dvh - var(--room-pad-top) - var(--room-pad-bottom) + 7.5rem
+    );
+  }
 }
 
 /* Front ↔ Back: the whole book turns over, not a leaf. */
@@ -1840,6 +1868,29 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
     padding-top: var(--room-pad-top);
   }
 
+  /* Signed-in phones: dock replaces top bookmark tabs. */
+  .room-shell[data-dock="true"] {
+    --room-pad-top: max(0.85rem, env(safe-area-inset-top, 0px));
+    --room-pad-bottom: max(
+      4.85rem,
+      calc(3.85rem + env(safe-area-inset-bottom, 0px))
+    );
+    padding-top: var(--room-pad-top);
+    padding-bottom: var(--room-pad-bottom);
+  }
+
+  .room-shell[data-dock="true"][data-preview="open"] {
+    --room-pad-bottom: max(
+      12.5rem,
+      calc(11rem + env(safe-area-inset-bottom, 0px))
+    );
+    padding-bottom: var(--room-pad-bottom);
+  }
+
+  .book-bookmarks-signed-in {
+    display: none;
+  }
+
   .book-bookmarks {
     right: 0.55rem;
     left: 0.55rem;
@@ -1859,6 +1910,105 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
     flex: 0 1 auto;
     padding: 0.55rem 0.55rem 0.7rem;
     font-size: 0.92rem;
+  }
+}
+
+/* Fixed bottom dock — phones only; tablet+ keep bookmark tabs. */
+.book-dock {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .book-dock {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding:
+      0.45rem max(0.65rem, env(safe-area-inset-right, 0px))
+      max(0.45rem, env(safe-area-inset-bottom, 0px))
+      max(0.65rem, env(safe-area-inset-left, 0px));
+    border-top: 1.5px solid var(--color-cocoa);
+    background-color: var(--color-paper-raised);
+    background-image:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-paper-press) 55%, var(--color-paper-raised)),
+        var(--color-paper-raised) 42%
+      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    box-shadow:
+      0 -1px 0 color-mix(in srgb, var(--color-paper-raised) 80%, transparent),
+      0 -6px 18px color-mix(in srgb, var(--color-ink) 14%, transparent);
+  }
+
+  .book-dock-tab {
+    display: flex;
+    min-height: 2.85rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.55rem 0.4rem;
+    border: 1px solid color-mix(in srgb, var(--color-cocoa) 55%, transparent);
+    border-radius: 3px 3px 2px 2px;
+    background-color: var(--color-paper);
+    background-image: linear-gradient(
+      180deg,
+      var(--color-paper-raised),
+      color-mix(in srgb, var(--color-paper-press) 70%, var(--color-paper))
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 1px 0 color-mix(in srgb, var(--color-cocoa) 35%, transparent);
+    color: var(--color-cocoa);
+    font-family: var(--font-display);
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.15;
+    text-align: center;
+    text-decoration: none;
+    text-wrap: balance;
+    touch-action: manipulation;
+  }
+
+  .book-dock-tab:hover,
+  .book-dock-tab:focus-visible {
+    color: var(--color-cinnamon-deep);
+  }
+
+  .book-dock-tab-active,
+  .book-dock-tab-active:hover,
+  .book-dock-tab-active:focus-visible {
+    border-color: var(--color-cocoa);
+    background-color: var(--color-cinnamon-deep);
+    background-image: linear-gradient(
+      180deg,
+      var(--color-cinnamon-deep),
+      color-mix(in srgb, var(--color-cinnamon-deep) 82%, var(--color-ink))
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 231, 211, 0.22),
+      0 1px 0 var(--color-cocoa);
+    color: var(--color-paper-raised);
+    text-shadow: 0 1px 0 color-mix(in srgb, var(--color-ink) 55%, transparent);
+  }
+
+  .book-dock-tab[aria-disabled="true"] {
+    cursor: default;
+  }
+
+  /* Sticky Save / footers sit above the dock, not under it. */
+  .room-shell[data-dock="true"] .sticky.bottom-0 {
+    bottom: max(3.7rem, calc(3.15rem + env(safe-area-inset-bottom, 0px)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-dock-tab {
+    transition: none;
   }
 }
 
@@ -2459,6 +2609,20 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   box-shadow: 0 0.55rem 0.7rem -0.75rem color-mix(in srgb, var(--color-cocoa) 55%, transparent);
 }
 
+/* Always-open tray under search — no collapsed Filters fold. */
+.book-filter-tray {
+  position: sticky;
+  top: 0;
+  z-index: 13;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem 0.75rem;
+  padding: 0.55rem 0 0.65rem;
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-paper);
+  box-shadow: 0 0.55rem 0.7rem -0.75rem color-mix(in srgb, var(--color-cocoa) 45%, transparent);
+}
+
 .book-filter-toggle {
   display: inline-flex;
   min-height: 3rem;
@@ -2752,9 +2916,10 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 }
 
 .book-portal-miss-mark {
-  width: 5.5rem;
+  width: 4.75rem;
   height: auto;
-  color: color-mix(in srgb, var(--color-cocoa) 70%, var(--color-cinnamon));
+  color: color-mix(in srgb, var(--color-cocoa) 65%, var(--color-cinnamon));
+  opacity: 0.88;
 }
 
 .book-portal-miss-note {
@@ -3406,23 +3571,34 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 .book-people-toggle {
   display: inline-flex;
   min-height: 3rem;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0 0.65rem;
-  border: 1px solid color-mix(in srgb, var(--color-cocoa) 42%, var(--color-paper));
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 0.8rem 0.12rem;
+  border: 1.5px solid var(--color-cocoa);
+  border-bottom-width: 3px;
   border-radius: 3px;
   background: var(--color-paper-raised);
-  color: var(--color-ink-soft);
+  color: var(--color-cocoa);
   cursor: pointer;
   font: inherit;
-  font-size: 17px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 650;
   line-height: 1;
+  touch-action: manipulation;
 }
 
 .book-people-toggle:hover,
 .book-people-toggle[data-active="true"] {
+  color: var(--color-cinnamon-deep);
   border-color: var(--color-cinnamon-deep);
-  color: var(--color-cocoa);
+}
+
+.book-people-toggle:active {
+  border-bottom-width: 1.5px;
+  transform: translateY(1.5px);
 }
 
 .book-people-toggle:focus-visible {
@@ -3431,13 +3607,15 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 }
 
 .book-people-count {
-  color: var(--color-ink-soft);
+  color: color-mix(in srgb, currentColor 72%, var(--color-ink-soft));
+  font-family: var(--font-sans);
   font-size: 0.82em;
+  font-weight: 500;
 }
 
 .book-people-chevron {
-  width: 0.45rem;
-  height: 0.45rem;
+  width: 0.5rem;
+  height: 0.5rem;
   border-right: 1.5px solid currentColor;
   border-bottom: 1.5px solid currentColor;
   transform: translateY(-0.12rem) rotate(45deg);
@@ -3839,6 +4017,38 @@ a.book-tab {
   transform-origin: 50% 88%;
 }
 
+.kitchen-think-dots {
+  display: inline-block;
+  margin-left: 0.05em;
+}
+
+.kitchen-think-dots span {
+  display: inline-block;
+  animation: kitchen-think-dot 1.1s ease-in-out infinite;
+  opacity: 0.25;
+}
+
+.kitchen-think-dots span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.kitchen-think-dots span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes kitchen-think-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-0.12em);
+  }
+}
+
 .kitchen-note {
   animation: kitchen-note-in 0.55s ease;
 }
@@ -4187,6 +4397,139 @@ summary::-webkit-details-marker {
   flex: 1 1 auto;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+/* Add / Edit form — photo on top, fields full book width (don’t
+   borrow the bake-leaf side-by-side hero; it squeezes the title). */
+.write-desk-leaf {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.write-desk-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.25rem;
+  margin-top: 1.35rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.write-desk-hero-photo,
+.write-desk-hero .bake-leaf-hero-photo {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 22rem;
+}
+
+.write-desk-hero .bake-leaf-hero-copy {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  gap: 1rem;
+}
+
+@media (min-width: 720px) {
+  /* Keep write desk stacked even when bake pages go side-by-side */
+  .write-desk-hero.bake-leaf-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .write-desk-hero .bake-leaf-hero-photo {
+    flex: 0 0 auto;
+    max-width: 22rem;
+  }
+}
+
+.write-desk-photo-img {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1.5px solid var(--color-rule);
+  border-radius: 0.5rem;
+  background: var(--color-paper-raised);
+}
+
+.write-desk-photo-empty {
+  display: flex;
+  box-sizing: border-box;
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  max-width: 100%;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed color-mix(in srgb, var(--color-cocoa) 55%, transparent);
+  border-radius: 0.5rem;
+  background: var(--color-paper-raised);
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.write-desk-photo-empty:hover {
+  border-color: var(--color-cinnamon-deep);
+}
+
+.write-desk-title {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border: 0;
+  border-bottom: 1.5px solid var(--color-rule);
+  border-radius: 0;
+  background: transparent;
+  padding: 0 0 0.35rem;
+  outline: none;
+}
+
+.write-desk-title::placeholder {
+  color: color-mix(in srgb, var(--color-ink-soft) 85%, transparent);
+}
+
+.write-desk-title:focus-visible {
+  border-bottom-color: var(--color-cinnamon-deep);
+}
+
+.write-desk-date {
+  display: inline;
+  width: auto;
+  max-width: 11rem;
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-cinnamon-deep) 45%, transparent);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0 0.15rem;
+}
+
+.write-desk-date:focus-visible {
+  outline: 2px solid var(--color-cinnamon-deep);
+  outline-offset: 2px;
+}
+
+.write-desk-method,
+.write-desk-sauce {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.write-desk-leaf input,
+.write-desk-leaf textarea,
+.write-desk-leaf .write-desk-title {
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .bake-leaf-title {

@@ -7,6 +7,7 @@ import { Link } from "react-router";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Kicker } from "@/components/Kicker";
 import { formatBakeDate } from "@/lib/dates";
 import { PageTitle } from "@/lib/pageTitle";
 import { BAKER_NAME, SITE_SHORT } from "@/lib/site";
@@ -877,7 +878,7 @@ export function WriteDesk({
         </div>
       ) : (
         <form
-          className="mt-3 flex flex-col"
+          className="write-desk-leaf mt-3 flex flex-col"
           onSubmit={handleSubmit}
           aria-describedby={error ? formErrorId : undefined}
         >
@@ -892,330 +893,340 @@ export function WriteDesk({
                 ? "Back to the pile"
                 : "Add a different way"}
           </button>
-          {editingBakeId ? (
-            <h1 className="font-display mt-4 text-[2.15rem] leading-[1.12] tracking-tight md:text-[2.6rem]">
-              Edit recipe
-            </h1>
-          ) : null}
           {extractNote ? (
-            <p className="mt-3 text-[18px] leading-7 text-ink-soft">{extractNote}</p>
+            <p className="mt-3 text-[18px] leading-7 text-ink-soft">
+              {extractNote}
+            </p>
           ) : null}
 
-          {originPreview ? (
-            <div className="mt-6">
-              <p className="text-[16px] leading-6 text-ink-soft">
-                Picture for this recipe
-              </p>
-              <img
-                src={originPreview}
-                alt="Current picture for this recipe"
-                className="mt-2 aspect-[4/3] w-full max-w-[22rem] border border-rule object-cover"
-              />
-              <button
-                type="button"
-                className="mt-2 min-h-12 cursor-pointer text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
-                onClick={() => {
-                  setOriginStorageId(null);
-                  setOriginIsImage(false);
-                  setCoverCleared(true);
-                  setOriginPreview((current) => {
-                    if (current?.startsWith("blob:")) {
-                      URL.revokeObjectURL(current);
-                    }
-                    return null;
-                  });
-                  setPhotoFile(null);
-                }}
-              >
-                Remove this picture
-              </button>
-            </div>
-          ) : (
-            <>
-              <Label htmlFor={photoId} className="mt-6">
-                Picture for this recipe
-              </Label>
-              <p className="mt-1 text-[16px] leading-6 text-ink-soft">
-                Nice if you have it. Old recipes can go in without one.
-              </p>
-              <label
-                htmlFor={photoId}
-                className="mt-3 flex min-h-28 cursor-pointer flex-col items-center justify-center border border-dashed border-cocoa bg-paper-raised px-4 py-5 text-center"
-              >
-                {photoPreview ? (
+          {/* Same rhythm as the bake page: photo + title/story, then the recipe card. */}
+          <header className="bake-leaf-hero write-desk-hero">
+            <div className="bake-leaf-hero-photo write-desk-hero-photo">
+              {originPreview || photoPreview ? (
+                <div className="write-desk-photo">
                   <img
-                    src={photoPreview}
-                    alt="Selected picture for this recipe"
-                    className="aspect-[4/3] w-full max-w-[22rem] object-cover"
+                    src={photoPreview ?? originPreview ?? ""}
+                    alt=""
+                    className="write-desk-photo-img"
                   />
-                ) : (
-                  <span className="text-[18px] leading-7">
+                  <button
+                    type="button"
+                    className="mt-2 min-h-12 cursor-pointer text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+                    onClick={() => {
+                      setOriginStorageId(null);
+                      setOriginIsImage(false);
+                      setCoverCleared(true);
+                      setOriginPreview((current) => {
+                        if (current?.startsWith("blob:")) {
+                          URL.revokeObjectURL(current);
+                        }
+                        return null;
+                      });
+                      setPhotoFile(null);
+                    }}
+                  >
+                    Remove this picture
+                  </button>
+                </div>
+              ) : (
+                <label
+                  htmlFor={photoId}
+                  className="write-desk-photo-empty"
+                >
+                  <span className="text-[17px] leading-7 text-ink-soft">
                     Tap to add a photo
                   </span>
+                  <input
+                    id={photoId}
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(event) => {
+                      setCoverCleared(false);
+                      setPhotoFile(event.target.files?.[0] ?? null);
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+
+            <div className="bake-leaf-hero-copy">
+              <Kicker>
+                {editingBakeId ? "Editing" : "New card"}
+                {" · "}
+                {bakerName}
+                {" · "}
+                {showDate ? (
+                  <label htmlFor="bakedOn" className="inline">
+                    <span className="sr-only">When</span>
+                    <input
+                      id="bakedOn"
+                      type="date"
+                      value={bakedOn}
+                      onChange={(event) => setBakedOn(event.target.value)}
+                      className="write-desk-date"
+                    />
+                  </label>
+                ) : (
+                  <>
+                    <time dateTime={bakedOn}>{formatBakeDate(bakedOn)}</time>
+                    {" · "}
+                    <button
+                      type="button"
+                      className="cursor-pointer underline decoration-rule underline-offset-4 hover:text-cocoa"
+                      onClick={() => setShowDate(true)}
+                    >
+                      Change date
+                    </button>
+                  </>
                 )}
-                <input
-                  id={photoId}
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  onChange={(event) => {
-                    setCoverCleared(false);
-                    setPhotoFile(event.target.files?.[0] ?? null);
-                  }}
-                />
-              </label>
-              {photoPreview ? (
-                <button
-                  type="button"
-                  className="mt-2 self-start min-h-12 cursor-pointer text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
-                  onClick={() => setPhotoFile(null)}
-                >
-                  Remove this picture
-                </button>
-              ) : null}
-            </>
-          )}
+              </Kicker>
 
-          <h1 className="mt-6 text-[1.25rem] font-medium leading-8 text-ink">
-            Where did this come from?
-          </h1>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {SOURCE_KINDS.map((kind) => (
-              <button
-                key={kind}
-                type="button"
-                aria-pressed={sourceKind === kind}
-                onClick={() => setSourceKind(kind)}
-                className={[
-                  "inline-flex min-h-12 cursor-pointer items-center rounded-[2px] border-[1.5px] px-4 text-[17px]",
-                  sourceKind === kind
-                    ? "border-cinnamon-deep bg-paper-raised text-cinnamon-deep"
-                    : "border-cocoa bg-transparent text-ink hover:border-cinnamon-deep",
-                ].join(" ")}
-              >
-                {SOURCE_LABELS[kind]}
-              </button>
-            ))}
-          </div>
-
-          {sourceLink(sourceKind) || intake === "link" ? (
-            <>
-              <Label htmlFor="sourceUrl" className="mt-6">
-                {sourceLink(sourceKind)?.label ?? "The link"}
+              <Label htmlFor="bake-title" className="sr-only">
+                What do you call it?
               </Label>
-              <Input
-                id="sourceUrl"
-                type="url"
-                inputMode="url"
-                value={sourceUrl}
-                onChange={(event) => setSourceUrl(event.target.value)}
-                onBlur={(event) =>
-                  setSourceUrl(
-                    sourceKind === "sally"
-                      ? normalizeSallyUrl(event.target.value)
-                      : event.target.value.trim(),
-                  )
-                }
-                placeholder={
-                  sourceLink(sourceKind)?.placeholder ??
-                  "https://…"
-                }
-                className="mt-2 min-h-14"
+              <input
+                id="bake-title"
+                value={title}
+                onChange={(event) => {
+                  setTitleTouched(true);
+                  setTitle(event.target.value);
+                }}
+                placeholder="What do you call it?"
+                required
+                autoComplete="off"
+                autoCapitalize="sentences"
+                enterKeyHint="next"
+                className="bake-leaf-title write-desk-title"
               />
-              {lookupState === "looking" ? (
-                <p role="status" className="mt-2 text-[17px] text-ink-soft">
-                  Looking up what she calls it…
+
+              <div>
+                <p className="text-[16px] font-medium leading-6 text-ink-soft">
+                  Where did this come from?
                 </p>
-              ) : null}
-              {lookupState === "found" && sourceTitle ? (
-                <p className="mt-2 text-[17px] text-ink-soft">
-                  Sally calls this <span className="text-ink">{sourceTitle}</span>.
-                </p>
-              ) : null}
-            </>
-          ) : null}
-
-          {sourceNote(sourceKind) ? (
-            <>
-              <Label htmlFor="sourceTitle" className="mt-6">
-                {sourceNote(sourceKind)?.label}
-              </Label>
-              <Input
-                id="sourceTitle"
-                value={sourceTitle}
-                onChange={(event) => setSourceTitle(event.target.value)}
-                placeholder={sourceNote(sourceKind)?.placeholder}
-                className="mt-2 min-h-14"
-              />
-            </>
-          ) : null}
-
-          <Label htmlFor="bake-title" className="mt-6">
-            What do you call it?
-          </Label>
-          <input
-            id="bake-title"
-            value={title}
-            onChange={(event) => {
-              setTitleTouched(true);
-              setTitle(event.target.value);
-            }}
-            placeholder="Pumpkin muffins, extra spice"
-            required
-            autoComplete="off"
-            autoCapitalize="sentences"
-            enterKeyHint="next"
-            className="font-display mt-2 min-h-14 w-full rounded-[2px] border-0 border-b-[1.5px] border-rule bg-transparent pb-2 text-[2rem] leading-[1.15] tracking-tight text-ink placeholder:text-ink-soft"
-          />
-
-          <Label htmlFor="makes" className="mt-6">
-            How much it made
-          </Label>
-          <Input
-            id="makes"
-            value={makes}
-            onChange={(event) => setMakes(event.target.value)}
-            placeholder={MAKES_HINT[trayFor(title, sourceTitle)]}
-            className="mt-2 min-h-14"
-          />
-
-          <Label htmlFor="ingredients" className="mt-6">
-            What went in
-          </Label>
-          <p className="mt-1 text-[16px] leading-6 text-ink-soft">
-            One thing per line. This is how you&apos;ll find it later — search
-            “buttermilk” and this shows up.
-          </p>
-          <Textarea
-            id="ingredients"
-            value={ingredients}
-            onChange={(event) => setIngredients(event.target.value)}
-            placeholder={"2 sticks butter\n1 cup brown sugar\nA pinch of salt"}
-            className="mt-2 min-h-28"
-          />
-
-          <Label htmlFor="steps" className="mt-6">
-            How
-          </Label>
-          <Textarea
-            id="steps"
-            value={steps}
-            onChange={(event) => setSteps(event.target.value)}
-            placeholder={"Mix the wet, then the dry.\nBake until the edges set."}
-            className="mt-2 min-h-28"
-          />
-
-          <p className="mt-6 text-[16px] text-ink-soft">
-            {showDate ? null : (
-              <>
-                Added today.{" "}
-                <button
-                  type="button"
-                  className="cursor-pointer underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
-                  onClick={() => setShowDate(true)}
-                >
-                  Not today?
-                </button>
-              </>
-            )}
-          </p>
-          {showDate ? (
-            <div className="mt-2">
-              <Label htmlFor="bakedOn">When</Label>
-              <Input
-                id="bakedOn"
-                type="date"
-                value={bakedOn}
-                onChange={(event) => setBakedOn(event.target.value)}
-                className="mt-2"
-              />
-            </div>
-          ) : null}
-
-          <Label htmlFor="story" className="mt-8">
-            How it went
-          </Label>
-          <Textarea
-            id="story"
-            value={story}
-            onChange={(event) => setStory(event.target.value)}
-            placeholder="Sunday morning. The house already smelled like cinnamon…"
-            required
-            className="mt-2 min-h-28"
-          />
-
-          <details className="write-tweak mt-8">
-            <summary className="write-tweak-open">
-              <span className="write-tweak-copy">
-                <span className="write-tweak-title">The secret sauce</span>
-                <span className="write-tweak-hint">
-                  {readyChanges(changes).length === 0
-                    ? "Optional. What you changed."
-                    : readyChanges(changes)
-                        .map((row) => `${row.move} ${row.change}`)
-                        .join(" · ")}
-                </span>
-              </span>
-              <span className="write-tweak-mark" aria-hidden="true" />
-            </summary>
-            <div className="write-tweak-body">
-              <p className="text-[17px] leading-7 text-ink-soft">
-                Tap what you did. Say what — butter, flour, whatever. Add as
-                many as you want.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {CHANGE_MOVES.map((move) => (
-                  <button
-                    key={move}
-                    type="button"
-                    onClick={() => addChange(move)}
-                    className="inline-flex min-h-12 cursor-pointer items-center whitespace-nowrap rounded-[2px] border-[1.5px] border-cocoa bg-transparent px-4 text-[17px] text-ink hover:border-cinnamon-deep"
-                  >
-                    {move}
-                  </button>
-                ))}
-              </div>
-              {changes.length > 0 ? (
-                <ul className="flex flex-col gap-3">
-                  {changes.map((row) => (
-                    <li key={row.id} className="flex flex-wrap items-end gap-2">
-                      <p className="min-w-[5.5rem] pb-3 font-display text-[1.15rem] leading-7">
-                        {row.move}
-                      </p>
-                      <Input
-                        id={row.id}
-                        value={row.change}
-                        onChange={(event) => {
-                          const next = event.target.value;
-                          setChanges((current) =>
-                            current.map((item) =>
-                              item.id === row.id
-                                ? { ...item, change: next }
-                                : item,
-                            ),
-                          );
-                        }}
-                        placeholder={changeHint(row.move)}
-                        aria-label={`${row.move} what`}
-                        className="min-h-14 min-w-[10rem] flex-1"
-                      />
-                      <button
-                        type="button"
-                        className="min-h-12 cursor-pointer text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
-                        onClick={() =>
-                          setChanges((current) =>
-                            current.filter((item) => item.id !== row.id),
-                          )
-                        }
-                      >
-                        Take off
-                      </button>
-                    </li>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {SOURCE_KINDS.map((kind) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      aria-pressed={sourceKind === kind}
+                      onClick={() => setSourceKind(kind)}
+                      className={[
+                        "inline-flex min-h-11 cursor-pointer items-center rounded-[2px] border-[1.5px] px-3 text-[16px]",
+                        sourceKind === kind
+                          ? "border-cinnamon-deep bg-paper-raised text-cinnamon-deep"
+                          : "border-cocoa/55 bg-transparent text-ink hover:border-cinnamon-deep",
+                      ].join(" ")}
+                    >
+                      {SOURCE_LABELS[kind]}
+                    </button>
                   ))}
-                </ul>
+                </div>
+              </div>
+
+              {sourceLink(sourceKind) || intake === "link" ? (
+                <div>
+                  <Label htmlFor="sourceUrl">
+                    {sourceLink(sourceKind)?.label ?? "The link"}
+                  </Label>
+                  <Input
+                    id="sourceUrl"
+                    type="url"
+                    inputMode="url"
+                    value={sourceUrl}
+                    onChange={(event) => setSourceUrl(event.target.value)}
+                    onBlur={(event) =>
+                      setSourceUrl(
+                        sourceKind === "sally"
+                          ? normalizeSallyUrl(event.target.value)
+                          : event.target.value.trim(),
+                      )
+                    }
+                    placeholder={
+                      sourceLink(sourceKind)?.placeholder ?? "https://…"
+                    }
+                    className="mt-2 min-h-12"
+                  />
+                  {lookupState === "looking" ? (
+                    <p role="status" className="mt-2 text-[17px] text-ink-soft">
+                      Looking up what she calls it…
+                    </p>
+                  ) : null}
+                  {lookupState === "found" && sourceTitle ? (
+                    <p className="mt-2 text-[17px] text-ink-soft">
+                      Sally calls this{" "}
+                      <span className="text-ink">{sourceTitle}</span>.
+                    </p>
+                  ) : null}
+                </div>
               ) : null}
+
+              {sourceNote(sourceKind) ? (
+                <div>
+                  <Label htmlFor="sourceTitle">
+                    {sourceNote(sourceKind)?.label}
+                  </Label>
+                  <Input
+                    id="sourceTitle"
+                    value={sourceTitle}
+                    onChange={(event) => setSourceTitle(event.target.value)}
+                    placeholder={sourceNote(sourceKind)?.placeholder}
+                    className="mt-2 min-h-12"
+                  />
+                </div>
+              ) : null}
+
+              <div>
+                <Label htmlFor="story">How it went</Label>
+                <Textarea
+                  id="story"
+                  value={story}
+                  onChange={(event) => setStory(event.target.value)}
+                  placeholder="Always a hit! Sunday morning…"
+                  required
+                  className="mt-2 min-h-28 w-full"
+                />
+              </div>
             </div>
-          </details>
+          </header>
+
+          <section
+            aria-labelledby="write-method-heading"
+            className="kitchen-method write-desk-method mt-8 w-full rounded-lg border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-3.5 py-5 md:px-7 md:py-7"
+          >
+            <Kicker>The recipe</Kicker>
+            <h2
+              id="write-method-heading"
+              className="font-display mt-1 text-[1.65rem] leading-8"
+            >
+              How we made it
+            </h2>
+
+            <Label htmlFor="makes" className="mt-4">
+              How much it made
+            </Label>
+            <Input
+              id="makes"
+              value={makes}
+              onChange={(event) => setMakes(event.target.value)}
+              placeholder={MAKES_HINT[trayFor(title, sourceTitle)]}
+              className="mt-2 min-h-12 w-full"
+            />
+
+            <div className="mt-6 flex flex-col gap-8">
+              <div>
+                <Label
+                  htmlFor="ingredients"
+                  className="text-[17px] font-medium tracking-[0.02em] text-cinnamon-deep"
+                >
+                  What went in
+                </Label>
+                <p className="mt-1 text-[15px] leading-6 text-ink-soft">
+                  One per line — so you can search later.
+                </p>
+                <Textarea
+                  id="ingredients"
+                  value={ingredients}
+                  onChange={(event) => setIngredients(event.target.value)}
+                  placeholder={
+                    "3–6 bell peppers\nwhite rice\nblack beans\ntomatoes"
+                  }
+                  className="mt-3 min-h-52 w-full"
+                />
+              </div>
+              <div>
+                <Label
+                  htmlFor="steps"
+                  className="text-[17px] font-medium tracking-[0.02em] text-cinnamon-deep"
+                >
+                  How
+                </Label>
+                <p className="mt-1 text-[15px] leading-6 text-ink-soft">
+                  One step per line.
+                </p>
+                <Textarea
+                  id="steps"
+                  value={steps}
+                  onChange={(event) => setSteps(event.target.value)}
+                  placeholder={
+                    "Preheat oven to 400.\nCook the rice.\nStuff and bake."
+                  }
+                  className="mt-3 min-h-52 w-full"
+                />
+              </div>
+            </div>
+          </section>
+
+          <section
+            aria-labelledby="write-sauce-heading"
+            className="secret-sauce write-desk-sauce mt-6 w-full rounded-lg border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-5"
+          >
+            <Kicker>The secret sauce</Kicker>
+            <h2
+              id="write-sauce-heading"
+              className="font-display mt-1 text-[1.65rem] leading-8"
+            >
+              What I changed
+            </h2>
+            <p className="mt-3 text-[17px] leading-7 text-ink-soft">
+              Optional. Tap what you did, then say what — butter, flour,
+              whatever.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {CHANGE_MOVES.map((move) => (
+                <button
+                  key={move}
+                  type="button"
+                  onClick={() => addChange(move)}
+                  className="inline-flex min-h-11 cursor-pointer items-center whitespace-nowrap rounded-[2px] border-[1.5px] border-cocoa/55 bg-transparent px-3 text-[16px] text-ink hover:border-cinnamon-deep"
+                >
+                  {move}
+                </button>
+              ))}
+            </div>
+            {changes.length > 0 ? (
+              <ul className="mt-5 flex flex-col">
+                {changes.map((row) => (
+                  <li
+                    key={row.id}
+                    className="flex flex-wrap items-end gap-2 border-t border-rule/80 py-3 first:border-t-0 first:pt-0 last:pb-0"
+                  >
+                    <p className="min-w-[5.5rem] pb-3 text-[15px] font-medium uppercase tracking-[0.06em] text-cinnamon-deep">
+                      {row.move}
+                    </p>
+                    <Input
+                      id={row.id}
+                      value={row.change}
+                      onChange={(event) => {
+                        const next = event.target.value;
+                        setChanges((current) =>
+                          current.map((item) =>
+                            item.id === row.id
+                              ? { ...item, change: next }
+                              : item,
+                          ),
+                        );
+                      }}
+                      placeholder={changeHint(row.move)}
+                      aria-label={`${row.move} what`}
+                      className="min-h-12 min-w-[10rem] flex-1"
+                    />
+                    <button
+                      type="button"
+                      className="min-h-12 cursor-pointer text-[17px] underline decoration-rule underline-offset-4 hover:text-cinnamon-deep"
+                      onClick={() =>
+                        setChanges((current) =>
+                          current.filter((item) => item.id !== row.id),
+                        )
+                      }
+                    >
+                      Take off
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
 
           {error ? (
             <p

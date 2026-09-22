@@ -4,7 +4,6 @@ import { api } from "../../convex/_generated/api";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Kicker } from "@/components/Kicker";
-import { WhiskMark } from "@/components/WhiskMark";
 import { useInkReveal } from "@/lib/useInkReveal";
 
 export function KitchenAsk({
@@ -73,16 +72,12 @@ export function KitchenAsk({
       className="kitchen-ask mt-10 w-full rounded-lg border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-5"
       aria-labelledby={headingId}
     >
-      <Kicker>If you&apos;re at the counter</Kicker>
+      <Kicker>Ask the kitchen</Kicker>
       <h2 id={headingId} className="font-display mt-1 text-[1.65rem] leading-8">
-        Missing something?
+        Missing something or want to mix it up? Ask me for suggestions!
       </h2>
-      <p className="mt-3 text-[18px] leading-7 text-ink-soft">
-        Ask what you have — or don&apos;t. A note comes back for this bake,
-        not a new recipe.
-      </p>
       <form className="mt-5" onSubmit={(event) => void handleSubmit(event)}>
-        <Label htmlFor="kitchen-ask">What&apos;s going on in your kitchen?</Label>
+        <Label htmlFor="kitchen-ask">What&apos;s going on?</Label>
         <Textarea
           id="kitchen-ask"
           value={question}
@@ -98,7 +93,7 @@ export function KitchenAsk({
             disabled={pending}
             aria-busy={pending}
           >
-            {pending ? "Looking through the notes…" : "Ask the kitchen"}
+            {pending ? "Thinking…" : "Ask the kitchen"}
           </button>
         </div>
       </form>
@@ -113,10 +108,14 @@ export function KitchenAsk({
             <p
               id={statusId}
               role="status"
-              className="mt-5 flex items-center gap-3 text-[18px] text-ink-soft"
+              className="kitchen-think mt-5 text-[18px] text-ink-soft"
             >
-              <WhiskMark className="kitchen-stir h-9 w-9 text-cinnamon-deep" />
-              Looking through {bakerName}&apos;s notes…
+              Thinking of ideas
+              <span className="kitchen-think-dots" aria-hidden="true">
+                <span>.</span>
+                <span>.</span>
+                <span>.</span>
+              </span>
             </p>
           ) : null}
           {error ? (

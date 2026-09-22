@@ -4,14 +4,22 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { FamilyDoor } from "@/components/FamilyDoor";
 import { useFamily } from "@/lib/family";
-import { clearOAuthReturn, isOAuthReturn } from "@/lib/oauthReturn";
+import {
+  clearInvite,
+  clearOAuthReturn,
+  isOAuthReturn,
+  peekInvite,
+  stashInvite,
+} from "@/lib/oauthReturn";
 import { PageTitle } from "@/lib/pageTitle";
 import { SITE_SHORT } from "@/lib/site";
 
 export function JoinPage() {
   const [params] = useSearchParams();
   // Invites are `?invite=` only. `?code=` is Google OAuth — never an invite.
-  const inviteToken = params.get("invite")?.trim() || "";
+  // Fall back to a stashed token if OAuth returned without the query param.
+  const fromUrl = params.get("invite")?.trim() || "";
+  const inviteToken = fromUrl || peekInvite() || "";
   const invite = useQuery(
     api.familyAuth.peekInvite,
     inviteToken ? { inviteToken } : "skip",
@@ -21,6 +29,12 @@ export function JoinPage() {
   const [joinError, setJoinError] = useState(false);
 
   useEffect(() => {
+    if (fromUrl) {
+      stashInvite(fromUrl);
+    }
+  }, [fromUrl]);
+
+  useEffect(() => {
     if (status !== "in" || !inviteToken || !invite) {
       return;
     }
@@ -28,6 +42,7 @@ export function JoinPage() {
     void acceptInvite({ inviteToken })
       .then((kitchenId) => {
         if (!cancelled) {
+          clearInvite();
           setKitchenId(kitchenId);
           window.location.replace("/");
         }

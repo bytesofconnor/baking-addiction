@@ -1,19 +1,14 @@
 import { NavLink } from "react-router";
-import { DESK_PATH } from "@/lib/desk";
 import { sectionOf } from "@/lib/bookPages";
-import { useFamily } from "@/lib/family";
-import { usePeekCalled, usePreview } from "@/lib/preview";
+import { useBookNav } from "@/lib/bookNav";
 
 function bookmarkClass(active: boolean) {
   return `book-bookmark${active ? " book-bookmark-active" : ""}`;
 }
 
 export function BookBookmarks({ pathname }: { pathname: string }) {
-  const family = useFamily();
-  const { asKey, keep } = usePreview();
-  const peekCalled = usePeekCalled();
+  const { onDoor, items } = useBookNav(pathname);
   const section = sectionOf(pathname);
-  const onDoor = family.status !== "in";
 
   // Door bookmarks reserve the same top shelf as the signed-in tabs,
   // so the book doesn't jump when someone comes in from Google.
@@ -39,47 +34,40 @@ export function BookBookmarks({ pathname }: { pathname: string }) {
     );
   }
 
-  const settingsActive = section === "you" || section === "family";
-  const called = peekCalled ?? family.user?.called ?? "You";
-  const settingsTo = asKey ? pathname : "/you";
-
   return (
-    <nav className="book-bookmarks" aria-label="Book sections">
-      <NavLink
-        to={keep("/")}
-        end
-        aria-current={section === "cookbook" ? "page" : undefined}
-        className={() => bookmarkClass(section === "cookbook")}
-      >
-        Recipes
-      </NavLink>
-      <NavLink
-        to={keep(DESK_PATH)}
-        aria-current={section === "add" ? "page" : undefined}
-        aria-label="Add a recipe"
-        className={() => bookmarkClass(section === "add")}
-      >
-        <span className="hidden sm:inline" aria-hidden="true">
-          Add a recipe
-        </span>
-        <span className="sm:hidden" aria-hidden="true">
-          Add
-        </span>
-      </NavLink>
-      <NavLink
-        to={keep(settingsTo)}
-        aria-label={`${called}, settings`}
-        aria-current={settingsActive ? "page" : undefined}
-        aria-disabled={asKey ? true : undefined}
-        onClick={(event) => {
-          if (asKey) {
-            event.preventDefault();
-          }
-        }}
-        className={() => bookmarkClass(settingsActive)}
-      >
-        {called}
-      </NavLink>
+    <nav
+      className="book-bookmarks book-bookmarks-signed-in"
+      aria-label="Book sections"
+    >
+      {items.map((item) => (
+        <NavLink
+          key={item.id}
+          to={item.to}
+          end={item.end}
+          aria-label={item.ariaLabel}
+          aria-current={item.active ? "page" : undefined}
+          aria-disabled={item.disabled ? true : undefined}
+          onClick={(event) => {
+            if (item.disabled) {
+              event.preventDefault();
+            }
+          }}
+          className={() => bookmarkClass(item.active)}
+        >
+          {item.id === "add" ? (
+            <>
+              <span className="hidden sm:inline" aria-hidden="true">
+                {item.label}
+              </span>
+              <span className="sm:hidden" aria-hidden="true">
+                {item.shortLabel}
+              </span>
+            </>
+          ) : (
+            item.label
+          )}
+        </NavLink>
+      ))}
     </nav>
   );
 }

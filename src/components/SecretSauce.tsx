@@ -26,12 +26,14 @@ export function SecretSauce({
             key={`${change.move}-${change.change}-${index}`}
             className="border-t border-rule/80 py-3 first:border-t-0 first:pt-0 last:pb-0"
           >
-            <p className="text-[16px] leading-6 text-ink-soft">{change.move}</p>
+            <p className="text-[15px] font-medium uppercase tracking-[0.06em] text-cinnamon-deep">
+              {change.move}
+            </p>
             {change.change ? (
-              <p className="font-display text-[1.4rem] leading-8">{change.change}</p>
+              <p className="mt-1 text-[18px] leading-7 text-ink">{change.change}</p>
             ) : null}
             {change.why ? (
-              <p className="text-[18px] leading-7 text-ink-soft">{change.why}</p>
+              <p className="mt-1 text-[17px] leading-7 text-ink-soft">{change.why}</p>
             ) : null}
           </li>
         ))}

@@ -13,7 +13,6 @@ import { RecipeEdit } from "@/components/RecipeEdit";
 import { RecipeDelete } from "@/components/RecipeDelete";
 import { KitchenMethod } from "@/components/KitchenMethod";
 import { KitchenAsk } from "@/components/KitchenAsk";
-import { HowItWent } from "@/components/HowItWent";
 import { formatBakeDate } from "@/lib/dates";
 import { inferKind, KIND_LABELS } from "../../convex/lib/kinds";
 import { PageTitle } from "@/lib/pageTitle";
@@ -174,8 +173,6 @@ export function BakePage() {
         ingredients={bake.ingredients}
         steps={bake.steps}
       />
-
-      <HowItWent bakeId={bake._id} />
 
       <PageTurn older={older} newer={newer} search={params.toString()} />
     </article>
