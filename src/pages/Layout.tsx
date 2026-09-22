@@ -3,6 +3,7 @@ import { AdminShell } from "@/components/AdminShell";
 import { BookBinding } from "@/components/BookBinding";
 import { BookBookmarks } from "@/components/BookBookmarks";
 import { BookCover } from "@/components/BookCover";
+import { BookDock } from "@/components/BookDock";
 import { BookFace } from "@/components/BookSheet";
 import { useArrive } from "@/lib/arrive";
 import { SeasonDoodles } from "@/components/SeasonDoodles";
@@ -24,10 +25,11 @@ export function Layout() {
   const bookTurning = flip !== null && flip.kind === "book";
   const landingCover = pathname === "/join" && family.status !== "in";
   const backFace = pathname === "/faq" && family.status !== "in";
+  const signedIn = family.status === "in";
   // Signed-in pages grow with content so the window scrolls like a normal page.
   // Join / FAQ stay fixed to one viewport.
   const bookGrow =
-    family.status === "in" && !landingCover && !backFace && phase === "in";
+    signedIn && !landingCover && !backFace && phase === "in";
 
   useEffect(() => {
     const robots = document.createElement("meta");
@@ -40,98 +42,103 @@ export function Layout() {
   }, []);
 
   return (
-    <div
-      className="room-shell"
-      data-preview={preview ? (open ? "open" : "shut") : undefined}
-      data-bookmarks="true"
-      data-landing-cover={landingCover ? "true" : undefined}
-      data-book-grow={bookGrow ? "true" : undefined}
-    >
-      {preview ? <AdminShell /> : null}
-      <SeasonDoodles />
+    <>
       <div
-        className="book relative z-10 mx-auto w-full max-w-[44rem] md:max-w-[52rem] xl:max-w-[66rem] 2xl:max-w-[72rem]"
-        data-page={page}
-        data-face={backFace ? "back" : undefined}
-        data-spine={backFace ? "end" : undefined}
-        data-book-flip={bookTurning ? flip.direction : undefined}
-        style={
-          bookTurning
-            ? ({
-                "--book-over-duration": `${flip.durationMs}ms`,
-              } as CSSProperties)
-            : undefined
-        }
-        aria-busy={leafTurning || bookTurning ? true : undefined}
+        className="room-shell"
+        data-preview={preview ? (open ? "open" : "shut") : undefined}
+        data-bookmarks="true"
+        data-dock={signedIn ? "true" : undefined}
+        data-landing-cover={landingCover ? "true" : undefined}
+        data-book-grow={bookGrow ? "true" : undefined}
       >
-        <BookBookmarks pathname={pathname} />
-        <div className="book-foredge book-foredge-back" aria-hidden="true" />
-        <div className="book-footedge book-footedge-back" aria-hidden="true" />
-        <div className="book-foredge" aria-hidden="true" />
-        <div className="book-footedge" aria-hidden="true" />
-        <BookCover />
-        {bookTurning && ghost ? (
-          <div
-            className="book-turn-face-ghost"
-            aria-hidden="true"
-            ref={(node) => {
-              if (node && ghost.parentElement !== node) {
-                node.replaceChildren(ghost);
-              }
-            }}
-          />
-        ) : null}
+        {preview ? <AdminShell /> : null}
+        <SeasonDoodles />
         <div
-          className="book-pages"
-          data-dir={leafTurning ? flip?.direction : undefined}
-          inert={!bookTurning && phase !== "in"}
-          aria-hidden={!bookTurning && phase !== "in" ? true : undefined}
+          className="book relative z-10 mx-auto w-full max-w-[44rem] md:max-w-[52rem] xl:max-w-[66rem] 2xl:max-w-[72rem]"
+          data-page={page}
+          data-face={backFace ? "back" : undefined}
+          data-spine={backFace ? "end" : undefined}
+          data-book-flip={bookTurning ? flip.direction : undefined}
           style={
-            leafTurning
+            bookTurning
               ? ({
-                  // Keep room for the outgoing leaf without freezing the
-                  // destination page to the old height (that snap-back is the
-                  // post-flip “second paint”).
-                  minHeight: overlayHeightPx ?? undefined,
-                  overflow: "hidden",
-                  "--book-flip-duration": `${flip.durationMs}ms`,
+                  "--book-over-duration": `${flip.durationMs}ms`,
                 } as CSSProperties)
-              : flip
+              : undefined
+          }
+          aria-busy={leafTurning || bookTurning ? true : undefined}
+        >
+          <BookBookmarks pathname={pathname} />
+          <div className="book-foredge book-foredge-back" aria-hidden="true" />
+          <div className="book-footedge book-footedge-back" aria-hidden="true" />
+          <div className="book-foredge" aria-hidden="true" />
+          <div className="book-footedge" aria-hidden="true" />
+          <BookCover />
+          {bookTurning && ghost ? (
+            <div
+              className="book-turn-face-ghost"
+              aria-hidden="true"
+              ref={(node) => {
+                if (node && ghost.parentElement !== node) {
+                  node.replaceChildren(ghost);
+                }
+              }}
+            />
+          ) : null}
+          <div
+            className="book-pages"
+            data-dir={leafTurning ? flip?.direction : undefined}
+            inert={!bookTurning && phase !== "in"}
+            aria-hidden={!bookTurning && phase !== "in" ? true : undefined}
+            style={
+              leafTurning
                 ? ({
+                    // Keep room for the outgoing leaf without freezing the
+                    // destination page to the old height (that snap-back is the
+                    // post-flip “second paint”).
+                    minHeight: overlayHeightPx ?? undefined,
+                    overflow: "hidden",
                     "--book-flip-duration": `${flip.durationMs}ms`,
                   } as CSSProperties)
-                : undefined
-          }
-        >
-          <div className="book-leaf book-leaf-under">
-            <BookFace pathname={pathname} faceRef={liveFace} />
-          </div>
-          {leafTurning ? (
-            <div
-              className="book-leaf book-leaf-over"
-              style={
-                overlayHeightPx
-                  ? { height: overlayHeightPx, bottom: "auto" }
+                : flip
+                  ? ({
+                      "--book-flip-duration": `${flip.durationMs}ms`,
+                    } as CSSProperties)
                   : undefined
-              }
-            >
-              <div className="book-leaf-front">
-                <div
-                  className="book-flip-ghost"
-                  ref={(node) => {
-                    if (node && ghost.parentElement !== node) {
-                      node.replaceChildren(ghost);
-                    }
-                  }}
-                />
-                <div className="book-leaf-shine" aria-hidden="true" />
-              </div>
-              <div className="book-leaf-back" aria-hidden="true" />
+            }
+          >
+            <div className="book-leaf book-leaf-under">
+              <BookFace pathname={pathname} faceRef={liveFace} />
             </div>
-          ) : null}
+            {leafTurning ? (
+              <div
+                className="book-leaf book-leaf-over"
+                style={
+                  overlayHeightPx
+                    ? { height: overlayHeightPx, bottom: "auto" }
+                    : undefined
+                }
+              >
+                <div className="book-leaf-front">
+                  <div
+                    className="book-flip-ghost"
+                    ref={(node) => {
+                      if (node && ghost.parentElement !== node) {
+                        node.replaceChildren(ghost);
+                      }
+                    }}
+                  />
+                  <div className="book-leaf-shine" aria-hidden="true" />
+                </div>
+                <div className="book-leaf-back" aria-hidden="true" />
+              </div>
+            ) : null}
+          </div>
+          <BookBinding />
         </div>
-        <BookBinding />
       </div>
-    </div>
+      {/* Outside the perspectived room so position:fixed sticks to the viewport. */}
+      {signedIn ? <BookDock pathname={pathname} /> : null}
+    </>
   );
 }

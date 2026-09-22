@@ -154,6 +154,20 @@ export async function connectPair(
   await ensureConnection(ctx, rightId, leftId);
 }
 
+/** If A→B exists but B→A is missing, write the reverse so both books stay in sync. */
+export async function mirrorOutgoingConnections(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+): Promise<void> {
+  const links = await ctx.db
+    .query("connections")
+    .withIndex("by_viewer", (q) => q.eq("viewerId", userId))
+    .take(40);
+  for (const link of links) {
+    await ensureConnection(ctx, link.otherUserId, userId);
+  }
+}
+
 export async function visibleKitchenIds(
   ctx: QueryCtx | MutationCtx,
   userId: Id<"users">,
@@ -263,8 +277,16 @@ export async function backfillConnections(
     const kitchen = await ctx.db.get("kitchens", membership.kitchenId);
     if (kitchen) {
       await connectPair(ctx, userId, kitchen.ownerId);
+      const peers = await ctx.db
+        .query("members")
+        .withIndex("by_kitchen", (q) => q.eq("kitchenId", kitchen._id))
+        .take(40);
+      for (const peer of peers) {
+        await connectPair(ctx, userId, peer.userId);
+      }
     }
   }
+  await mirrorOutgoingConnections(ctx, userId);
 }
 
 export async function claimOrphanBakes(

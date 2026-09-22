@@ -7,6 +7,31 @@ import { useFamily } from "@/lib/family";
 import { useCookbookView } from "@/lib/preview";
 import { collapsePeople } from "@/lib/cookbookMix";
 
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fall through to the legacy path.
+  }
+  try {
+    const field = document.createElement("textarea");
+    field.value = text;
+    field.setAttribute("readonly", "");
+    field.style.position = "fixed";
+    field.style.left = "-9999px";
+    document.body.appendChild(field);
+    field.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(field);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 function PencilMark() {
   return (
     <svg className="family-pencil" viewBox="0 0 24 24" aria-hidden="true">
@@ -166,12 +191,15 @@ export function FamilyBook() {
     setCopied(false);
     try {
       const result = await createInvite({ kitchenId, role: "cook" });
-      const url = `${window.location.origin}/join?invite=${result.token}`;
+      const url = `${window.location.origin}/join?invite=${encodeURIComponent(result.token)}`;
       setInviteUrl(url);
-      await navigator.clipboard?.writeText(url).catch(() => undefined);
-      setCopied(true);
+      const ok = await copyText(url);
+      setCopied(ok);
+      if (!ok) {
+        setError("Clipboard blocked — select the link below and copy it.");
+      }
     } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : "Couldn’t copy it.");
+      setError(caught instanceof Error ? caught.message : "Couldn’t make a link.");
     } finally {
       setPending(false);
     }
@@ -252,16 +280,16 @@ export function FamilyBook() {
           <h2 className="font-display mt-1 text-[1.65rem] leading-8">
             Invite someone
           </h2>
-          <div className="mt-5 border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-6 md:px-7 md:py-7">
+          <div className="mt-5 rounded-lg border border-rule border-l-[3px] border-l-cinnamon bg-paper-raised px-5 py-6 md:px-7 md:py-7">
             <p className="text-[18px] leading-8 text-ink-soft">
               {inviteUrl
                 ? copied
-                  ? "Copied. Text it to them."
-                  : "Good for a month."
-                : "Send a link. They open it, you’re in each other’s books."}
+                  ? "Copied. Text it to them — when they sign in, you both show up in each other’s books."
+                  : "Good for a month. Select the link if it didn’t copy."
+                : "Send a link. They sign in with it, and you both show up in each other’s books."}
             </p>
             {inviteUrl ? (
-              <p className="mt-5 break-all rounded-sm border border-dashed border-cocoa/35 bg-paper px-4 py-3 font-mono text-[15px] leading-6 text-ink">
+              <p className="mt-5 break-all rounded-lg border border-dashed border-cocoa/35 bg-paper px-4 py-3 font-mono text-[15px] leading-6 text-ink">
                 {inviteUrl}
               </p>
             ) : null}
@@ -272,7 +300,7 @@ export function FamilyBook() {
             ) : null}
             <button
               type="button"
-              className="book-press book-press-text book-press-save mt-6"
+              className="book-press book-press-text book-press-save mt-6 w-full sm:w-auto"
               disabled={pending}
               aria-busy={pending}
               onClick={() => void copyLink()}

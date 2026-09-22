@@ -2,8 +2,10 @@ import { v } from "convex/values";
 import { mutation, query, type MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import {
+  backfillConnections,
   calledName,
   connectPair,
+  getMembership,
   getSignedInUser,
   hashFamilyToken,
   ownedKitchen,
@@ -128,17 +130,40 @@ async function joinInvite(
     throw new Error("That book isn't here anymore.");
   }
   if (kitchen.ownerId !== userId) {
+    const already = await getMembership(ctx, invite.kitchenId, userId);
+    if (!already) {
+      await ctx.db.insert("members", {
+        kitchenId: invite.kitchenId,
+        userId,
+        role: invite.role,
+      });
+    }
+    // Mutual: you ↔ book owner, and you ↔ everyone already in that book.
     await connectPair(ctx, userId, kitchen.ownerId);
+    const peers = await ctx.db
+      .query("members")
+      .withIndex("by_kitchen", (q) => q.eq("kitchenId", invite.kitchenId))
+      .take(40);
+    for (const peer of peers) {
+      await connectPair(ctx, userId, peer.userId);
+    }
   }
-  const mine = await ownedKitchen(ctx, userId);
-  if (mine) {
-    return mine._id;
+  const existing = await ownedKitchen(ctx, userId);
+  let mineId = existing?._id;
+  if (!mineId) {
+    const user = await ctx.db.get("users", userId);
+    if (!user) {
+      throw new Error("Not signed in");
+    }
+    mineId = await startKitchen(
+      ctx,
+      userId,
+      recipesBookName(calledName(user)),
+    );
   }
-  const user = await ctx.db.get("users", userId);
-  if (!user) {
-    throw new Error("Not signed in");
-  }
-  return await startKitchen(ctx, userId, recipesBookName(calledName(user)));
+  await backfillConnections(ctx, userId);
+  await backfillConnections(ctx, kitchen.ownerId);
+  return mineId;
 }
 
 export const setCalled = mutation({

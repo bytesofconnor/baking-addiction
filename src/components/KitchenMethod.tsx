@@ -50,7 +50,7 @@ export function KitchenMethod({
         <div className="mt-5 grid gap-8 md:grid-cols-2 md:gap-10">
           {whatWentIn.length > 0 ? (
             <div>
-              <h3 className="text-[17px] font-medium tracking-[0.02em] text-ink">
+              <h3 className="text-[17px] font-medium tracking-[0.02em] text-cinnamon-deep">
                 What went in
               </h3>
               <ul className="mt-3 flex flex-col">
@@ -67,7 +67,7 @@ export function KitchenMethod({
           ) : null}
           {how.length > 0 ? (
             <div>
-              <h3 className="text-[17px] font-medium tracking-[0.02em] text-ink">
+              <h3 className="text-[17px] font-medium tracking-[0.02em] text-cinnamon-deep">
                 How
               </h3>
               <ol className="mt-3 flex flex-col">
@@ -108,15 +108,9 @@ export function KitchenMethod({
           >
             {sourceTitle}
           </a>
-          {shared
-            ? "."
-            : ". Her original, if you want it. This is the version from this kitchen."}
+          .
         </p>
-      ) : shared ? null : (
-        <p className="mt-6 border-t border-rule pt-4 text-[16px] leading-7 text-ink-soft">
-          This is the version from this kitchen.
-        </p>
-      )}
+      ) : null}
     </section>
   );
 }

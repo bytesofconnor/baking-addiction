@@ -1,4 +1,5 @@
 const RETURN_KEY = "yum-oauth-return";
+const INVITE_KEY = "yum-pending-invite";
 
 export function markOAuthReturn(): void {
   try {
@@ -21,6 +22,35 @@ export function isOAuthReturn(): boolean {
     return sessionStorage.getItem(RETURN_KEY) === "1";
   } catch {
     return false;
+  }
+}
+
+/** Keep invite tokens across Google OAuth when the return URL drops `?invite=`. */
+export function stashInvite(token: string): void {
+  const clean = token.trim();
+  if (!clean) {
+    return;
+  }
+  try {
+    sessionStorage.setItem(INVITE_KEY, clean);
+  } catch {
+    // Private browsing can block storage.
+  }
+}
+
+export function peekInvite(): string | null {
+  try {
+    return sessionStorage.getItem(INVITE_KEY)?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearInvite(): void {
+  try {
+    sessionStorage.removeItem(INVITE_KEY);
+  } catch {
+    // ignore
   }
 }
 

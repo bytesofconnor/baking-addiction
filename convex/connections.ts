@@ -105,17 +105,31 @@ export const throwOut = mutation({
     }
     await ctx.db.delete(link._id);
 
-    const mixes = await ctx.db
-      .query("cookbookMixes")
-      .withIndex("by_viewer", (q) => q.eq("viewerId", user._id))
-      .take(40);
-    for (const mix of mixes) {
-      if (!mix.otherUserIds.includes(args.otherUserId)) {
-        continue;
+    // Drop the reverse link too — family is mutual.
+    const reverse = await ctx.db
+      .query("connections")
+      .withIndex("by_viewer_and_other", (q) =>
+        q.eq("viewerId", args.otherUserId).eq("otherUserId", user._id),
+      )
+      .unique();
+    if (reverse) {
+      await ctx.db.delete(reverse._id);
+    }
+
+    for (const viewerId of [user._id, args.otherUserId]) {
+      const mixes = await ctx.db
+        .query("cookbookMixes")
+        .withIndex("by_viewer", (q) => q.eq("viewerId", viewerId))
+        .take(40);
+      const dropId = viewerId === user._id ? args.otherUserId : user._id;
+      for (const mix of mixes) {
+        if (!mix.otherUserIds.includes(dropId)) {
+          continue;
+        }
+        await ctx.db.patch(mix._id, {
+          otherUserIds: mix.otherUserIds.filter((id) => id !== dropId),
+        });
       }
-      await ctx.db.patch(mix._id, {
-        otherUserIds: mix.otherUserIds.filter((id) => id !== args.otherUserId),
-      });
     }
     return null;
   },

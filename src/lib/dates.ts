@@ -28,6 +28,18 @@ export function formatBakeDate(isoDate: string): string {
   return year ? `${monthName} ${day}, ${year}` : `${monthName} ${day}`;
 }
 
+/** Compact card footer: "Added 1/2/28". */
+export function formatAddedShort(isoDate: string): string {
+  const parts = isoDate.split("-");
+  const month = Number(parts[1]);
+  const day = Number(parts[2]);
+  const year = parts[0];
+  if (!month || !day || !year || year.length < 2) {
+    return isoDate;
+  }
+  return `Added ${month}/${day}/${year.slice(-2)}`;
+}
+
 export function todayStamp(): string {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, "0");

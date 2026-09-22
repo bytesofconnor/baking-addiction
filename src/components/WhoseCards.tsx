@@ -108,8 +108,10 @@ export function WhoseCards({
           aria-controls="book-people-picker"
           onClick={() => setPeopleOpen((open) => !open)}
         >
-          <span>Choose people</span>
-          <span className="book-people-count">{selectedCount} selected</span>
+          <span>Who&apos;s cooking</span>
+          <span className="book-people-count">
+            {selectedCount === 1 ? "just one" : `${selectedCount}`}
+          </span>
           <span className="book-people-chevron" aria-hidden="true" />
         </button>
         {canRemember ? (
@@ -133,7 +135,7 @@ export function WhoseCards({
       >
         <FilterChecks labelledBy="whose-cards-label">
           <p id="whose-cards-label" className="sr-only">
-            Choose family members
+            Who&apos;s cooking in this tray
           </p>
           <FilterCheck checked={selection.includeMine} onChange={toggleSelf}>
             Me
