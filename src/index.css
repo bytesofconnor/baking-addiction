@@ -1054,6 +1054,19 @@ html[data-arrive="opening"] .book-colophon {
   text-shadow: 0 2px 12px color-mix(in srgb, var(--color-ink) 88%, transparent);
 }
 
+/* On a wide cover, treat the dark half as its own composition and center the
+   title block within it. The full-bleed art still owns the brighter right side. */
+@media (min-width: 1024px) and (min-aspect-ratio: 3 / 2) {
+  .book-cover-front-landing {
+    justify-content: center;
+  }
+
+  .book-cover-copy {
+    margin-top: 0;
+    transform: translateY(-2%);
+  }
+}
+
 .book-cover-eyebrow {
   margin: 0 0 0.7rem;
   font-size: clamp(0.72rem, 1.3vw, 0.9rem);
@@ -1181,6 +1194,16 @@ html[data-arrive="opening"] .book-colophon {
 .room-shell[data-landing-cover="true"] {
   padding-top: 4.6rem;
   padding-bottom: 3.85rem;
+}
+
+/* A cover should still read like a physical object on panoramic displays.
+   Keep the signed-in book fluid, but stop the landing cover from becoming a
+   banner and center the extra room around it. */
+@media (min-width: 1024px) {
+  .room-shell[data-landing-cover="true"] .book {
+    width: min(100%, 84rem);
+    align-self: center;
+  }
 }
 
 @media (max-width: 639px) {
@@ -2431,7 +2454,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 }
 
 .book-back-intro {
-  width: min(54%, 34rem);
+  width: min(62%, 42rem);
 }
 
 .book[data-spine="end"] .book-back-body {
@@ -2468,7 +2491,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 }
 
 .book-back-list {
-  width: min(56%, 38rem);
+  width: min(64%, 44rem);
   margin: clamp(1.25rem, 2.8vh, 2rem) 0 0;
   padding: 0.25rem clamp(0.9rem, 1.8vw, 1.3rem);
   border: 1px solid color-mix(in srgb, var(--color-rule) 62%, var(--color-cocoa));
@@ -2543,7 +2566,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 
 .book-back-footer {
   display: flex;
-  width: min(56%, 36rem);
+  width: min(64%, 44rem);
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
@@ -2564,20 +2587,19 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 
 .book-back-cta-link {
   display: inline-flex;
-  min-height: 3.85rem;
+  min-height: 3.25rem;
   align-items: center;
   gap: 0.55rem;
   justify-content: center;
-  padding: 0.28rem 1.35rem 0.1rem;
-  border: 2px solid var(--color-cocoa);
-  border-right-width: 3px;
-  border-bottom-width: 5px;
-  border-radius: 4px;
+  padding: 0.35rem 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--color-cocoa) 58%, transparent);
+  border-radius: 0.65rem;
   background: var(--color-cinnamon-deep);
   color: var(--color-paper-raised);
   font-family: var(--font-display);
-  font-size: clamp(1.08rem, 1.85vw, 1.28rem);
-  font-weight: 800;
+  box-shadow: 0 0.35rem 0.85rem color-mix(in srgb, var(--color-ink) 16%, transparent);
+  font-size: clamp(1rem, 1.55vw, 1.15rem);
+  font-weight: 700;
   line-height: 1.15;
   letter-spacing: 0.01em;
   text-decoration: none;
@@ -2590,9 +2612,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 }
 
 .book-back-cta-link:active {
-  border-right-width: 2px;
-  border-bottom-width: 2px;
-  transform: translate(1px, 3px);
+  transform: translateY(1px);
 }
 
 .book-back-cta-link:focus-visible {
@@ -2602,11 +2622,11 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 
 @media (max-width: 639px) {
   .book-back-body {
-    padding: 1.25rem;
+    padding: 1rem 0.8rem calc(5.3rem + env(safe-area-inset-bottom, 0px));
   }
 
   .book[data-spine="end"] .book-back-body {
-    padding: 1.25rem;
+    padding: 1rem 0.8rem calc(5.3rem + env(safe-area-inset-bottom, 0px));
   }
 
   .book-back-intro,
@@ -2616,11 +2636,14 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   }
 
   .book-back-title {
-    font-size: clamp(2rem, 10vw, 2.8rem);
+    max-width: 10ch;
+    font-size: clamp(2rem, 9vw, 2.55rem);
   }
 
   .book-back-list {
-    padding: 0.2rem 0.85rem;
+    margin-top: 1.1rem;
+    padding: 0.15rem 0.7rem;
+    box-shadow: none;
   }
 
   .book-back-item summary {
@@ -2631,20 +2654,23 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   }
 
   .book-back-question {
-    font-size: 1rem;
+    font-size: 1.05rem;
   }
 
   .book-back-answer {
     margin-right: 0.4rem;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.9rem;
     margin-left: 2.25rem;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    line-height: 1.5;
   }
 
   .book-back-footer {
-    align-items: flex-start;
-    flex-direction: column;
-    margin-bottom: 9rem;
+    margin-top: 1rem;
+  }
+
+  .book-back-footer .book-back-cta {
+    display: none;
   }
 
   .book-back-cover-art {

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router";
 import { PageTitle } from "@/lib/pageTitle";
 import { SITE_SHORT } from "@/lib/site";
@@ -26,6 +27,7 @@ const FAQS = [
 export function FaqPage() {
   const { status } = useFamily();
   const signedIn = status === "in";
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <div className="book-back-cover">
@@ -46,13 +48,22 @@ export function FaqPage() {
           <p className="book-back-eyebrow">Five quick things</p>
           <h1 className="book-back-title">Before you open the book.</h1>
           <p className="book-back-deck">
-            Private, simple, and made for family.
+            Private, simple, and made to share.
           </p>
         </header>
         <div className="book-back-list" aria-label="Frequently asked questions">
           {FAQS.map((item, index) => (
-            <details key={item.q} className="book-back-item" open={index === 0}>
-              <summary>
+            <details
+              key={item.q}
+              className="book-back-item"
+              open={openIndex === index}
+            >
+              <summary
+                onClick={(event) => {
+                  event.preventDefault();
+                  setOpenIndex((current) => current === index ? null : index);
+                }}
+              >
                 <span className="book-back-number" aria-hidden="true">
                   {String(index + 1).padStart(2, "0")}
                 </span>
