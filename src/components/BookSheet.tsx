@@ -9,9 +9,13 @@ import { SITE_LINE, SITE_SHORT } from "@/lib/site";
 export function BookChrome({ pathname }: { pathname?: string }) {
   const location = useLocation();
   const path = pathname ?? location.pathname;
+  const recipeLeaf = path.startsWith("/bakes/");
 
   return (
-    <div className="book-chrome">
+    <div
+      className="book-chrome"
+      data-recipe-leaf={recipeLeaf ? "true" : undefined}
+    >
       <a
         href="#main"
         className="skip-link"
@@ -22,9 +26,7 @@ export function BookChrome({ pathname }: { pathname?: string }) {
       >
         Skip to the recipe book
       </a>
-      <SiteHeader
-        pathname={path}
-      />
+      {recipeLeaf ? null : <SiteHeader pathname={path} />}
     </div>
   );
 }
