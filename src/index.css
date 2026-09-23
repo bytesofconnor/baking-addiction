@@ -141,6 +141,13 @@ body {
   min-height: 4.35rem;
 }
 
+/* Recipe leaves carry their own headline; repeating it in the book chrome
+   makes the opening feel like two separate layouts stacked together. */
+.book-chrome[data-recipe-leaf="true"] {
+  min-height: 0;
+  padding-top: 0.7rem;
+}
+
 .book-chrome-head {
   position: relative;
   display: flex;
@@ -1039,7 +1046,7 @@ html[data-arrive="opening"] .book-colophon {
   position: relative;
   z-index: 2;
   width: min(43%, 31rem);
-  margin: clamp(0.6rem, 1.8vw, 1.35rem) 0 0;
+  margin: clamp(0.2rem, 0.9vw, 0.7rem) 0 0;
   padding: clamp(0.35rem, 0.8vw, 0.7rem);
   border: 0;
   background: transparent;
@@ -1067,6 +1074,25 @@ html[data-arrive="opening"] .book-colophon {
   text-wrap: balance;
 }
 
+.book-cover-headline > span {
+  display: block;
+}
+
+.book-cover-title-the {
+  margin-bottom: 0.14em;
+  color: color-mix(in srgb, var(--color-rule) 72%, var(--color-paper-raised));
+  font-size: 0.42em;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.book-cover-title-accent {
+  color: color-mix(in srgb, var(--color-cinnamon) 74%, var(--color-paper-raised));
+  font-style: italic;
+}
+
 .book-cover-promise {
   max-width: 32rem;
   margin: clamp(0.8rem, 2vw, 1.35rem) 0 0;
@@ -1090,7 +1116,7 @@ html[data-arrive="opening"] .book-colophon {
 .book-cover-cta {
   display: flex;
   width: 100%;
-  min-height: 3.85rem;
+  min-height: 3.4rem;
   align-items: center;
   justify-content: center;
   /* Slight top padding offsets the thick bottom border so the label sits centered */
@@ -1104,10 +1130,11 @@ html[data-arrive="opening"] .book-colophon {
   background: var(--color-cinnamon-deep);
   color: var(--color-paper-raised);
   font-family: var(--font-display);
-  font-size: clamp(1.08rem, 1.85vw, 1.28rem);
+  font-size: clamp(1.04rem, 1.65vw, 1.2rem);
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: 0.01em;
+  white-space: nowrap;
   touch-action: manipulation;
 }
 
@@ -1194,9 +1221,9 @@ html[data-arrive="opening"] .book-colophon {
   }
 
   .book-cover-cta {
-    min-height: 3.65rem;
+    min-height: 3.4rem;
     padding: 0.28rem 1.15rem 0.08rem;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
 
   .book-cover-headline {
@@ -3635,6 +3662,10 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   gap: 0.4rem;
 }
 
+.bake-leaf-baker {
+  gap: 0.5rem;
+}
+
 .book-mark-who {
   gap: 0.5rem;
 }
@@ -3722,7 +3753,17 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.15rem 0;
+  column-gap: 0.55rem;
+  row-gap: 0.3rem;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.bake-leaf-kicker-sep {
+  color: color-mix(in srgb, var(--color-cinnamon-deep) 55%, var(--color-paper));
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
 }
 
 .book-mark:hover {
@@ -4365,7 +4406,11 @@ summary::-webkit-details-marker {
   min-width: 0;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.85rem;
+}
+
+.bake-leaf-hero-copy .bake-leaf-title {
+  margin-top: 0.15rem;
 }
 
 /* Add / Edit form — photo on top, fields full book width (don’t
@@ -4548,8 +4593,8 @@ summary::-webkit-details-marker {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  margin-top: 0.35rem;
-  max-width: 36rem;
+  width: min(100%, 52rem);
+  margin: 1.45rem auto 0;
 }
 
 .bake-leaf-outcome {
@@ -4573,47 +4618,27 @@ summary::-webkit-details-marker {
 
 @media (min-width: 720px) {
   .bake-leaf-hero {
-    display: flow-root;
+    display: grid;
+    grid-template-columns: minmax(15rem, 42%) minmax(0, 1fr);
+    align-items: start;
+    gap: 1.5rem;
   }
 
   .bake-leaf-hero-photo {
-    float: left;
-    width: min(42%, 17.5rem);
+    width: 100%;
     max-width: none;
-    margin: 0 1.6rem 1rem 0;
-  }
-
-  .bake-leaf-hero-copy {
-    display: block;
-    padding-top: 0.15rem;
-  }
-
-  .bake-leaf-hero-copy > * {
-    margin-bottom: 0;
-  }
-
-  .bake-leaf-hero-copy > * + * {
-    margin-top: 0.65rem;
-  }
-
-  .bake-leaf-intro {
-    display: block;
-    max-width: none;
-  }
-
-  .bake-leaf-intro p {
     margin: 0;
   }
 
-  .bake-leaf-intro p + p {
-    margin-top: 0.85rem;
+  .bake-leaf-hero-copy {
+    display: flex;
+    padding-top: 0.15rem;
   }
 }
 
 @media (min-width: 960px) {
   .bake-leaf-hero-photo {
-    width: min(44%, 24rem);
-    margin-right: 2rem;
+    max-width: 24rem;
   }
 
   .bake-leaf-title {
