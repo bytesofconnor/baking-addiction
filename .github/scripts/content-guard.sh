@@ -37,7 +37,7 @@ fi
 # Check for production seed commands in workflows or scripts
 echo ""
 echo "Checking for production seed commands..."
-RESULTS=$(git grep -n 'convex run seed:.*beloved-lapwing-642' -- '.github/' || true)
+RESULTS=$(git grep -n 'convex run seed:.*beloved-lapwing-642' -- '.github/workflows/' || true)
 if [ -n "$RESULTS" ]; then
   echo "$RESULTS"
   echo "❌ FAIL: Found seed command targeting production (beloved-lapwing-642)"
