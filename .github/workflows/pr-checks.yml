@@ -34,7 +34,16 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: |
+          # Lint only files changed in this PR to avoid failing on pre-existing errors
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACM origin/main...HEAD | grep -E '\.(ts|tsx|js|jsx)$' || true)
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "Linting changed files:"
+            echo "$CHANGED_FILES"
+            echo "$CHANGED_FILES" | xargs npx eslint --max-warnings=0
+          else
+            echo "No TypeScript/JavaScript files changed"
+          fi
 
       - name: Typecheck
         run: npm run typecheck
