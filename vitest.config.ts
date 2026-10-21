@@ -5,7 +5,6 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: "happy-dom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     exclude: [
@@ -13,6 +12,10 @@ export default defineConfig({
       "**/dist/**",
       "**/tests/**", // Exclude Playwright tests
       "**/.{idea,git,cache,output,temp}/**",
+    ],
+    environmentMatchGlobs: [
+      ["convex/**/*.test.ts", "node"],
+      ["src/**/*.test.{ts,tsx}", "happy-dom"],
     ],
   },
   resolve: {

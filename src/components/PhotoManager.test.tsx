@@ -1,13 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { PhotoManager } from "./PhotoManager";
-import type { Id } from "../../convex/_generated/dataModel";
-
 /**
+ * @vitest-environment happy-dom
+ * 
  * PhotoManager behavior tests.
  * Focus on user-facing functionality rather than implementation details.
  * Full upload and mutation testing is done in Playwright integration tests.
  */
+
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { PhotoManager } from "./PhotoManager";
+import type { Id } from "../../convex/_generated/dataModel";
 
 vi.mock("convex/react", () => ({
   useMutation: vi.fn(() => vi.fn()),
