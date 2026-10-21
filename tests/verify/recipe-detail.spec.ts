@@ -42,7 +42,7 @@ test.describe("Recipe detail page", () => {
   test("recipe shows source attribution", async ({ page }) => {
     await page.goto("/bakes/pumpkin-muffins-extra-spice");
 
-    // Look for Sally's Baking Addiction credit
+    // Look for external source credit
     const pageText = await page.textContent("body");
     expect(pageText?.toLowerCase()).toMatch(/sally|source/);
 

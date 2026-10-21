@@ -7,7 +7,7 @@
 - Show ingredients and steps
 - Display "what I changed" section if present
 - Show recipe photo if uploaded
-- Link to original source (e.g., Sally's Baking Addiction)
+- Link to original source (e.g., external recipe sites)
 - Navigate back to home page
 
 ## How to get to it
@@ -48,9 +48,9 @@ const ingredients = page.locator('text=pumpkin');
 await expect(ingredients.first()).toBeVisible();
 await page.screenshot({ path: 'artifacts/verify/screenshots/recipe-detail-page.png' });
 
-// Verify source attribution (Sally's Baking Addiction)
+// Verify source attribution (external recipe site)
 const sourceLink = page.getByRole('link', { name: /sally/i });
-await expect(sourceLink).toHaveAttribute('href', /sallysbakingaddiction.com/);
+await expect(sourceLink).toHaveAttribute('href', /sallysbakingaddiction/);
 ```
 
 ## Gotchas
