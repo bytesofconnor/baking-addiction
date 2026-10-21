@@ -28,8 +28,11 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
+      - name: Clean previous build
+        run: rm -rf .vercel/output
+
       - name: Build Project Artifacts
-        run: npx vercel@latest build --prod --yes --force --scope connors-projects-408eaae2
+        run: npx vercel@latest build --prod --yes --scope connors-projects-408eaae2
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
