@@ -21,9 +21,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build project
-        run: npm run build
-
       - name: Pull Vercel Environment Information
         run: npx vercel@latest pull --yes --environment=production --scope connors-projects-408eaae2
         env:
@@ -32,7 +29,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Build Project Artifacts
-        run: npx vercel@latest build --prod --yes --scope connors-projects-408eaae2
+        run: npx vercel@latest build --prod --yes --force --scope connors-projects-408eaae2
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -50,3 +47,44 @@ jobs:
         env:
           CONVEX_DEPLOYMENT: prod:beloved-lapwing-642
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
+      - name: Verify Production Deployment
+        run: |
+          echo "Waiting 10s for CDN to update..."
+          sleep 10
+          
+          # Fetch the production HTML and extract the bundle filename
+          PROD_BUNDLE=$(curl -sL https://thefamilyrecipebook.app | grep -o 'assets/index-[^"]*\.js' | head -1)
+          
+          if [ -z "$PROD_BUNDLE" ]; then
+            echo "❌ Failed to extract bundle filename from production"
+            exit 1
+          fi
+          
+          echo "Production bundle: $PROD_BUNDLE"
+          
+          # Check local build output to get expected bundle name
+          LOCAL_BUNDLE=$(grep -o 'assets/index-[^"]*\.js' .vercel/output/static/index.html | head -1)
+          
+          if [ -z "$LOCAL_BUNDLE" ]; then
+            echo "❌ Failed to extract bundle filename from local build"
+            exit 1
+          fi
+          
+          echo "Expected bundle: $LOCAL_BUNDLE"
+          
+          # Compare bundle filenames
+          if [ "$PROD_BUNDLE" = "$LOCAL_BUNDLE" ]; then
+            echo "✅ Production deployment verified - bundle matches build"
+          else
+            echo "❌ Production deployment FAILED - bundle mismatch!"
+            echo "   Expected: $LOCAL_BUNDLE"
+            echo "   Got:      $PROD_BUNDLE"
+            echo ""
+            echo "This means production is serving stale assets."
+            echo "Possible causes:"
+            echo "  - Vercel build cache contained old code"
+            echo "  - CDN not yet updated (wait longer)"
+            echo "  - Deployment succeeded but wasn't promoted to production domain"
+            exit 1
+          fi

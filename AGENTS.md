@@ -55,53 +55,63 @@ Example:
 
 > **Blast radius:** Changes `BookCover.tsx` component, used only on home page (`/`). Routes `/join`, `/faq`, and `/bakes/*` are unaffected. No data model changes. Build and auth flows unchanged.
 
-### Principles
+### Principle Skills
 
-See `.cursor/skills/` for detailed guidance on:
+Use these skills to maintain code quality and shipping standards:
 
-- **prove-it-works** — Verify the real outcome, don't just claim done
-- **blast-radius** — List what a change can affect before shipping
-- **fix-root-causes** — Don't paper over symptoms; fix the underlying issue
-- **experience-first** — Judge by what the user sees and feels
-- **minimize-reader-load** — Write code others can understand quickly
-- **laziness-protocol** — Make the simplest change that works
+- **principle-prove-it-works** (`.cursor/skills/principle-prove-it-works/SKILL.md`): Apply after completing any task, before declaring done. Verify against the real artifact — run the feature, read the actual value, inspect the diff. Never infer from proxies or "it compiles."
+
+- **principle-blast-radius** (`.cursor/skills/principle-blast-radius/SKILL.md`): Use before opening a PR to find what a change could break beyond the diff. Prove the one fact it's safe because of by running real code. Required for refactors and API changes.
+
+- **principle-fix-root-causes** (`.cursor/skills/principle-fix-root-causes/SKILL.md`): Apply when debugging. Trace each symptom back to the first place the system went wrong and fix it there. Don't add guards for states that should never exist.
+
+- **principle-experience-first** (`.cursor/skills/principle-experience-first/SKILL.md`): Use when product, UX, or feature-scope tradeoffs come up. Choose user delight over implementation convenience. Ship fewer polished features over more rough ones.
+
+- **principle-minimize-reader-load** (`.cursor/skills/principle-minimize-reader-load/SKILL.md`): Apply when reviewing or shaping code that's hard to trace. Count layers between question and answer. Collapse one-caller wrappers and shrink mutable scope.
+
+- **principle-laziness-protocol** (`.cursor/skills/principle-laziness-protocol/SKILL.md`): Use when refactoring or evaluating diff size. Bias toward deletion and the smallest change that solves the problem. Minimize the diff.
 
 ## Factory
 
-### Environments
+### Production
 
-- **Production:** https://thefamilyrecipebook.app
-- **Preview URLs:** Vercel PR preview deployments (if enabled in Vercel project settings)
-- **Deploy mechanism:** GitHub Actions workflow deploys on push to `main`
-  - Vercel production deployment
+- **URL:** https://thefamilyrecipebook.app
+- **Preview URLs:** Vercel PR preview deployments (if enabled in project settings)
+- **Deploy mechanism:** GitHub Actions on push to `main`:
+  - Vercel production build and deployment
   - Convex production deployment (`beloved-lapwing-642`)
-  - See [`ops.md`](./ops.md) for details
+  - See [`ops.md`](./ops.md) for deployment details
 
 ### Required CI Checks
 
-All pull requests to `main` must pass these checks:
+All PRs to `main` must pass:
 
-- **PR Checks / checks** — Runs lint, typecheck, production build, and Playwright smoke tests
-- **PR Checks / content-guard** — Blocks banned content (Sally's Baking Addiction images/branding, production seed commands)
+- **PR Checks / checks** — Lint (changed files only), typecheck, production build (`vite build`), Playwright smoke tests
+- **PR Checks / content-guard** — Blocks Sally's Baking Addiction image hotlinks, copied branding text, and production seed commands
 
-### Content Rules for CI
+### Content Rules
 
-The content-guard check enforces:
+Content guard enforces:
 
-- **No Sally's Baking Addiction assets:** No image hotlinks to `sallysbakingaddiction.com` or `sallysbakinaddiction.com` domains
-- **No Sally's branding:** No copied recipe text or branding strings (e.g., "Sally's Baking Addiction" in recipe bodies, photo credits from Sally's site)
-- **No production seed:** Never run `convex run seed:` commands on production deployment (`beloved-lapwing-642`)
+- **No Sally's Baking Addiction hotlinks:** No `<img>` tags or URLs pointing to `sallysbakingaddiction.com` images
+- **No Sally's branding:** No copied recipe text, branding strings, or photo credits from Sally's site (credit with `source: "sally"` and link to original)
+- **No production seeds:** Never `convex run seed:` commands targeting production (`beloved-lapwing-642`)
 
-Sally's recipes are credited with `source: "sally"` in recipe data and link to the original — we do not duplicate her content.
+### Vercel Analytics
+
+The `@vercel/analytics` package was removed because Analytics is not enabled in the Vercel project. If you need pageview tracking, enable Analytics in the Vercel dashboard, then reinstall `npm install @vercel/analytics` and add the component back to `App.tsx`.
 
 ### Merge Policy
 
-As of 2026-10-20:
+**Auto-merge to main when all required checks are green** (owner granted 2026-10-20).
 
-- **Auto-merge to main** when all required checks pass
-- Requires owner approval
-- Small, focused PRs preferred
-- PR body must include Verification and Blast radius sections
+### Pull Request Requirements
+
+Every PR must:
+
+1. **Pass CI:** All checks (lint, typecheck, build, content guard, smoke tests) must pass
+2. **Include verification:** Show evidence the change works — test output, build logs, screenshots, or script results
+3. **Include blast-radius note:** For non-trivial changes, document what could break and why it won't (or what testing proves it's safe)
 
 ## Operations
 
