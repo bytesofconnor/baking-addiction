@@ -8,15 +8,42 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$WORKSPACE_ROOT"
 
+# Load port configuration
+if [ -f /tmp/verify-ports.env ]; then
+  source /tmp/verify-ports.env
+else
+  # Fallback to default ports
+  CONVEX_PORT=3210
+  VITE_PORT=4821
+fi
+
 echo "🩺 Running health checks..."
 echo ""
 
 CHECKS_PASSED=0
 CHECKS_FAILED=0
 
-# Check Vite
-echo -n "Vite (http://localhost:4821): "
-if curl -s -o /dev/null -w "%{http_code}" http://localhost:4821 | grep -q "200"; then
+# Check if PIDs exist and processes are running
+echo -n "Process status: "
+if [ -f /tmp/verify-convex.pid ] && [ -f /tmp/verify-vite.pid ]; then
+  CONVEX_PID=$(cat /tmp/verify-convex.pid)
+  VITE_PID=$(cat /tmp/verify-vite.pid)
+  
+  if ps -p $CONVEX_PID > /dev/null 2>&1 && ps -p $VITE_PID > /dev/null 2>&1; then
+    echo "✅ Both processes running (Convex: $CONVEX_PID, Vite: $VITE_PID)"
+    CHECKS_PASSED=$((CHECKS_PASSED + 1))
+  else
+    echo "❌ FAIL (one or more processes not running)"
+    CHECKS_FAILED=$((CHECKS_FAILED + 1))
+  fi
+else
+  echo "❌ FAIL (PID files not found)"
+  CHECKS_FAILED=$((CHECKS_FAILED + 1))
+fi
+
+# Check Vite HTTP endpoint
+echo -n "Vite (http://localhost:${VITE_PORT}): "
+if curl -sf -o /dev/null -w "%{http_code}" http://localhost:${VITE_PORT} | grep -q "200"; then
   echo "✅ OK"
   CHECKS_PASSED=$((CHECKS_PASSED + 1))
 else
@@ -24,9 +51,9 @@ else
   CHECKS_FAILED=$((CHECKS_FAILED + 1))
 fi
 
-# Check Convex
-echo -n "Convex (http://127.0.0.1:3210): "
-if curl -s http://127.0.0.1:3210 > /dev/null 2>&1; then
+# Check Convex HTTP endpoint
+echo -n "Convex (http://127.0.0.1:${CONVEX_PORT}): "
+if curl -sf http://127.0.0.1:${CONVEX_PORT} > /dev/null 2>&1; then
   echo "✅ OK"
   CHECKS_PASSED=$((CHECKS_PASSED + 1))
 else
@@ -34,14 +61,29 @@ else
   CHECKS_FAILED=$((CHECKS_FAILED + 1))
 fi
 
-# Check for seed data
-echo -n "Seed data (home page renders): "
-SEED_CHECK=$(curl -s http://localhost:4821 | grep -o "recipe\|bake" | head -1 || echo "")
-if [ -n "$SEED_CHECK" ]; then
+# Check for seed data with real Convex query
+echo -n "Seed data (recipes in database): "
+if RECIPE_COUNT=$(npx convex run seed:countBakes 2>&1 | tail -1); then
+  if [ "$RECIPE_COUNT" -gt 0 ] 2>/dev/null; then
+    echo "✅ OK ($RECIPE_COUNT recipes)"
+    CHECKS_PASSED=$((CHECKS_PASSED + 1))
+  else
+    echo "⚠️  No recipes found (seed may have failed)"
+    CHECKS_FAILED=$((CHECKS_FAILED + 1))
+  fi
+else
+  echo "⚠️  Could not query database"
+  CHECKS_FAILED=$((CHECKS_FAILED + 1))
+fi
+
+# Check home page renders
+echo -n "Home page renders: "
+HOME_PAGE=$(curl -sf http://localhost:${VITE_PORT} 2>/dev/null || echo "")
+if echo "$HOME_PAGE" | grep -q "recipe\|bake\|Recipe\|Book"; then
   echo "✅ OK"
   CHECKS_PASSED=$((CHECKS_PASSED + 1))
 else
-  echo "⚠️  WARNING (home page may be empty)"
+  echo "⚠️  WARNING (unexpected content)"
   CHECKS_FAILED=$((CHECKS_FAILED + 1))
 fi
 
@@ -52,6 +94,7 @@ if [ -f .env.local ] && grep -q "VITE_TEST_AUTH_BYPASS=true" .env.local; then
   CHECKS_PASSED=$((CHECKS_PASSED + 1))
 else
   echo "⚠️  NOT ENABLED (admin tests will be skipped)"
+  CHECKS_FAILED=$((CHECKS_FAILED + 1))
 fi
 
 echo ""
@@ -61,7 +104,7 @@ if [ $CHECKS_FAILED -gt 0 ]; then
   echo ""
   echo "💡 To fix:"
   echo "   - Ensure both servers are running: ./scripts/verify/launch.sh"
-  echo "   - For admin tests, add VITE_TEST_AUTH_BYPASS=true to .env.local"
+  echo "   - Check logs: tail -f /tmp/verify-convex.log /tmp/verify-vite.log"
   exit 1
 fi
 
