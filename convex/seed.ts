@@ -281,11 +281,12 @@ export const createTestUser = internalMutation({
       .unique();
     
     if (!user) {
+      const now = Date.now();
       const userId = await ctx.db.insert("users", {
         email: testEmail,
         name: "Test User",
         called: "Test",
-        emailVerified: true,
+        emailVerificationTime: now,
       });
       user = (await ctx.db.get("users", userId))!;
     }
@@ -299,6 +300,7 @@ export const createTestUser = internalMutation({
       const kitchenId = await ctx.db.insert("kitchens", {
         name: "Test's recipes",
         ownerId: user._id,
+        createdAt: Date.now(),
       });
       kitchen = (await ctx.db.get("kitchens", kitchenId))!;
       
@@ -317,7 +319,46 @@ export const ensureSamples = internalMutation({
   args: {},
   returns: v.number(),
   handler: async (ctx) => {
-    const { userId, kitchenId } = await createTestUser.handler(ctx, {});
+    // Create test user and kitchen for verification
+    const testEmail = "test@local.dev";
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", testEmail))
+      .unique();
+    
+    if (!user) {
+      const now = Date.now();
+      const userId = await ctx.db.insert("users", {
+        email: testEmail,
+        name: "Test User",
+        called: "Test",
+        emailVerificationTime: now,
+      });
+      user = (await ctx.db.get("users", userId))!;
+    }
+
+    let kitchen = await ctx.db
+      .query("kitchens")
+      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .unique();
+
+    if (!kitchen) {
+      const kitchenId = await ctx.db.insert("kitchens", {
+        name: "Test's recipes",
+        ownerId: user._id,
+        createdAt: Date.now(),
+      });
+      kitchen = (await ctx.db.get("kitchens", kitchenId))!;
+      
+      await ctx.db.insert("members", {
+        kitchenId: kitchen._id,
+        userId: user._id,
+        role: "owner",
+      });
+    }
+
+    const userId = user._id;
+    const kitchenId = kitchen._id;
     
     let inserted = 0;
     for (const sample of momSamples) {
@@ -335,6 +376,8 @@ export const ensureSamples = internalMutation({
           steps: [...sample.steps],
           sourceKind: "sally",
           ingredientSearch: sample.ingredients.join("\n").toLowerCase(),
+          kitchenId,
+          ownerId: userId,
         });
         continue;
       }
