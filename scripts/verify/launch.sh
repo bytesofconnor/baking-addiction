@@ -16,6 +16,10 @@ cat > .env.local << 'EOF'
 VITE_CONVEX_URL=http://127.0.0.1:3210
 VITE_CONVEX_SITE_URL=http://127.0.0.1:3211
 VITE_TEST_AUTH_BYPASS=true
+# Backend environment variables
+WRITER_PASSWORD=test-writer-pw
+TEST_AUTH_BYPASS=true
+SITE_URL=http://localhost:4821
 EOF
 
 echo "✅ Created .env.local for anonymous Convex (no login required)"
