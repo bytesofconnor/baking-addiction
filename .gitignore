@@ -10,3 +10,6 @@ dist
 test-results/
 playwright-report/
 *.tsbuildinfo
+
+# Verification artifacts
+artifacts/verify/
