@@ -57,6 +57,9 @@ jobs:
       - name: Verify test auth bypass cannot ship
         run: .github/scripts/verify-bypass-safety.sh
 
+      - name: Verify no default passwords in convex/
+        run: .github/scripts/verify-no-default-passwords.sh
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
