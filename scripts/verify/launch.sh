@@ -23,12 +23,18 @@ echo "✅ Created .env.local for anonymous Convex (no login required)"
 echo ""
 echo "🚀 Starting anonymous Convex dev server..."
 
+# Export backend env vars so Convex process inherits them
+export TEST_AUTH_BYPASS=true
+export WRITER_PASSWORD="test-writer-pw"
+export SITE_URL="http://localhost:4821"
+
 # Start Convex dev - will run in anonymous mode without CONVEX_DEPLOYMENT
 npx convex dev > /tmp/verify-convex.log 2>&1 &
 CONVEX_PID=$!
 echo $CONVEX_PID > /tmp/verify-convex.pid
 echo "   PID: $CONVEX_PID"
 echo "   Logs: /tmp/verify-convex.log"
+echo "   Backend env: TEST_AUTH_BYPASS=true, WRITER_PASSWORD=***, SITE_URL=$SITE_URL"
 
 echo "⏳ Waiting for Convex to be ready (this may take 10-15 seconds)..."
 sleep 15
@@ -51,12 +57,6 @@ echo "✅ Convex is ready at http://127.0.0.1:3210"
 
 # Wait a bit more for Convex to be fully initialized
 sleep 3
-
-echo ""
-echo "🔧 Setting backend environment variables..."
-npx convex env set TEST_AUTH_BYPASS true --yes 2>&1 || echo "⚠️  Could not set TEST_AUTH_BYPASS (continuing anyway)"
-npx convex env set WRITER_PASSWORD "test-writer-pw" --yes 2>&1 || echo "⚠️  Could not set WRITER_PASSWORD"
-npx convex env set SITE_URL "http://localhost:4821" --yes 2>&1 || echo "⚠️  Could not set SITE_URL"
 
 echo ""
 echo "🌱 Seeding sample data..."
