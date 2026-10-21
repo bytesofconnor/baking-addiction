@@ -1,6 +1,7 @@
 import { Password } from "@convex-dev/auth/providers/Password";
 
 // Only enable password provider on local deployments for testing
+/* eslint-disable @convex-dev/no-process-env */
 const isLocalDeployment =
   process.env.CONVEX_SITE_URL?.startsWith("http://127.0.0.1") ||
   process.env.CONVEX_SITE_URL?.startsWith("http://localhost") ||
@@ -21,3 +22,4 @@ export default {
       : []),
   ],
 };
+/* eslint-enable @convex-dev/no-process-env */

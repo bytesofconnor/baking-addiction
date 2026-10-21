@@ -82,7 +82,6 @@ test.describe("Browse and search recipes", () => {
     const firstRecipe = page.locator('a[href^="/bakes/"]').first();
     await expect(firstRecipe).toBeVisible();
 
-    const recipeName = await firstRecipe.textContent();
     await firstRecipe.click();
 
     // Verify we're on a recipe detail page

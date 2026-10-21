@@ -9,7 +9,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Admin create recipe", () => {
   test.skip(
-    ({ browserName }) => !process.env.VITE_TEST_AUTH_BYPASS,
+    () => !process.env.VITE_TEST_AUTH_BYPASS,
     "Skipping admin tests: VITE_TEST_AUTH_BYPASS not enabled",
   );
 

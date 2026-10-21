@@ -370,7 +370,7 @@ export const ensureSamples = internalMutation({
         .withIndex("by_slug", (q) => q.eq("slug", sample.slug))
         .unique();
       if (already) {
-        await ctx.db.patch(already._id, {
+        await ctx.db.patch("bakes", already._id, {
           kind: already.kind ?? sample.kind,
           coverUrl: already.coverUrl ?? coverPath(sample.slug),
           method: sample.method,
@@ -413,7 +413,7 @@ export const stampKinds = internalMutation({
       if (bake.kind === kind) {
         continue;
       }
-      await ctx.db.patch(bake._id, { kind });
+      await ctx.db.patch("bakes", bake._id, { kind });
       patched += 1;
     }
     return patched;
@@ -439,7 +439,7 @@ export const signAsChris = internalMutation({
       if (!bakerNeedsUpdate && !crumbNeedsUpdate) {
         continue;
       }
-      await ctx.db.patch(bake._id, {
+      await ctx.db.patch("bakes", bake._id, {
         bakerName: "Chris",
         changes: crumb,
       });
