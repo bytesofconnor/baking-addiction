@@ -54,6 +54,11 @@ type FamilyContextValue = {
 const FamilyContext = createContext<FamilyContextValue | null>(null);
 
 export function FamilyProvider({ children }: { children: ReactNode }) {
+  // Test-only auth bypass for verification (dev mode only, never in prod builds)
+  const testAuthBypass =
+    import.meta.env.DEV &&
+    import.meta.env.VITE_TEST_AUTH_BYPASS === "true";
+
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signOut: authSignOut } = useAuthActions();
   const [kitchenId, setKitchenState] = useState<Id<"kitchens"> | null>(null);
@@ -155,33 +160,69 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     };
   }, [ensureMine, me]);
 
-  const status: FamilyStatus =
-    isLoading ||
-    !kitchenReady ||
-    comingBack
-      ? "checking"
-      : isAuthenticated && me === undefined
-      ? "checking"
-      : me
-      ? "in"
-      : "out";
+  // Test bypass returns "in" status immediately (dev only, impossible in prod)
+  const status: FamilyStatus = testAuthBypass
+    ? "in"
+    : isLoading ||
+      !kitchenReady ||
+      comingBack
+    ? "checking"
+    : isAuthenticated && me === undefined
+    ? "checking"
+    : me
+    ? "in"
+    : "out";
 
   const value = useMemo(
     () => ({
       status,
-      user: me?.user ?? null,
-      kitchens,
-      mine,
-      theirs,
-      kitchenId: resolvedKitchen?._id ?? kitchenId,
-      kitchen: resolvedKitchen,
-      isOwnBook: status === "in",
-      canWrite: status === "in",
-      canInvite: mine !== null,
+      user: testAuthBypass
+        ? {
+            _id: "test-user-id" as Id<"users">,
+            called: "Test User",
+            email: "test@verify.local",
+            avatarUrl: null,
+            hasCustomAvatar: false,
+          }
+        : me?.user ?? null,
+      kitchens: testAuthBypass
+        ? [
+            {
+              _id: "test-kitchen-id" as Id<"kitchens">,
+              name: "Test Kitchen",
+              ownerCalled: "Test User",
+              role: "owner" as const,
+            },
+          ]
+        : kitchens,
+      mine: testAuthBypass
+        ? {
+            _id: "test-kitchen-id" as Id<"kitchens">,
+            name: "Test Kitchen",
+            ownerCalled: "Test User",
+            role: "owner" as const,
+          }
+        : mine,
+      theirs: testAuthBypass ? [] : theirs,
+      kitchenId: testAuthBypass
+        ? ("test-kitchen-id" as Id<"kitchens">)
+        : resolvedKitchen?._id ?? kitchenId,
+      kitchen: testAuthBypass
+        ? {
+            _id: "test-kitchen-id" as Id<"kitchens">,
+            name: "Test Kitchen",
+            ownerCalled: "Test User",
+            role: "owner" as const,
+          }
+        : resolvedKitchen,
+      isOwnBook: testAuthBypass ? true : status === "in",
+      canWrite: testAuthBypass ? true : status === "in",
+      canInvite: testAuthBypass ? true : mine !== null,
       setKitchenId,
       signOut,
     }),
     [
+      testAuthBypass,
       kitchenId,
       kitchens,
       me,

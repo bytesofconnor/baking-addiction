@@ -110,8 +110,101 @@ The `@vercel/analytics` package was removed because Analytics is not enabled in 
 Every PR must:
 
 1. **Pass CI:** All checks (lint, typecheck, build, content guard, smoke tests) must pass
-2. **Include verification:** Show evidence the change works — test output, build logs, screenshots, or script results
-3. **Include blast-radius note:** For non-trivial changes, document what could break and why it won't (or what testing proves it's safe)
+2. **State blast-radius tier:** LOW or HIGH, with justification (see Verification Tiers below)
+3. **Include verification:** Evidence appropriate to the tier (see Verification Tiers below)
+
+### Verification Tiers
+
+Use the `principle-blast-radius` skill to classify your change, then follow the tier's requirements:
+
+#### LOW Risk
+
+**Qualifies as LOW if:**
+- CSS or copy tweaks (colors, spacing, text)
+- Documentation changes
+- Single-component visual changes (no state, routing, or data flow changes)
+- Typo fixes
+
+**Verification required:**
+- Required CI checks (lint, typecheck, build, smoke tests) — already automated
+- One targeted Playwright assertion proving the change works (can be added to `tests/smoke.spec.ts`)
+- Optional: screenshot showing before/after
+
+**Example LOW verification:**
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+npm run preview & npx playwright test
+# Screenshot: artifacts/button-color-change.png
+```
+
+#### HIGH Risk
+
+**Qualifies as HIGH if:**
+- Convex schema changes (new tables, fields, indexes)
+- Mutations or queries (create, update, delete operations)
+- Auth flows (sign-in, permissions, tokens, kitchen code)
+- Admin flows (`/add` write desk, recipe create/edit/delete)
+- Data shape changes (how recipes, users, or photos are stored)
+- Routing changes (new routes, redirects, route guards)
+- Deploy or CI config changes (workflows, environment variables, build steps)
+- Dependency upgrades (especially Convex, React Router, auth libraries)
+- Anything touching production data or deployments
+
+**Verification required:**
+1. **Run the verify skill** for each feature the change touches:
+   ```bash
+   # Launch local stack with seed data
+   ./scripts/verify/launch.sh
+   
+   # Health check
+   ./scripts/verify/doctor.sh
+   
+   # Run verification for affected features
+   npx playwright test tests/verify/browse-recipes.spec.ts
+   npx playwright test tests/verify/admin-create-recipe.spec.ts
+   
+   # Cleanup
+   ./scripts/verify/cleanup.sh
+   ```
+
+2. **Attach screenshot evidence** in the PR Verification section:
+   - Screenshots from `artifacts/verify/screenshots/` showing the feature working
+   - If a user flow broke and you fixed it, show before/after or the error → fix progression
+
+3. **Verify side effects:** For mutations, prove the data was written (query Convex, check the recipe appears in the book)
+
+**Example HIGH verification:**
+
+```bash
+./scripts/verify/launch.sh
+./scripts/verify/doctor.sh
+npx playwright test tests/verify/admin-create-recipe.spec.ts
+./scripts/verify/cleanup.sh
+
+# Evidence attached:
+# - artifacts/verify/screenshots/admin-create-recipe-form.png
+# - artifacts/verify/screenshots/admin-create-recipe-published.png
+# - Convex query showing the new recipe row
+```
+
+### Blast Radius
+
+State your tier (LOW or HIGH) and justify it. What could this break? Why won't it?
+
+- Which components/routes/functions use the code you changed?
+- What testing proves it's safe?
+- What edge cases did you consider?
+
+Example:
+
+> **Tier: LOW**
+> **Blast radius:** Changes button color in `BookCover.tsx`, used only on home page (`/`). No state, routing, or data changes. Smoke tests confirm the page renders.
+
+> **Tier: HIGH**
+> **Blast radius:** Adds `photoUrl` field to `bakes` table schema. Mutations updated to handle optional photo. Affects recipe create/edit flows at `/add` and detail pages at `/bakes/:slug`. Verified with `.cursor/skills/verify-baking-addiction` — screenshot evidence attached showing photo upload and display working.
 
 ## Operations
 
