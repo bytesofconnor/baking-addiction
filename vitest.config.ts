@@ -5,11 +5,18 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: "happy-dom",
     globals: true,
-    setupFiles: ["./tests/setup.ts"],
-    include: ["**/*.test.{ts,tsx}"],
-    exclude: ["**/*.spec.{ts,tsx}", "**/node_modules/**"],
+    setupFiles: ["./vitest.setup.ts"],
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/tests/**",
+      "**/.{idea,git,cache,output,temp}/**",
+    ],
+    environmentMatchGlobs: [
+      ["convex/**/*.test.ts", "node"],
+      ["src/**/*.test.{ts,tsx}", "happy-dom"],
+    ],
   },
   resolve: {
     alias: {

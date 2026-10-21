@@ -6,6 +6,7 @@ import { PageTurn } from "@/components/PageTurn";
 import { BakePlate } from "@/components/BakePlate";
 import { BakerAvatar } from "@/components/BakerAvatar";
 import { PhotoFrame } from "@/components/PhotoFrame";
+import { PhotoGallery } from "@/components/PhotoGallery";
 import { RecipeSource } from "@/components/RecipeSource";
 import { SecretSauce } from "@/components/SecretSauce";
 import { CookbookBack } from "@/components/CookbookBack";
@@ -76,7 +77,15 @@ export function BakePage() {
     );
   }
 
-  const hero = photos?.[0];
+  // Ensure cover photo is first in gallery
+  const sortedPhotos = photos && photos.length > 0 && bake.coverStorageId
+    ? [
+        ...photos.filter((p) => p.storageId === bake.coverStorageId),
+        ...photos.filter((p) => p.storageId !== bake.coverStorageId),
+      ]
+    : photos || [];
+
+  const hero = sortedPhotos[0];
   const heroSrc = hero?.url ?? bake.coverUrl;
   const heroAlt = hero?.alt || bake.title;
   const [firstParagraph, ...restParagraphs] = bake.story
@@ -91,6 +100,12 @@ export function BakePage() {
     Boolean(firstParagraph) ||
     restParagraphs.length > 0 ||
     Boolean(bake.outcome);
+
+  // Prepare photos for gallery (filter out null URLs, already sorted by cover)
+  const galleryPhotos =
+    sortedPhotos.length > 0
+      ? sortedPhotos.filter((p) => p.url).map((p) => ({ url: p.url!, alt: p.alt }))
+      : [];
 
   return (
     <article className="bake-leaf">
@@ -114,7 +129,9 @@ export function BakePage() {
 
       <header className="bake-leaf-hero">
         <div className="bake-leaf-hero-photo">
-          {heroSrc ? (
+          {galleryPhotos.length > 0 ? (
+            <PhotoGallery photos={galleryPhotos} title={bake.title} />
+          ) : heroSrc ? (
             <PhotoFrame src={heroSrc} alt={heroAlt} size="hero" />
           ) : (
             <div className="book-portal-frame book-plate-hero">
