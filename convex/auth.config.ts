@@ -16,10 +16,7 @@ export default {
     },
     ...(isLocalDeployment
       ? [
-          Password({
-            id: "password-local-test",
-            // Only for local test verification - cannot be enabled on prod
-          }),
+          Password({ id: "password-local-test" }),
         ]
       : []),
   ],
