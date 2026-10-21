@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
+import { internalMutation, internalQuery } from "./_generated/server";
 import { inferKind } from "./lib/kinds";
 
 export const momSamples = [
@@ -446,5 +446,14 @@ export const signAsMom = internalMutation({
       patched += 1;
     }
     return patched;
+  },
+});
+
+export const countBakes = internalQuery({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const bakes = await ctx.db.query("bakes").collect();
+    return bakes.length;
   },
 });
