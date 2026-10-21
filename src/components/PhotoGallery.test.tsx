@@ -1,11 +1,13 @@
-import { describe, it, expect } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import { PhotoGallery } from "./PhotoGallery";
-
 /**
+ * @vitest-environment happy-dom
+ * 
  * PhotoGallery behavior tests.
  * These verify user-facing functionality, not implementation details.
  */
+
+import { describe, it, expect } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { PhotoGallery } from "./PhotoGallery";
 
 describe("PhotoGallery", () => {
   const mockPhotos = [

@@ -1,142 +1,204 @@
 /**
- * Photo mutation behavioral specifications.
- * These tests document expected behavior. Full integration testing
- * is performed via Playwright end-to-end tests.
+ * @vitest-environment node
+ * 
+ * Unit tests for photo mutation logic.
+ * Tests pure functions that implement the business logic.
  */
 
 import { describe, it, expect } from "vitest";
+import {
+  shouldSetAsCover,
+  selectNewCover,
+  validatePhotosForReorder,
+} from "./photos";
+import type { Id } from "./_generated/dataModel";
 
-/**
- * These tests document the expected behavior of photo mutations.
- * Full end-to-end verification is performed via Playwright tests.
- */
-
-describe("Photo attach behavior", () => {
-  it("sets first photo as cover when bake has no existing cover", () => {
-    type Bake = { coverStorageId?: string };
-    
-    const bake: Bake = { coverStorageId: undefined };
-    const setCover = false;
-    
-    // Logic: if no cover exists OR setCover is true, set new photo as cover
-    const shouldSetCover = !bake.coverStorageId || setCover;
-    expect(shouldSetCover).toBe(true);
+describe("shouldSetAsCover", () => {
+  it("returns true when bake has no cover", () => {
+    const bake = { coverStorageId: undefined };
+    expect(shouldSetAsCover(bake, false)).toBe(true);
   });
 
-  it("keeps existing cover when adding additional photos", () => {
-    type Bake = { coverStorageId?: string };
-    
-    const bake: Bake = { coverStorageId: "existing-storage" };
-    const setCover = false;
-    
-    const shouldSetCover = !bake.coverStorageId || setCover;
-    expect(shouldSetCover).toBe(false);
+  it("returns false when bake has cover and setCover is false", () => {
+    const bake = { coverStorageId: "existing" as Id<"_storage"> };
+    expect(shouldSetAsCover(bake, false)).toBe(false);
   });
 
-  it("overrides cover when setCover flag is true", () => {
-    type Bake = { coverStorageId?: string };
-    
-    const bake: Bake = { coverStorageId: "existing-storage" };
-    const setCover = true;
-    
-    const shouldSetCover = !bake.coverStorageId || setCover;
-    expect(shouldSetCover).toBe(true);
+  it("returns true when setCover flag is true", () => {
+    const bake = { coverStorageId: "existing" as Id<"_storage"> };
+    expect(shouldSetAsCover(bake, true)).toBe(true);
+  });
+
+  it("returns true when bake has no cover even if setCover is false", () => {
+    const bake = { coverStorageId: undefined };
+    expect(shouldSetAsCover(bake, false)).toBe(true);
   });
 });
 
-describe("Photo remove behavior", () => {
-  it("updates cover to next photo when removing the cover photo", () => {
-    type Photo = { _id: string; storageId: string };
-    
-    const coverStorageId = "storage-1";
-    const photos: Photo[] = [
-      { _id: "p1", storageId: "storage-1" },
-      { _id: "p2", storageId: "storage-2" },
-      { _id: "p3", storageId: "storage-3" },
+describe("selectNewCover", () => {
+  it("returns first remaining photo when cover is removed", () => {
+    const photos = [
+      { _id: "p1" as Id<"photos">, storageId: "s1" as Id<"_storage"> },
+      { _id: "p2" as Id<"photos">, storageId: "s2" as Id<"_storage"> },
+      { _id: "p3" as Id<"photos">, storageId: "s3" as Id<"_storage"> },
     ];
     
-    const removedPhotoId = "p1";
-    const removedPhoto = photos.find(p => p._id === removedPhotoId)!;
-    const isCoverRemoved = coverStorageId === removedPhoto.storageId;
-    
-    expect(isCoverRemoved).toBe(true);
-    
-    // When cover is removed, set cover to next remaining photo
-    const remaining = photos.filter(p => p._id !== removedPhotoId);
-    const newCover = remaining[0]?.storageId;
-    
-    expect(newCover).toBe("storage-2");
+    const newCover = selectNewCover(photos, "p1" as Id<"photos">);
+    expect(newCover).toBe("s2" as Id<"_storage">);
   });
 
-  it("clears cover when removing the last photo", () => {
-    type Photo = { _id: string; storageId: string };
+  it("returns undefined when last photo is removed", () => {
+    const photos = [
+      { _id: "p1" as Id<"photos">, storageId: "s1" as Id<"_storage"> },
+    ];
     
-    const photos: Photo[] = [{ _id: "p1", storageId: "storage-1" }];
-    
-    const removedPhotoId = "p1";
-    const remaining = photos.filter(p => p._id !== removedPhotoId);
-    const newCover = remaining[0]?.storageId;
-    
+    const newCover = selectNewCover(photos, "p1" as Id<"photos">);
     expect(newCover).toBeUndefined();
   });
 
-  it("deletes storage file to prevent orphaned files", () => {
-    // This test documents that photos.remove MUST call ctx.storage.delete
-    // to prevent storage leaks. Verification happens via code review.
-    expect(true).toBe(true);
+  it("returns next photo when middle photo is removed", () => {
+    const photos = [
+      { _id: "p1" as Id<"photos">, storageId: "s1" as Id<"_storage"> },
+      { _id: "p2" as Id<"photos">, storageId: "s2" as Id<"_storage"> },
+      { _id: "p3" as Id<"photos">, storageId: "s3" as Id<"_storage"> },
+    ];
+    
+    const newCover = selectNewCover(photos, "p2" as Id<"photos">);
+    // Returns first remaining, which is p1
+    expect(newCover).toBe("s1" as Id<"_storage">);
   });
 });
 
-describe("Photo reorder behavior", () => {
-  it("preserves new order after reordering", () => {
-    type PhotoId = string;
+describe("validatePhotosForReorder", () => {
+  const bakeId = "b1" as Id<"bakes">;
+
+  it("returns true when all photos belong to bake", () => {
+    const photos = [
+      { _id: "p1" as Id<"photos">, bakeId },
+      { _id: "p2" as Id<"photos">, bakeId },
+      { _id: "p3" as Id<"photos">, bakeId },
+    ];
     
-    const originalOrder: PhotoId[] = ["p1", "p2", "p3"];
-    const requestedOrder: PhotoId[] = ["p3", "p1", "p2"];
+    const photoIds = ["p1" as Id<"photos">, "p2" as Id<"photos">, "p3" as Id<"photos">];
+    expect(validatePhotosForReorder(photos, bakeId, photoIds)).toBe(true);
+  });
+
+  it("returns false when photo belongs to different bake", () => {
+    const photos = [
+      { _id: "p1" as Id<"photos">, bakeId },
+      { _id: "p2" as Id<"photos">, bakeId: "b2" as Id<"bakes"> }, // Different bake!
+      { _id: "p3" as Id<"photos">, bakeId },
+    ];
     
-    // After reorder mutation completes, query should return photos in new order
-    expect(requestedOrder).toEqual(["p3", "p1", "p2"]);
-    expect(requestedOrder).not.toEqual(originalOrder);
+    const photoIds = ["p1" as Id<"photos">, "p2" as Id<"photos">, "p3" as Id<"photos">];
+    expect(validatePhotosForReorder(photos, bakeId, photoIds)).toBe(false);
+  });
+
+  it("returns false when photo ID is missing", () => {
+    const photos = [
+      { _id: "p1" as Id<"photos">, bakeId },
+      { _id: "p2" as Id<"photos">, bakeId },
+      { _id: "p3" as Id<"photos">, bakeId },
+    ];
+    
+    // Only requesting 2 of 3 photos
+    const photoIds = ["p1" as Id<"photos">, "p2" as Id<"photos">];
+    expect(validatePhotosForReorder(photos, bakeId, photoIds)).toBe(false);
+  });
+
+  it("returns false when extra photo ID is included", () => {
+    const photos = [
+      { _id: "p1" as Id<"photos">, bakeId },
+      { _id: "p2" as Id<"photos">, bakeId },
+    ];
+    
+    // Requesting 3 photos but only 2 exist
+    const photoIds = ["p1" as Id<"photos">, "p2" as Id<"photos">, "p4" as Id<"photos">];
+    expect(validatePhotosForReorder(photos, bakeId, photoIds)).toBe(false);
+  });
+
+  it("validates reorder preserves photo count", () => {
+    const photos = [
+      { _id: "p1" as Id<"photos">, bakeId },
+      { _id: "p2" as Id<"photos">, bakeId },
+      { _id: "p3" as Id<"photos">, bakeId },
+    ];
+    
+    // Reordered but same photos
+    const photoIds = ["p3" as Id<"photos">, "p1" as Id<"photos">, "p2" as Id<"photos">];
+    expect(validatePhotosForReorder(photos, bakeId, photoIds)).toBe(true);
+  });
+});
+
+describe("Cover photo ordering in BakePage", () => {
+  it("sorts photos with cover first", () => {
+    type Photo = { storageId: Id<"_storage">; alt: string };
+    const coverStorageId = "s2" as Id<"_storage">;
+    
+    const photos: Photo[] = [
+      { storageId: "s1" as Id<"_storage">, alt: "Photo 1" },
+      { storageId: "s2" as Id<"_storage">, alt: "Photo 2 (cover)" },
+      { storageId: "s3" as Id<"_storage">, alt: "Photo 3" },
+    ];
+    
+    // BakePage sorting logic
+    const sorted = [
+      ...photos.filter((p) => p.storageId === coverStorageId),
+      ...photos.filter((p) => p.storageId !== coverStorageId),
+    ];
+    
+    expect(sorted[0]?.storageId).toBe("s2" as Id<"_storage">);
+    expect(sorted[0]?.alt).toBe("Photo 2 (cover)");
+    expect(sorted.length).toBe(3);
+  });
+
+  it("preserves order when no cover is specified", () => {
+    type Photo = { storageId: Id<"_storage">; alt: string };
+    const coverStorageId = undefined;
+    
+    const photos: Photo[] = [
+      { storageId: "s1" as Id<"_storage">, alt: "Photo 1" },
+      { storageId: "s2" as Id<"_storage">, alt: "Photo 2" },
+    ];
+    
+    // BakePage sorting logic (falls back to original order)
+    const sorted = coverStorageId
+      ? [
+          ...photos.filter((p) => p.storageId === coverStorageId),
+          ...photos.filter((p) => p.storageId !== coverStorageId),
+        ]
+      : photos;
+    
+    expect(sorted).toEqual(photos);
   });
 });
 
 describe("Legacy recipe compatibility", () => {
-  it("supports recipes with coverStorageId but no photos table entries", () => {
-    type Photo = { storageId: string };
-    
-    // Legacy recipe: has coverStorageId but no photos table rows
-    const coverStorageId = "legacy-storage";
+  it("falls back to coverStorageId when photos array is empty", () => {
+    type Photo = { storageId: Id<"_storage"> };
+    const coverStorageId = "s-legacy" as Id<"_storage">;
     const photos: Photo[] = [];
     
-    // BakePage logic: if no photos exist, fall back to coverStorageId
+    // BakePage fallback logic
     const displayPhoto = photos.length > 0 
       ? photos[0]?.storageId 
       : coverStorageId;
     
-    expect(displayPhoto).toBe("legacy-storage");
+    expect(displayPhoto).toBe("s-legacy" as Id<"_storage">);
   });
 
-  it("prefers photos table when both photos and coverStorageId exist", () => {
-    type Photo = { storageId: string; url: string | null; alt: string };
-    
+  it("uses photos table when available", () => {
+    type Photo = { storageId: Id<"_storage"> };
+    const coverStorageId = "s1" as Id<"_storage">;
     const photos: Photo[] = [
-      { storageId: "storage-1", url: "url1", alt: "Photo 1" },
-      { storageId: "storage-2", url: "url2", alt: "Photo 2" },
+      { storageId: "s1" as Id<"_storage"> },
+      { storageId: "s2" as Id<"_storage"> },
     ];
     
-    // Modern recipes use photos table (allows gallery)
-    const shouldUseGallery = photos.length > 0;
-    expect(shouldUseGallery).toBe(true);
-  });
-
-  it("shows decorative plate when recipe has no images", () => {
-    type Photo = never;
+    const displayPhoto = photos.length > 0 
+      ? photos[0]?.storageId 
+      : coverStorageId;
     
-    const coverStorageId = undefined;
-    const photos: Photo[] = [];
-    
-    const hasAnyImage = photos.length > 0 || !!coverStorageId;
-    expect(hasAnyImage).toBe(false);
-    // BakePage renders BakePlate component when no images
+    expect(displayPhoto).toBe("s1" as Id<"_storage">);
   });
 });

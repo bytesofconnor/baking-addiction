@@ -77,7 +77,15 @@ export function BakePage() {
     );
   }
 
-  const hero = photos?.[0];
+  // Ensure cover photo is first in gallery
+  const sortedPhotos = photos && photos.length > 0 && bake.coverStorageId
+    ? [
+        ...photos.filter((p) => p.storageId === bake.coverStorageId),
+        ...photos.filter((p) => p.storageId !== bake.coverStorageId),
+      ]
+    : photos || [];
+
+  const hero = sortedPhotos[0];
   const heroSrc = hero?.url ?? bake.coverUrl;
   const heroAlt = hero?.alt || bake.title;
   const [firstParagraph, ...restParagraphs] = bake.story
@@ -93,10 +101,10 @@ export function BakePage() {
     restParagraphs.length > 0 ||
     Boolean(bake.outcome);
 
-  // Prepare photos for gallery (filter out null URLs)
+  // Prepare photos for gallery (filter out null URLs, already sorted by cover)
   const galleryPhotos =
-    photos && photos.length > 0
-      ? photos.filter((p) => p.url).map((p) => ({ url: p.url!, alt: p.alt }))
+    sortedPhotos.length > 0
+      ? sortedPhotos.filter((p) => p.url).map((p) => ({ url: p.url!, alt: p.alt }))
       : [];
 
   return (
