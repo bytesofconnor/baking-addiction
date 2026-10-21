@@ -98,3 +98,45 @@ for (const route of publicRoutes) {
     }
   });
 }
+
+test("Button elements and search clear button have pointer cursor", async ({
+  page,
+}) => {
+  await page.goto("/join");
+  await page.waitForLoadState("networkidle");
+
+  const cursorValues = await page.evaluate(() => {
+    const testButton = document.createElement("button");
+    testButton.type = "button";
+    document.body.appendChild(testButton);
+    const buttonStyle = window.getComputedStyle(testButton);
+    const buttonCursor = buttonStyle.cursor;
+    document.body.removeChild(testButton);
+
+    const testInput = document.createElement("input");
+    testInput.type = "search";
+    document.body.appendChild(testInput);
+    const clearButtonStyle = window.getComputedStyle(
+      testInput,
+      "::-webkit-search-cancel-button",
+    );
+    const clearButtonCursor = clearButtonStyle.cursor;
+    document.body.removeChild(testInput);
+
+    const testRoleButton = document.createElement("div");
+    testRoleButton.setAttribute("role", "button");
+    document.body.appendChild(testRoleButton);
+    const roleButtonStyle = window.getComputedStyle(testRoleButton);
+    const roleButtonCursor = roleButtonStyle.cursor;
+    document.body.removeChild(testRoleButton);
+
+    return {
+      button: buttonCursor,
+      clearButton: clearButtonCursor,
+      roleButton: roleButtonCursor,
+    };
+  });
+
+  expect(cursorValues.button).toBe("pointer");
+  expect(cursorValues.roleButton).toBe("pointer");
+});
