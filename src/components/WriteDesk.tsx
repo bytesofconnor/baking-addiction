@@ -113,6 +113,7 @@ export function WriteDesk({
   >("idle");
   const [extracting, setExtracting] = useState(false);
   const [extractNote, setExtractNote] = useState<string | null>(null);
+  const [intakePhotoStorageIds, setIntakePhotoStorageIds] = useState<Id<"_storage">[]>([]);
   const [story, setStory] = useState("");
   const [bakedOn, setBakedOn] = useState(() =>
     new Date().toISOString().slice(0, 10),
@@ -362,6 +363,89 @@ export function WriteDesk({
       sourceTitle: card.sourceTitle,
       keep: true,
     }));
+  }
+
+  async function ingestMultiplePhotos(files: File[]) {
+    setError(null);
+    setExtracting(true);
+    setExtractNote(`Uploading ${files.length} photo${files.length > 1 ? 's' : ''}…`);
+    setIntake("photo");
+    setSourceKind("original");
+    
+    const uploadedIds: Id<"_storage">[] = [];
+    
+    try {
+      // Upload all photos
+      for (const [index, file] of files.entries()) {
+        setExtractNote(`Uploading photo ${index + 1} of ${files.length}…`);
+        
+        const uploadUrl = await generateUploadUrl(writeAccess);
+        const uploaded = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": file.type || "application/octet-stream" },
+          body: file,
+        });
+        
+        if (!uploaded.ok) {
+          throw new Error(`Photo ${index + 1} didn't upload. Try again.`);
+        }
+        
+        const { storageId } = (await uploaded.json()) as {
+          storageId: Id<"_storage">;
+        };
+        uploadedIds.push(storageId);
+      }
+      
+      // Store the uploaded photo IDs for use when saving
+      setIntakePhotoStorageIds(uploadedIds);
+      
+      // Set preview to first photo
+      setOriginIsImage(true);
+      setOriginPreview((current) => {
+        if (current) {
+          URL.revokeObjectURL(current);
+        }
+        return URL.createObjectURL(files[0]!);
+      });
+      setOriginStorageId(uploadedIds[0]!);
+      
+      // Extract text from first photo only
+      setExtractNote("Reading the first photo…");
+      const extracted = await extractCard({
+        ...writeAccess,
+        storageId: uploadedIds[0]!,
+        fileName: files[0]!.name,
+        mimeType: files[0]!.type || "image/jpeg",
+      });
+      
+      const drafts = draftsFromExtract(extracted.cards);
+      setPile(drafts);
+      setEditingIndex(null);
+      const first = drafts[0];
+      if (first) {
+        applyCardToForm(first);
+      }
+      
+      setExtractNote(
+        uploadedIds.length > 1
+          ? `Uploaded ${uploadedIds.length} photos. The first one is the cover. Check the recipe before saving.`
+          : extracted.usedAi
+            ? "Check this. Fix anything it got wrong."
+            : first && linesFromText(first.ingredients).length > 0
+              ? "Pulled the words off the photo. Check them."
+              : "Saved the photo. Add what went in so you can find it later.",
+      );
+      setScreen("card");
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Couldn't upload the photos.",
+      );
+      setIntakePhotoStorageIds([]);
+    } finally {
+      setExtracting(false);
+    }
   }
 
   async function ingestFile(file: File, nextIntake: Intake) {
@@ -736,8 +820,25 @@ export function WriteDesk({
         outcome: "",
         changes: readyChanges(changes),
         status,
-      });
-      if (coverStorageId) {
+      });      
+      // Attach photos: if we have multiple intake photos, attach them all in order
+      if (intakePhotoStorageIds.length > 0) {
+        try {
+          for (const [index, storageId] of intakePhotoStorageIds.entries()) {
+            await attachPhoto({
+              ...writeAccess,
+              bakeId: result.bakeId,
+              storageId,
+              alt: index === 0 ? title : `${title} - Photo ${index + 1}`,
+              setCover: index === 0, // First photo is the cover
+            });
+          }
+          setIntakePhotoStorageIds([]); // Clear after attaching
+        } catch {
+          toast.error("Saved, but some photos didn't attach. You can add them when you edit.");
+        }
+      } else if (coverStorageId) {
+        // Single photo from tray or origin
         try {
           await attachPhoto({
             ...writeAccess,
@@ -746,7 +847,7 @@ export function WriteDesk({
             alt: title,
           });
         } catch {
-          toast.error("Saved, but the photo didn’t attach. You can add it when you edit.");
+          toast.error("Saved, but the photo didn't attach. You can add it when you edit.");
         }
       }
       if (status === "published" && pile.length > 1 && editingIndex !== null) {
@@ -810,12 +911,27 @@ export function WriteDesk({
             ? "image/*"
             : "image/*,.pdf,.ppt,.pptx,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain"
         }
+        multiple={intake === "photo"}
+        capture={intake === "photo" ? "environment" : undefined}
         className="sr-only"
         onChange={(event) => {
-          const file = event.target.files?.[0];
+          const files = event.target.files;
           event.target.value = "";
-          if (file) {
-            void ingestFile(file, intake === "file" ? "file" : "photo");
+          
+          if (!files || files.length === 0) return;
+          
+          // For photo intake, handle multiple files
+          if (intake === "photo" && files.length > 1) {
+            const photoFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
+            if (photoFiles.length > 0) {
+              void ingestMultiplePhotos(photoFiles);
+            }
+          } else {
+            // Single file or PDF/PowerPoint intake
+            const file = files[0];
+            if (file) {
+              void ingestFile(file, intake === "file" ? "file" : "photo");
+            }
           }
         }}
       />
