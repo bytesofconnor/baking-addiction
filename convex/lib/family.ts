@@ -45,7 +45,7 @@ export async function getSignedInUser(
   if (testBypass) {
     const testUser = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", "test@local.dev"))
+      .withIndex("email", (q) => q.eq("email", "test@local.dev"))
       .unique();
     if (testUser) {
       return testUser;
