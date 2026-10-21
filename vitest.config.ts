@@ -5,10 +5,9 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: "jsdom",
+    environment: "happy-dom", // Use happy-dom for better CI compatibility
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
-    pool: "threads", // Use threads instead of forks for CI compatibility
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
