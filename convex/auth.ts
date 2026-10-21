@@ -1,12 +1,24 @@
 import Google from "@auth/core/providers/google";
 import { convexAuth } from "@convex-dev/auth/server";
+import { Password } from "@convex-dev/auth/providers/Password";
 
 function siteUrl(): string {
   return process.env.SITE_URL ?? "http://localhost:4821";
 }
 
+// Only enable password provider on local deployments for testing
+const isLocalDeployment =
+  process.env.CONVEX_SITE_URL?.startsWith("http://127.0.0.1") ||
+  process.env.CONVEX_SITE_URL?.startsWith("http://localhost") ||
+  !process.env.CONVEX_CLOUD_URL ||
+  process.env.CONVEX_CLOUD_URL.startsWith("http://127.0.0.1") ||
+  process.env.CONVEX_CLOUD_URL.startsWith("http://localhost");
+
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-  providers: [Google],
+  providers: [
+    Google,
+    ...(isLocalDeployment ? [Password({ id: "password-local-test" })] : []),
+  ],
   callbacks: {
     async redirect({ redirectTo }) {
       const fallback = siteUrl();
