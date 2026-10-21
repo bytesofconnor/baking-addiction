@@ -2,6 +2,7 @@ import Google from "@auth/core/providers/google";
 import { convexAuth } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
 
+/* eslint-disable @convex-dev/no-process-env */
 function siteUrl(): string {
   return process.env.SITE_URL ?? "http://localhost:4821";
 }
@@ -13,6 +14,7 @@ const isLocalDeployment =
   !process.env.CONVEX_CLOUD_URL ||
   process.env.CONVEX_CLOUD_URL.startsWith("http://127.0.0.1") ||
   process.env.CONVEX_CLOUD_URL.startsWith("http://localhost");
+/* eslint-enable @convex-dev/no-process-env */
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
@@ -43,7 +45,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         user.email?.split("@")[0] ||
         "Family";
       if (user.called !== called) {
-        await ctx.db.patch(userId, { called });
+        await ctx.db.patch("users", userId, { called });
       }
     },
   },
