@@ -6,6 +6,7 @@ import { PageTurn } from "@/components/PageTurn";
 import { BakePlate } from "@/components/BakePlate";
 import { BakerAvatar } from "@/components/BakerAvatar";
 import { PhotoFrame } from "@/components/PhotoFrame";
+import { PhotoGallery } from "@/components/PhotoGallery";
 import { RecipeSource } from "@/components/RecipeSource";
 import { SecretSauce } from "@/components/SecretSauce";
 import { CookbookBack } from "@/components/CookbookBack";
@@ -92,6 +93,12 @@ export function BakePage() {
     restParagraphs.length > 0 ||
     Boolean(bake.outcome);
 
+  // Prepare photos for gallery (filter out null URLs)
+  const galleryPhotos =
+    photos && photos.length > 0
+      ? photos.filter((p) => p.url).map((p) => ({ url: p.url!, alt: p.alt }))
+      : [];
+
   return (
     <article className="bake-leaf">
       <PageTitle title={`${bake.title} · ${SITE_SHORT}`} />
@@ -114,7 +121,9 @@ export function BakePage() {
 
       <header className="bake-leaf-hero">
         <div className="bake-leaf-hero-photo">
-          {heroSrc ? (
+          {galleryPhotos.length > 0 ? (
+            <PhotoGallery photos={galleryPhotos} title={bake.title} />
+          ) : heroSrc ? (
             <PhotoFrame src={heroSrc} alt={heroAlt} size="hero" />
           ) : (
             <div className="book-portal-frame book-plate-hero">

@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Link } from "react-router";
 import { BookConfirm } from "@/components/BookConfirm";
+import { PhotoManager } from "@/components/PhotoManager";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -88,6 +89,10 @@ export function WriteDesk({
       : null;
   const editBake = useQuery(
     api.bakes.getMineForEdit,
+    editBakeId ? { bakeId: editBakeId } : "skip",
+  );
+  const editPhotos = useQuery(
+    api.photos.listForBake,
     editBakeId ? { bakeId: editBakeId } : "skip",
   );
   const formErrorId = useId();
@@ -1364,6 +1369,19 @@ export function WriteDesk({
           </div>
         </form>
       )}
+
+      {screen === "tray" && editingBakeId && editPhotos !== undefined ? (
+        <PhotoManager
+          bakeId={editingBakeId}
+          photos={editPhotos}
+          coverStorageId={editBake?.coverStorageId}
+          writerToken={token}
+          kitchenId={kitchenId}
+          onPhotosChange={() => {
+            // Photos will refresh via Convex reactivity
+          }}
+        />
+      ) : null}
 
       {screen === "choose" && mine && mine.length > 0 ? (
         <details className="mt-16 border-t border-rule pt-6">

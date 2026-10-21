@@ -67,6 +67,7 @@ export const bakeTeaserValidator = v.object({
 
 export const photoValidator = v.object({
   _id: v.id("photos"),
+  storageId: v.id("_storage"),
   url: v.union(v.string(), v.null()),
   alt: v.string(),
 });
