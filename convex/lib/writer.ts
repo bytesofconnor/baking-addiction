@@ -41,8 +41,7 @@ export function newDeskToken(): string {
 }
 
 async function passwordFingerprint(): Promise<string> {
-  const password = env.WRITER_PASSWORD ?? "test-writer-pw-local";
-  return (await sha256Hex(password.trim())).slice(0, 24);
+  return (await sha256Hex(env.WRITER_PASSWORD.trim())).slice(0, 24);
 }
 
 async function getGate(ctx: MutationCtx) {

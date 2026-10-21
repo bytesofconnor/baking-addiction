@@ -9,7 +9,15 @@ const isLocalDeployment =
   process.env.CONVEX_CLOUD_URL.startsWith("http://localhost");
 
 export default {
-  providers: isLocalDeployment
-    ? [Password({ id: "password-local-test" })]
-    : [],
+  providers: [
+    {
+      domain: process.env.CONVEX_SITE_URL ?? "http://127.0.0.1:3211",
+      applicationID: "convex",
+    },
+    ...(isLocalDeployment
+      ? [
+          Password({ id: "password-local-test" }),
+        ]
+      : []),
+  ],
 };
