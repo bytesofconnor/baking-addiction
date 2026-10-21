@@ -54,6 +54,9 @@ jobs:
           # Dummy Convex URL for build — not connected to any deployment
           VITE_CONVEX_URL: https://preview-only-not-connected.convex.cloud
 
+      - name: Verify test auth bypass cannot ship
+        run: .github/scripts/verify-bypass-safety.sh
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
