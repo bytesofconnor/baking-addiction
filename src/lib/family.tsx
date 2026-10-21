@@ -73,7 +73,10 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     setKitchenReady(true);
   }, []);
 
-  const me = useQuery(api.familyAuth.me, isAuthenticated ? {} : "skip");
+  const me = useQuery(
+    api.familyAuth.me,
+    isAuthenticated || testAuthBypass ? {} : "skip",
+  );
   const ensureMine = useMutation(api.kitchens.ensureMine);
 
   const kitchens = me?.kitchens ?? [];
