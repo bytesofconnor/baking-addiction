@@ -40,6 +40,18 @@ export async function hashFamilyToken(token: string): Promise<string> {
 export async function getSignedInUser(
   ctx: QueryCtx | MutationCtx,
 ): Promise<Doc<"users"> | null> {
+  // Dev-only test bypass for local verification
+  const testBypass = process.env.TEST_AUTH_BYPASS === "true";
+  if (testBypass) {
+    const testUser = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", "test@local.dev"))
+      .unique();
+    if (testUser) {
+      return testUser;
+    }
+  }
+  
   const userId = await getAuthUserId(ctx);
   if (!userId) {
     return null;

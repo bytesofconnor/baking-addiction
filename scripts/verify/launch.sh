@@ -53,6 +53,12 @@ echo "✅ Convex is ready at http://127.0.0.1:3210"
 sleep 3
 
 echo ""
+echo "🔧 Setting backend environment variables..."
+npx convex env set TEST_AUTH_BYPASS true --yes 2>&1 || echo "⚠️  Could not set TEST_AUTH_BYPASS (continuing anyway)"
+npx convex env set WRITER_PASSWORD "test-writer-pw" --yes 2>&1 || echo "⚠️  Could not set WRITER_PASSWORD"
+npx convex env set SITE_URL "http://localhost:4821" --yes 2>&1 || echo "⚠️  Could not set SITE_URL"
+
+echo ""
 echo "🌱 Seeding sample data..."
 npx convex run seed:ensureSamples 2>&1 || {
   echo "⚠️  Seed failed, retrying in 5s..."

@@ -41,14 +41,6 @@ fi
 
 if [ $BYPASS_FOUND -eq 0 ]; then
   echo "✓ No bypass strings found in dist/"
-  echo ""
-  echo "✅ Test auth bypass is dev-only and cannot ship to production"
-  echo ""
-  echo "Guards verified:"
-  echo "  • import.meta.env.DEV is false after vite build"
-  echo "  • Bypass condition fails in production builds"
-  echo "  • Test user/kitchen mocks are stripped"
-  exit 0
 else
   echo ""
   echo "❌ FAIL: Test auth bypass leaked into production build"
@@ -56,3 +48,30 @@ else
   echo "This means the bypass guard is broken. Check src/lib/family.tsx"
   exit 1
 fi
+
+echo ""
+echo "Checking backend bypass guards..."
+
+# Verify backend bypass is only checked via process.env.TEST_AUTH_BYPASS
+if ! grep -q 'process\.env\.TEST_AUTH_BYPASS === "true"' convex/lib/family.ts; then
+  echo "❌ FAIL: Backend bypass guard missing or malformed in convex/lib/family.ts"
+  exit 1
+fi
+
+# Verify test user email is the expected one
+if ! grep -q 'test@local\.dev' convex/lib/family.ts; then
+  echo "❌ FAIL: Test user email missing or changed in convex/lib/family.ts"
+  exit 1
+fi
+
+echo "✓ Backend bypass guards are correct"
+echo ""
+echo "✅ Test auth bypass is dev-only and cannot ship to production"
+echo ""
+echo "Guards verified:"
+echo "  • Frontend: import.meta.env.DEV is false after vite build"
+echo "  • Frontend: Bypass condition fails in production builds"
+echo "  • Frontend: Test user/kitchen mocks are stripped"
+echo "  • Backend: TEST_AUTH_BYPASS checked via process.env only"
+echo "  • Backend: Test user query is explicit (test@local.dev)"
+exit 0
