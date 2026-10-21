@@ -60,7 +60,30 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     import.meta.env.VITE_TEST_AUTH_BYPASS === "true";
 
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const { signOut: authSignOut } = useAuthActions();
+  const { signOut: authSignOut, signIn } = useAuthActions();
+  
+  // Auto-signin for test bypass
+  useEffect(() => {
+    if (!testAuthBypass || isAuthenticated || isLoading) {
+      return;
+    }
+    // Sign in as test user using password provider
+    void signIn("password-local-test", {
+      email: "test@local.dev",
+      password: "test-password-local-only",
+      flow: "signIn",
+    }).catch((err) => {
+      // If user doesn't exist, try signUp flow
+      if (err?.message?.includes("not found") || err?.message?.includes("Invalid")) {
+        void signIn("password-local-test", {
+          email: "test@local.dev",
+          password: "test-password-local-only",
+          flow: "signUp",
+          name: "Test User",
+        });
+      }
+    });
+  }, [testAuthBypass, isAuthenticated, isLoading, signIn]);
   const [kitchenId, setKitchenState] = useState<Id<"kitchens"> | null>(null);
   const [kitchenReady, setKitchenReady] = useState(false);
   const [comingBack, setComingBack] = useState(isOAuthReturn);
@@ -73,10 +96,7 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     setKitchenReady(true);
   }, []);
 
-  const me = useQuery(
-    api.familyAuth.me,
-    isAuthenticated || testAuthBypass ? {} : "skip",
-  );
+  const me = useQuery(api.familyAuth.me, isAuthenticated ? {} : "skip");
   const ensureMine = useMutation(api.kitchens.ensureMine);
 
   const kitchens = me?.kitchens ?? [];
