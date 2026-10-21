@@ -98,3 +98,4 @@ for (const route of publicRoutes) {
     }
   });
 }
+
