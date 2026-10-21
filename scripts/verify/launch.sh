@@ -59,8 +59,18 @@ done
 
 echo "✅ Convex is ready at http://127.0.0.1:3210"
 
-# Wait a bit more for Convex to be fully initialized
-sleep 3
+# Wait for deployment to be initialized and set env vars
+echo ""
+echo "⏳ Waiting for Convex deployment to be configured..."
+sleep 10
+
+echo "🔧 Setting Convex environment variables..."
+npx convex env set WRITER_PASSWORD "test-writer-pw" 2>&1 || echo "⚠️  Could not set WRITER_PASSWORD"
+npx convex env set TEST_AUTH_BYPASS "true" 2>&1 || echo "⚠️  Could not set TEST_AUTH_BYPASS"
+npx convex env set SITE_URL "http://localhost:4821" 2>&1 || echo "⚠️  Could not set SITE_URL"
+
+# Wait for env vars to be applied
+sleep 5
 
 echo ""
 echo "🌱 Seeding sample data..."
