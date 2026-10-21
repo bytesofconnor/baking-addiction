@@ -10,7 +10,7 @@ export default defineConfig({
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
-      "**/tests/**", // Exclude Playwright tests
+      "**/tests/**",
       "**/.{idea,git,cache,output,temp}/**",
     ],
     environmentMatchGlobs: [
