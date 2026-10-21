@@ -8,40 +8,38 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$WORKSPACE_ROOT"
 
-echo "🔍 Checking local Convex configuration..."
+echo "🔍 Setting up local anonymous Convex backend..."
 
-if [ ! -f .env.local ]; then
-  echo "❌ .env.local not found. Run 'npx convex dev' first to generate it."
-  exit 1
-fi
+# Create .env.local WITHOUT CONVEX_DEPLOYMENT to trigger anonymous mode
+cat > .env.local << 'EOF'
+# Local anonymous Convex backend for verification (no CONVEX_DEPLOYMENT = anonymous mode)
+VITE_CONVEX_URL=http://127.0.0.1:3210
+VITE_CONVEX_SITE_URL=http://127.0.0.1:3211
+VITE_TEST_AUTH_BYPASS=true
+EOF
 
-if ! grep -q "CONVEX_DEPLOYMENT=dev:anonymous" .env.local; then
-  echo "❌ .env.local is not configured for local development."
-  echo "   Expected CONVEX_DEPLOYMENT=dev:anonymous-*"
-  echo "   Never run verification against production."
-  exit 1
-fi
-
-echo "✅ Convex is configured for local development"
+echo "✅ Created .env.local for anonymous Convex (no login required)"
 
 echo ""
-echo "🚀 Starting Convex dev server..."
+echo "🚀 Starting anonymous Convex dev server..."
 
+# Start Convex dev - will run in anonymous mode without CONVEX_DEPLOYMENT
 npx convex dev > /tmp/verify-convex.log 2>&1 &
 CONVEX_PID=$!
 echo $CONVEX_PID > /tmp/verify-convex.pid
 echo "   PID: $CONVEX_PID"
 echo "   Logs: /tmp/verify-convex.log"
 
-echo "⏳ Waiting for Convex to be ready..."
-sleep 5
+echo "⏳ Waiting for Convex to be ready (this may take 10-15 seconds)..."
+sleep 15
 
-MAX_WAIT=30
+MAX_WAIT=45
 WAITED=0
 until curl -s http://127.0.0.1:3210 > /dev/null 2>&1; do
   if [ $WAITED -ge $MAX_WAIT ]; then
     echo "❌ Convex did not start within ${MAX_WAIT}s"
-    echo "   Check logs: tail -f /tmp/verify-convex.log"
+    echo "   Last 30 lines of logs:"
+    tail -30 /tmp/verify-convex.log
     kill $CONVEX_PID 2>/dev/null || true
     exit 1
   fi
@@ -51,9 +49,16 @@ done
 
 echo "✅ Convex is ready at http://127.0.0.1:3210"
 
+# Wait a bit more for Convex to be fully initialized
+sleep 3
+
 echo ""
 echo "🌱 Seeding sample data..."
-npx convex run seed:ensureSamples
+npx convex run seed:ensureSamples 2>&1 || {
+  echo "⚠️  Seed failed, retrying in 5s..."
+  sleep 5
+  npx convex run seed:ensureSamples
+}
 
 echo ""
 echo "🚀 Starting Vite dev server..."
