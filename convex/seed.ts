@@ -267,10 +267,58 @@ export const populateIfEmpty = internalMutation({
   },
 });
 
+export const createTestUser = internalMutation({
+  args: {},
+  returns: v.object({
+    userId: v.id("users"),
+    kitchenId: v.id("kitchens"),
+  }),
+  handler: async (ctx) => {
+    const testEmail = "test@local.dev";
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", testEmail))
+      .unique();
+    
+    if (!user) {
+      const userId = await ctx.db.insert("users", {
+        email: testEmail,
+        name: "Test User",
+        called: "Test",
+        emailVerified: true,
+      });
+      user = (await ctx.db.get("users", userId))!;
+    }
+
+    let kitchen = await ctx.db
+      .query("kitchens")
+      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .unique();
+
+    if (!kitchen) {
+      const kitchenId = await ctx.db.insert("kitchens", {
+        name: "Test's recipes",
+        ownerId: user._id,
+      });
+      kitchen = (await ctx.db.get("kitchens", kitchenId))!;
+      
+      await ctx.db.insert("members", {
+        kitchenId: kitchen._id,
+        userId: user._id,
+        role: "owner",
+      });
+    }
+
+    return { userId: user._id, kitchenId: kitchen._id };
+  },
+});
+
 export const ensureSamples = internalMutation({
   args: {},
   returns: v.number(),
   handler: async (ctx) => {
+    const { userId, kitchenId } = await createTestUser.handler(ctx, {});
+    
     let inserted = 0;
     for (const sample of chrisSamples) {
       const already = await ctx.db
@@ -294,6 +342,8 @@ export const ensureSamples = internalMutation({
         ...sample,
         coverUrl: coverPath(sample.slug),
         status: "published",
+        kitchenId,
+        ownerId: userId,
         changes: [...sample.changes],
         ingredients: [...sample.ingredients],
         steps: [...sample.steps],
