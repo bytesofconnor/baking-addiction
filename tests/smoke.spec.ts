@@ -19,13 +19,18 @@ for (const route of publicRoutes) {
     const consoleErrors: string[] = [];
     const consoleWarnings: string[] = [];
     const failedRequests: string[] = [];
-    const vercelAnalytics404 = { seen: false };
+    let vercelAnalytics404 = false;
 
-    // Track failed requests (excluding expected Vercel Analytics 404 in preview)
+    // Track failed requests
     page.on("requestfailed", (request) => {
       const url = request.url();
+      
+      // Detect Vercel Analytics 404 (should not happen - Analytics was removed)
       if (url.includes("/_vercel/insights/")) {
-        vercelAnalytics404.seen = true;
+        vercelAnalytics404 = true;
+        failedRequests.push(
+          `⚠️  Vercel Analytics 404: ${url} (Analytics not configured - remove @vercel/analytics)`,
+        );
       } else {
         failedRequests.push(
           `${request.method()} ${url} - ${request.failure()?.errorText || "unknown"}`,
@@ -36,11 +41,14 @@ for (const route of publicRoutes) {
     page.on("console", (msg) => {
       const text = msg.text();
       if (msg.type() === "error") {
-        // Skip generic "Failed to load resource" 404 errors - these are expected
-        // in preview mode (e.g., Vercel Analytics script). Real JS errors will
-        // have different messages (syntax errors, undefined variables, etc.)
+        // Filter expected 404s for resources that don't exist in preview
+        // (but catch Vercel Analytics 404 as a real error since we removed it)
         if (text.includes("Failed to load resource") && text.includes("404")) {
-          // This is expected in preview mode - some resources aren't available locally
+          if (vercelAnalytics404) {
+            // This is a bug - Analytics was removed but might have been re-added
+            consoleErrors.push(text);
+          }
+          // Other 404s are expected in preview (e.g., optional third-party scripts)
           return;
         }
         consoleErrors.push(text);
@@ -60,11 +68,15 @@ for (const route of publicRoutes) {
     expect(bodyText).toBeTruthy();
     expect(bodyText!.trim().length).toBeGreaterThan(0);
 
-    // Report failed requests (diagnostic info)
+    // Report and fail on failed requests (including Analytics 404)
     if (failedRequests.length > 0) {
       console.error(
         `Failed requests on ${route.path}:\n${failedRequests.join("\n")}`,
       );
+      expect(
+        failedRequests,
+        `Unexpected failed requests on ${route.path}`,
+      ).toHaveLength(0);
     }
 
     // Report console errors (fail the test if any exist)

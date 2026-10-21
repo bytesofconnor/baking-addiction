@@ -7,7 +7,8 @@ import {
   useLocation,
   useSearchParams,
 } from "react-router";
-import { Analytics } from "@vercel/analytics/react";
+// Vercel Analytics removed - enable in Vercel dashboard if needed
+// import { Analytics } from "@vercel/analytics/react";
 import { BakePage } from "@/pages/BakePage";
 import { FaqPage } from "@/pages/FaqPage";
 import { JoinPage } from "@/pages/JoinPage";
@@ -88,12 +89,6 @@ function BookRoutes() {
   );
 }
 
-/** SPA pageviews for React Router — keep path + route in sync. */
-function VercelAnalytics() {
-  const { pathname } = useLocation();
-  return <Analytics path={pathname} route={pathname} />;
-}
-
 function AppShell() {
   return (
     <SeasonProvider>
@@ -103,7 +98,6 @@ function AppShell() {
             <Route path="/slip/:token" element={<SlipPage />} />
             <Route path="*" element={<BookRoutes />} />
           </Routes>
-          <VercelAnalytics />
         </PreviewProvider>
       </ToastProvider>
     </SeasonProvider>
