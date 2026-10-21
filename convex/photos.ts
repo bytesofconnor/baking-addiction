@@ -98,6 +98,9 @@ export const remove = mutation({
       });
     }
 
+    // Delete the storage file to prevent orphaned files
+    await ctx.storage.delete(photo.storageId);
+
     await ctx.db.delete("photos", args.photoId);
     return null;
   },
