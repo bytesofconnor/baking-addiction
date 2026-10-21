@@ -277,7 +277,7 @@ export const createTestUser = internalMutation({
     const testEmail = "test@local.dev";
     let user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", testEmail))
+      .withIndex("email", (q) => q.eq("email", testEmail))
       .unique();
     
     if (!user) {
@@ -323,7 +323,7 @@ export const ensureSamples = internalMutation({
     const testEmail = "test@local.dev";
     let user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", testEmail))
+      .withIndex("email", (q) => q.eq("email", testEmail))
       .unique();
     
     if (!user) {
