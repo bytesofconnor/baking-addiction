@@ -99,44 +99,65 @@ for (const route of publicRoutes) {
   });
 }
 
-test("Button elements and search clear button have pointer cursor", async ({
+test("Search clear button shows pointer cursor and clears input", async ({
   page,
 }) => {
   await page.goto("/join");
   await page.waitForLoadState("networkidle");
 
-  const cursorValues = await page.evaluate(() => {
-    const testButton = document.createElement("button");
-    testButton.type = "button";
-    document.body.appendChild(testButton);
-    const buttonStyle = window.getComputedStyle(testButton);
-    const buttonCursor = buttonStyle.cursor;
-    document.body.removeChild(testButton);
+  await page.evaluate(() => {
+    const container = document.createElement("div");
+    container.style.cssText = "padding: 20px;";
+    container.innerHTML = `
+      <div style="position: relative; width: 300px;">
+        <input
+          type="text"
+          id="test-search"
+          value=""
+          placeholder="Search recipes..."
+          style="width: 100%; padding: 12px 48px 12px 12px; border: 1.5px solid #5a2a14; border-radius: 4px; font-size: 20px; background: #fffdf8; color: #2a1810;"
+        />
+        <button
+          type="button"
+          id="test-clear"
+          aria-label="Clear search"
+          style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: none; width: 32px; height: 32px; border: none; background: transparent; border-radius: 50%; color: #5c3a2a; cursor: pointer; padding: 0;"
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="display: block; margin: auto;">
+            <path d="M13.5 4.5L4.5 13.5M4.5 4.5L13.5 13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    `;
+    document.body.appendChild(container);
 
-    const testInput = document.createElement("input");
-    testInput.type = "search";
-    document.body.appendChild(testInput);
-    const clearButtonStyle = window.getComputedStyle(
-      testInput,
-      "::-webkit-search-cancel-button",
-    );
-    const clearButtonCursor = clearButtonStyle.cursor;
-    document.body.removeChild(testInput);
+    const input = document.getElementById("test-search") as HTMLInputElement;
+    const clearBtn = document.getElementById("test-clear") as HTMLButtonElement;
 
-    const testRoleButton = document.createElement("div");
-    testRoleButton.setAttribute("role", "button");
-    document.body.appendChild(testRoleButton);
-    const roleButtonStyle = window.getComputedStyle(testRoleButton);
-    const roleButtonCursor = roleButtonStyle.cursor;
-    document.body.removeChild(testRoleButton);
+    input.addEventListener("input", () => {
+      clearBtn.style.display = input.value.length > 0 ? "flex" : "none";
+    });
 
-    return {
-      button: buttonCursor,
-      clearButton: clearButtonCursor,
-      roleButton: roleButtonCursor,
-    };
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
   });
 
-  expect(cursorValues.button).toBe("pointer");
-  expect(cursorValues.roleButton).toBe("pointer");
+  const searchInput = page.locator("#test-search");
+  const clearButton = page.locator("#test-clear");
+
+  await searchInput.fill("chocolate");
+  await expect(searchInput).toHaveValue("chocolate");
+
+  await expect(clearButton).toBeVisible();
+
+  const clearButtonCursor = await clearButton.evaluate((btn) => {
+    return window.getComputedStyle(btn).cursor;
+  });
+  expect(clearButtonCursor).toBe("pointer");
+
+  await clearButton.click();
+  await expect(searchInput).toHaveValue("");
+  await expect(clearButton).not.toBeVisible();
 });

@@ -38,10 +38,6 @@ button:not(:disabled),
   cursor: pointer;
 }
 
-input[type="search"]::-webkit-search-cancel-button {
-  cursor: pointer;
-}
-
 .book-binding {
   pointer-events: none;
   position: absolute;
