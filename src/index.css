@@ -33,6 +33,11 @@ body {
   );
 }
 
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
 .book-binding {
   pointer-events: none;
   position: absolute;

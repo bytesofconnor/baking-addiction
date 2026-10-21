@@ -120,20 +120,47 @@ export function CookbookExplorer({
         <Label htmlFor={searchId} id="cookbook-index-heading" className="sr-only">
           Search recipes
         </Label>
-        <Input
-          id={searchId}
-          type="search"
-          value={query}
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
-          enterKeyHint="search"
-          inputMode="search"
-          placeholder="Search recipes — pumpkin, chocolate…"
-          aria-describedby={countId}
-          className="book-search min-h-14 rounded-[4px] px-3 outline-offset-4"
-          onChange={(event) => write({ q: event.target.value })}
-        />
+        <div className="relative">
+          <Input
+            id={searchId}
+            type="text"
+            value={query}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint="search"
+            inputMode="search"
+            placeholder="Search recipes — pumpkin, chocolate…"
+            aria-describedby={countId}
+            className="book-search min-h-14 rounded-[4px] px-3 pr-12 outline-offset-4"
+            onChange={(event) => write({ q: event.target.value })}
+          />
+          {query.length > 0 && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-paper-press hover:text-ink focus-visible:bg-paper-press focus-visible:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cinnamon-deep"
+              onClick={() => write({ q: "" })}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M13.5 4.5L4.5 13.5M4.5 4.5L13.5 13.5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
       </form>
       <div className="book-filter-tray">
         {whose}
