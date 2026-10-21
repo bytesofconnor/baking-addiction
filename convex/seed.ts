@@ -320,12 +320,15 @@ export const ensureSamples = internalMutation({
   returns: v.number(),
   handler: async (ctx) => {
     // Create test user and kitchen for verification
+    // User will be created via Password provider signin in the frontend
     const testEmail = "test@local.dev";
     let user = await ctx.db
       .query("users")
       .withIndex("email", (q) => q.eq("email", testEmail))
       .unique();
     
+    // If user doesn't exist, they'll be created on first password signin
+    // For now, find or create a placeholder to assign recipes to
     if (!user) {
       const now = Date.now();
       const userId = await ctx.db.insert("users", {

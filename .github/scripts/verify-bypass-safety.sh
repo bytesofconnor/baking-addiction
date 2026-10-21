@@ -50,21 +50,28 @@ else
 fi
 
 echo ""
-echo "Checking backend bypass guards..."
+echo "Checking backend auth safety..."
 
-# Verify backend bypass is only checked via process.env.TEST_AUTH_BYPASS
-if ! grep -q 'process\.env\.TEST_AUTH_BYPASS === "true"' convex/lib/family.ts; then
-  echo "❌ FAIL: Backend bypass guard missing or malformed in convex/lib/family.ts"
+# Verify NO auth bypass exists in backend query/mutation handlers
+if grep -q 'TEST_AUTH_BYPASS' convex/lib/family.ts; then
+  echo "❌ FAIL: Dangerous TEST_AUTH_BYPASS check found in convex/lib/family.ts"
+  echo "   Backend must use real auth identity, not env-gated bypasses"
   exit 1
 fi
 
-# Verify test user email is the expected one
-if ! grep -q 'test@local\.dev' convex/lib/family.ts; then
-  echo "❌ FAIL: Test user email missing or changed in convex/lib/family.ts"
+# Verify Password provider is properly gated by local deployment check
+if ! grep -q 'isLocalDeployment' convex/auth.config.ts; then
+  echo "❌ FAIL: Password provider must be gated by isLocalDeployment check"
   exit 1
 fi
 
-echo "✓ Backend bypass guards are correct"
+if ! grep -q 'CONVEX_CLOUD_URL' convex/auth.config.ts; then
+  echo "❌ FAIL: Password provider gate must check CONVEX_CLOUD_URL"
+  exit 1
+fi
+
+echo "✓ Backend auth uses real identity (no env-only bypasses)"
+echo "✓ Password provider is properly gated for local deployments only"
 echo ""
 echo "✅ Test auth bypass is dev-only and cannot ship to production"
 echo ""
