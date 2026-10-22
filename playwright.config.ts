@@ -2,7 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Playwright config for PR checks (smoke + accessibility).
- * Runs against `vite preview` on port 4821.
+ * Runs against the local a11y fixture preview on port 4821 — never
+ * production Convex, never real credentials.
  * Accessibility specs set their own desktop (1280x800) and mobile (390x844) viewports.
  */
 export default defineConfig({
@@ -24,9 +25,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run preview",
+    command: "npm run preview:a11y",
     url: "http://localhost:4821",
     reuseExistingServer: !process.env.CI,
-    timeout: 30 * 1000,
+    timeout: 120 * 1000,
   },
 });

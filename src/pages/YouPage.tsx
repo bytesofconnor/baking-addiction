@@ -151,6 +151,7 @@ export function YouPage() {
                 type="file"
                 accept="image/*"
                 capture="user"
+                aria-label="Kitchen photo"
                 className="sr-only"
                 onChange={(event) => {
                   const file = event.target.files?.[0];

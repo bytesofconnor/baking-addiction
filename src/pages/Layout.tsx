@@ -10,10 +10,11 @@ import { SeasonDoodles } from "@/components/SeasonDoodles";
 import { pageForPath } from "@/lib/bookPages";
 import { useFamily } from "@/lib/family";
 import { usePreview } from "@/lib/preview";
+import { isA11yAdmin } from "@/test/a11yFixtureMode";
 import { useBookFlip } from "@/lib/useBookFlip";
 
 export function Layout() {
-  const preview = import.meta.env.DEV;
+  const preview = import.meta.env.DEV || isA11yAdmin();
   const family = useFamily();
   const { open } = usePreview();
   const { phase } = useArrive();

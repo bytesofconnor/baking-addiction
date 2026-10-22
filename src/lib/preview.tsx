@@ -19,6 +19,7 @@ import {
   type SavedMix,
 } from "@/lib/cookbookMix";
 import { useFamily } from "@/lib/family";
+import { isA11yAdmin, isPreviewTools } from "@/test/a11yFixtureMode";
 
 export type DummyKey = "mom" | "nana" | "brenda";
 
@@ -48,10 +49,9 @@ function readOpen(): boolean {
 export function PreviewProvider({ children }: { children: ReactNode }) {
   const [params, setParams] = useSearchParams();
   const rawAs = params.get("as");
-  const asKey =
-    import.meta.env.DEV && isDummyKey(rawAs) ? rawAs : null;
+  const asKey = isPreviewTools() && isDummyKey(rawAs) ? rawAs : null;
   const [open, setOpenState] = useState(
-    () => import.meta.env.DEV && readOpen(),
+    () => (import.meta.env.DEV && readOpen()) || isA11yAdmin(),
   );
 
   const setAs = useCallback(
@@ -79,7 +79,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
 
   const keep = useCallback(
     (path: string) => {
-      if (!import.meta.env.DEV) {
+      if (!isPreviewTools()) {
         return path;
       }
       const next = new URLSearchParams();
