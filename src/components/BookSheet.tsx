@@ -1,5 +1,6 @@
 import type { Ref } from "react";
 import { useLocation } from "react-router";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { WarmPages } from "@/components/WarmPages";
 import { BookHeadingProvider } from "@/lib/bookHeading";
@@ -104,6 +105,12 @@ export function BookFace({
   pathname: string;
   faceRef?: Ref<HTMLDivElement>;
 }) {
+  const section = sectionOf(pathname);
+  // Public join/FAQ paint their own footer on the cover or back board.
+  // The write desk stays a working page — no extra chrome under the form.
+  const showSiteFooter =
+    section !== "add" && section !== "faq" && section !== "join";
+
   return (
     <BookHeadingProvider>
       <div className="book-face" ref={faceRef}>
@@ -114,6 +121,7 @@ export function BookFace({
           </main>
         </div>
         <BookColophon pathname={pathname} />
+        {showSiteFooter ? <SiteFooter /> : null}
       </div>
     </BookHeadingProvider>
   );
