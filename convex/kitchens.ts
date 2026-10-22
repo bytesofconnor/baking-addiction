@@ -1,5 +1,10 @@
 import { v } from "convex/values";
-import { mutation, query, type MutationCtx } from "./_generated/server";
+import {
+  internalMutation,
+  mutation,
+  query,
+  type MutationCtx,
+} from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import {
   backfillConnections,
@@ -86,7 +91,7 @@ export const ensureMine = mutation({
         mine.name === "Mom's recipes" &&
         called.toLowerCase() !== "mom"
       ) {
-        await ctx.db.patch(mine._id, { name: recipesBookName(called) });
+        await ctx.db.patch("kitchens", mine._id, { name: recipesBookName(called) });
       }
     }
     await backfillConnections(ctx, user._id);
@@ -170,5 +175,36 @@ export const get = query({
     } catch {
       return null;
     }
+  },
+});
+
+export async function renameKitchenDoc(
+  ctx: MutationCtx,
+  id: Id<"kitchens">,
+  rawName: string,
+) {
+  const kitchen = await ctx.db.get("kitchens", id);
+  if (!kitchen) {
+    throw new Error("Kitchen not found.");
+  }
+  const name = rawName.trim();
+  if (name.length === 0) {
+    throw new Error("The book needs a name.");
+  }
+  if (name.length > 80) {
+    throw new Error("That name is too long.");
+  }
+  await ctx.db.patch("kitchens", id, { name });
+}
+
+export const renameKitchen = internalMutation({
+  args: {
+    id: v.id("kitchens"),
+    name: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await renameKitchenDoc(ctx, args.id, args.name);
+    return null;
   },
 });
