@@ -1,8 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Lightweight Playwright config for PR smoke tests.
+ * Playwright config for PR checks (smoke + accessibility).
  * Runs against `vite preview` on port 4821.
+ * Accessibility specs set their own desktop (1280x800) and mobile (390x844) viewports.
  */
 export default defineConfig({
   testDir: "./tests",

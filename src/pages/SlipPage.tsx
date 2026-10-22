@@ -69,7 +69,7 @@ export function SlipPage() {
         {recipe.photoUrl ? (
           <div className="book-portal-frame slip-frame">
             <div className="book-portal-frame-well">
-              <img src={recipe.photoUrl} alt="" />
+              <img src={recipe.photoUrl} alt={recipe.title} />
             </div>
           </div>
         ) : (

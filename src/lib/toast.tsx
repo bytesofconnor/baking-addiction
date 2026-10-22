@@ -86,7 +86,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="book-toast-region" aria-label="Notifications">
+      <section className="book-toast-region" aria-label="Notifications">
         {toasts.map((toast) => (
           <div
             key={toast.id}
@@ -114,7 +114,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             </button>
           </div>
         ))}
-      </div>
+      </section>
     </ToastContext.Provider>
   );
 }
