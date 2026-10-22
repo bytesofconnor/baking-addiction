@@ -11,7 +11,11 @@ export function SiteFooter({
   const year = new Date().getFullYear();
 
   return (
-    <footer className={`site-footer site-footer-${tone}`}>
+    <footer
+      className={
+        tone === "dark" ? "site-footer site-footer-on-dark" : "site-footer"
+      }
+    >
       <p className="site-footer-copy">
         © {year} {SITE_NAME} · Made with love in our family kitchen
       </p>
@@ -24,7 +28,6 @@ export function SiteFooter({
       </p>
       <nav className="site-footer-nav" aria-label="Footer">
         <Link to="/">Home</Link>
-        <Link to="/">All recipes</Link>
       </nav>
     </footer>
   );

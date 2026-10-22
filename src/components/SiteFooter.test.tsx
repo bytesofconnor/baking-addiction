@@ -8,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { SiteFooter } from "./SiteFooter";
-import { SITE_NAME } from "@/lib/site";
 
 const PERSON_NAME = /\b(chris|christine|barrett|connor|mom)\b/i;
 
@@ -30,7 +29,9 @@ describe("SiteFooter", () => {
     );
 
     expect(
-      screen.getByText(`© 2028 ${SITE_NAME} · Made with love in our family kitchen`),
+      screen.getByText(
+        "© 2028 The Family Recipe Book · Made with love in our family kitchen",
+      ),
     ).toBeInTheDocument();
   });
 
@@ -48,7 +49,7 @@ describe("SiteFooter", () => {
     expect(credit.textContent).toMatch(/sally/i);
   });
 
-  it("links Home and All recipes to the cookbook root", () => {
+  it("links Home to the cookbook root and has no All recipes link", () => {
     render(
       <MemoryRouter>
         <SiteFooter />
@@ -59,10 +60,21 @@ describe("SiteFooter", () => {
       "href",
       "/",
     );
-    expect(screen.getByRole("link", { name: "All recipes" })).toHaveAttribute(
-      "href",
-      "/",
+    expect(
+      screen.queryByRole("link", { name: "All recipes" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("gives the dark tone the class the stylesheet targets", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <SiteFooter tone="dark" />
+      </MemoryRouter>,
     );
+
+    const footer = container.querySelector("footer.site-footer");
+    expect(footer).toHaveClass("site-footer-on-dark");
+    expect(footer).not.toHaveClass("site-footer-dark");
   });
 
   it("does not name any person", () => {
