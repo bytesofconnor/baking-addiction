@@ -21,10 +21,11 @@ else
   echo "✅ PASS: No Sally's Baking Addiction image hotlinks found"
 fi
 
-# Check for copied Sally's branding text in code (excluding legitimate documentation)
+# Check for copied Sally's branding text in code (excluding legitimate documentation
+# and the site footer, which credits her by name and links out — no recipe copy.)
 echo ""
 echo "Checking for copied Sally's Baking Addiction branding text..."
-RESULTS=$(git grep -n -i "sally's baking addiction" -- '*.ts' '*.tsx' '*.js' '*.jsx' ':!AGENTS.md' ':!ops.md' ':!.github/' ':!convex/extractCard.ts' || true)
+RESULTS=$(git grep -n -i "sally's baking addiction" -- '*.ts' '*.tsx' '*.js' '*.jsx' ':!AGENTS.md' ':!ops.md' ':!.github/' ':!convex/extractCard.ts' ':!src/components/SiteFooter.tsx' ':!src/components/SiteFooter.test.tsx' || true)
 if [ -n "$RESULTS" ]; then
   echo "$RESULTS"
   echo "❌ FAIL: Found 'Sally's Baking Addiction' branding text in code"

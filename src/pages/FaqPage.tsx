@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import { SiteFooter } from "@/components/SiteFooter";
 import { PageTitle } from "@/lib/pageTitle";
 import { SITE_SHORT } from "@/lib/site";
 import { useFamily } from "@/lib/family";
@@ -85,6 +86,7 @@ export function FaqPage() {
             </p>
           ) : null}
         </footer>
+        <SiteFooter tone="dark" />
       </div>
     </div>
   );

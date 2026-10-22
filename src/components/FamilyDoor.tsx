@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { SiteFooter } from "@/components/SiteFooter";
 import { PageTitle } from "@/lib/pageTitle";
 import { markOAuthReturn, stashInvite } from "@/lib/oauthReturn";
 import { SITE_NAME, SITE_SHORT } from "@/lib/site";
@@ -79,6 +80,7 @@ export function JoinCoverLanding({ invited = false }: { invited?: boolean }) {
         Keep the recipes. Pass them on.
       </p>
       <GoogleComeIn cover />
+      <SiteFooter tone="dark" />
     </div>
   );
 }
@@ -109,6 +111,7 @@ export function FamilyDoor({
         {blurb}
       </p>
       <GoogleComeIn inviteToken={inviteToken} />
+      <SiteFooter />
     </div>
   );
 }
