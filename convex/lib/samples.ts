@@ -47,7 +47,7 @@ export function sampleCollapseKey(user: Doc<"users">): string {
     .trim()
     .toLowerCase()
     .replace(/[^a-z]/g, "");
-  if (called === "mom" || called === "christine" || called === "chris") {
+  if (called === "mom") {
     return "mom";
   }
   if (called === "nana" || called === "grandma") {

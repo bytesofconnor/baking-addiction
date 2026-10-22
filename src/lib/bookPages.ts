@@ -62,8 +62,7 @@ export function pageForPath(pathname: string): number {
   if (
     pathname === DESK_PATH ||
     pathname === "/admin" ||
-    pathname === "/write" ||
-    pathname === "/chris-desk"
+    pathname === "/write"
   ) {
     return BOOK_PAGE.desk;
   }
@@ -98,8 +97,7 @@ export function sectionOf(pathname: string): BookSection {
   if (
     pathname === DESK_PATH ||
     pathname === "/admin" ||
-    pathname === "/write" ||
-    pathname === "/chris-desk"
+    pathname === "/write"
   ) {
     return "add";
   }

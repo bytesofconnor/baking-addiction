@@ -75,7 +75,6 @@ function BookRoutes() {
         <Route path={DESK_PATH} />
         <Route path="/admin" element={<RedirectKeep to={DESK_PATH} />} />
         <Route path="/write" element={<RedirectKeep to={DESK_PATH} />} />
-        <Route path="/chris-desk" element={<RedirectKeep to={DESK_PATH} />} />
         <Route path="/join" element={<JoinPage />} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/family" element={<RedirectKeep to="/you/family" />} />

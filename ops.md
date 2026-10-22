@@ -1,15 +1,15 @@
 # Ops
 
-Family cookbook for Christine (Chris) Barrett: **The Family Recipe Book**.
-Private family book. Unlisted — `robots.txt` disallows everything. Chris writes. Family uses the URL. Not a blog. Sally is a source on some cards, not the name of the book. The line under the name is “Family favorites, all in one place.” Colors, header doodles, and monthly room artwork follow the Minnesota month (America/Chicago) on load. Family comes in with Google.
+Family cookbook: **The Family Recipe Book**.
+Private family book. Unlisted — `robots.txt` disallows everything. The baker writes. Family uses the URL. Not a blog. Sally is a source on some cards, not the name of the book. The line under the name is “Family favorites, all in one place.” Colors, header doodles, and monthly room artwork follow the Minnesota month (America/Chicago) on load. Family comes in with Google.
 
 ## Services
 
 | What | Where | Status |
 | --- | --- | --- |
 | Source | GitHub `bytesofconnor/baking-addiction` | https://github.com/bytesofconnor/baking-addiction |
-| App (SPA) | Vercel project `baking-addiction` | Team **Connor's projects** (`team_ynn7qy4sDXJcDEMHSuWLuXXo` / `connors-projects-408eaae2`). Project `prj_aFYDZXk50XMLtWsmraJ6lbd8eTAg` |
-| Backend + DB | Convex project `baking-addiction` | Team **connor-barrett**. Production deployment `beloved-lapwing-642` |
+| App (SPA) | Vercel project `baking-addiction` | Vercel team `team_ynn7qy4sDXJcDEMHSuWLuXXo` / `connors-projects-408eaae2`. Project `prj_aFYDZXk50XMLtWsmraJ6lbd8eTAg` |
+| Backend + DB | Convex project `baking-addiction` | Production deployment `beloved-lapwing-642` |
 | Domain | `thefamilyrecipebook.app` | Live on Vercel. Old alias `baking-addiction.vercel.app` still works. |
 | Kitchen AI | Vercel AI Gateway via Convex action `kitchen.remix` | `AI_GATEWAY_API_KEY` is **not** set. Falls back to notes in `convex/lib/kitchenLetter.ts`. |
 
@@ -24,10 +24,10 @@ Git remote: `github.com-personal:bytesofconnor/baking-addiction.git`
 | Vercel dashboard | https://vercel.com/connors-projects-408eaae2/baking-addiction |
 | Vercel domains | https://vercel.com/connors-projects-408eaae2/baking-addiction/settings/domains |
 | Convex HTTP | https://beloved-lapwing-642.convex.cloud |
-| Convex dashboard | https://dashboard.convex.dev/t/connor-barrett/baking-addiction/beloved-lapwing-642 |
+| Convex dashboard | https://dashboard.convex.dev (production deployment `beloved-lapwing-642`) |
 | Google OAuth credentials | https://console.cloud.google.com/apis/credentials |
 
-Production cookbook starts **empty**. Chris writes the real bakes. Dummy seed is `internalMutation` only — never run it on prod.
+Production cookbook starts **empty**. The baker writes the real bakes. Dummy seed is `internalMutation` only — never run it on prod.
 
 ### CI/CD Deployment
 
@@ -107,11 +107,10 @@ rm /tmp/convex-prod.env
 | `/add?code=…` | Magic link. Unlocks this device, then strips `code` from the URL. |
 | `/admin` | Redirect to `/add` |
 | `/write` | Redirect to `/add` |
-| `/chris-desk` | Legacy redirect to `/add` |
 
 Family signs in with Google. Session cookie `mba_desk` + `localStorage` `mba-desk-session` is only the write-desk kitchen code, ~400 days.
 
-Family gets `/join?code=` from the Family page. After Google, the invite opens that kitchen. Chris can still write at `/admin` with the kitchen code, or by signing in as a cook.
+Family gets `/join?code=` from the Family page. After Google, the invite opens that kitchen. The baker can still write at `/admin` with the kitchen code, or by signing in as a cook.
 
 ## Convex env
 
@@ -125,11 +124,11 @@ Set on the **Convex** deployment, not Vercel.
 | `JWKS` | Yes | Convex Auth public key. Generated with the private key. |
 | `AUTH_GOOGLE_ID` | Yes | Google OAuth client ID. |
 | `AUTH_GOOGLE_SECRET` | Yes | Google OAuth client secret. |
-| `AI_GATEWAY_API_KEY` | No | Convex. If missing, Ask the kitchen still answers from Chris's notes. |
+| `AI_GATEWAY_API_KEY` | No | Convex. If missing, Ask the kitchen still answers from the baker's notes. |
 
 ```bash
-npx convex env set WRITER_PASSWORD --deployment connor-barrett:baking-addiction:production
-npx convex env set AI_GATEWAY_API_KEY --deployment connor-barrett:baking-addiction:production
+npx convex env set WRITER_PASSWORD --deployment <convex-team>:baking-addiction:production
+npx convex env set AI_GATEWAY_API_KEY --deployment <convex-team>:baking-addiction:production
 ```
 
 Google OAuth (Google Cloud → APIs & Services → Credentials → Web application):
