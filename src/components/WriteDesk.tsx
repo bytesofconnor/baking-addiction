@@ -962,7 +962,7 @@ export function WriteDesk({
                   window.setTimeout(() => fileInput.current?.click(), 0);
                 }}
               >
-                Take or choose a photo
+                Take or choose photos
               </button>
               <button
                 type="button"
