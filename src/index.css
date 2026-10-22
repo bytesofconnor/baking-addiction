@@ -2156,6 +2156,13 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
   .room-shell[data-dock="true"] .sticky.bottom-0 {
     bottom: max(3.7rem, calc(3.15rem + env(safe-area-inset-bottom, 0px)));
   }
+
+  /* All page content needs bottom padding to clear the fixed dock. 
+     This ensures the last content element (like "Already in the book" on 
+     the Add page) isn't covered by the dock. */
+  .room-shell[data-dock="true"] .book-page-body {
+    padding-bottom: max(4.5rem, calc(3.5rem + env(safe-area-inset-bottom, 0px)));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
