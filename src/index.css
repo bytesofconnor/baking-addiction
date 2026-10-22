@@ -2031,6 +2031,12 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
       4.85rem,
       calc(3.85rem + env(safe-area-inset-bottom, 0px))
     );
+    /* Dock clearance for content:
+       - Dock bottom offset: 0.55rem (max with safe-area-inset-bottom)
+       - Dock height: ~3.6rem (0.3rem padding + 3rem tab + 0.3rem padding)
+       - Total: 4.15rem + small margin = 4.5rem
+       This variable ensures consistent clearance across sticky and regular content. */
+    --dock-clearance: max(4.5rem, calc(4rem + env(safe-area-inset-bottom, 0px)));
     padding-top: var(--room-pad-top);
     padding-bottom: var(--room-pad-bottom);
   }
@@ -2154,14 +2160,14 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 
   /* Sticky Save / footers sit above the dock, not under it. */
   .room-shell[data-dock="true"] .sticky.bottom-0 {
-    bottom: max(3.7rem, calc(3.15rem + env(safe-area-inset-bottom, 0px)));
+    bottom: var(--dock-clearance);
   }
 
   /* All page content needs bottom padding to clear the fixed dock. 
      This ensures the last content element (like "Already in the book" on 
      the Add page) isn't covered by the dock. */
   .room-shell[data-dock="true"] .book-page-body {
-    padding-bottom: max(4.5rem, calc(3.5rem + env(safe-area-inset-bottom, 0px)));
+    padding-bottom: var(--dock-clearance);
   }
 }
 
