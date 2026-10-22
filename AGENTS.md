@@ -91,7 +91,7 @@ This book is used by a non-technical person on phones and desktops. Treat access
 - **Reduced motion.** Honor `prefers-reduced-motion` for cover opens, page turns, and other motion. The book should still be usable with motion off.
 - **44px touch targets.** Primary controls (sign-in, dock tabs, FAQ summaries, save/submit, photo picker) must be at least 44×44px on mobile. Do not tuck actions under the bottom dock.
 - **Test both viewports.** Every UI change is verified at desktop (1280×800) and mobile (390×844). A desktop-only pass is not done.
-- **Add or update an a11y test** for any new page or interactive component. Public pages are covered by `tests/a11y.spec.ts` (`@axe-core/playwright`, keyboard, tap targets, dock clearance). If a surface cannot be reached without a live Convex backend, say so in the PR — do not skip or weaken the test.
+- **Add or update an a11y test** for any new page or interactive component. Public pages and signed-in write-desk / edit / You / family / admin pages are covered by `tests/a11y.spec.ts` (`@axe-core/playwright`, keyboard, tap targets, dock clearance). Signed-in scans use the local `vite --mode a11y` fixture — never production data or real credentials. If a surface still cannot be reached, say so in the PR — do not skip or weaken the test.
 
 ### What “prove it works” means here
 

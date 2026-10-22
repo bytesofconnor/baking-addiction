@@ -8,6 +8,7 @@
     "convex:dev": "convex dev",
     "build": "tsc -b && vite build",
     "preview": "vite preview --port 4821 --strictPort",
+    "preview:a11y": "vite build --mode a11y --outDir dist-a11y && vite preview --outDir dist-a11y --port 4821 --strictPort",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

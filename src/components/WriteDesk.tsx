@@ -913,6 +913,9 @@ export function WriteDesk({
         }
         multiple={intake === "photo"}
         capture={intake === "photo" ? "environment" : undefined}
+        aria-label={
+          intake === "photo" ? "Recipe photos" : "Recipe file"
+        }
         className="sr-only"
         onChange={(event) => {
           const files = event.target.files;
@@ -1124,7 +1127,11 @@ export function WriteDesk({
                 <div className="write-desk-photo">
                   <img
                     src={photoPreview ?? originPreview ?? ""}
-                    alt=""
+                    alt={
+                      title.trim()
+                        ? title.trim()
+                        : "Recipe photo"
+                    }
                     className="write-desk-photo-img"
                   />
                   <button
@@ -1501,7 +1508,7 @@ export function WriteDesk({
 
       {screen === "choose" && mine && mine.length > 0 ? (
         <details className="mt-16 border-t border-rule pt-6">
-          <summary className="cursor-pointer text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep">
+          <summary className="flex min-h-11 cursor-pointer items-center text-[17px] text-ink-soft underline decoration-rule underline-offset-4 hover:text-cinnamon-deep">
             Already in the book
             {mine.length === 1 ? " · 1 bake" : ` · ${mine.length} bakes`}
           </summary>

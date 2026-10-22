@@ -39,9 +39,11 @@ Follow this skill on every UI, form, or route change. Tie the work to:
 - Run `npx playwright test tests/a11y.spec.ts` after UI changes
 - Name the blast radius: dock, buttons, labels, and routes that reuse the primitive
 
-## Public pages CI can see
+## Pages CI can see
 
-Without a live Convex backend, Playwright can open the join cover (`/join`), the invited cover (`/join?invite=`), FAQ (`/faq`), and invalid slips (`/slip/short`). Signed-in book pages, the write desk, and the FamilyDoor that appears only after `peekInvite` succeeds are not in that scan — still build them to this bar, and say in the PR when a check could not run.
+Playwright scans public pages without a live Convex backend: the join cover (`/join`), the invited cover (`/join?invite=`), FAQ (`/faq`), and invalid slips (`/slip/short`).
+
+Signed-in write desk (`/add`), recipe edit (`/add?edit=`), You / family editors, and the admin preview bar are scanned with the local `vite --mode a11y` fixture (generic kitchen data). That build never talks to production Convex and never uses real credentials. The FamilyDoor that appears only after a live `peekInvite` is still out of reach — say so in the PR when a check could not run.
 
 ## Why It Matters
 

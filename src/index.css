@@ -176,6 +176,8 @@ button:not(:disabled),
   top: 0.12rem;
   right: 0;
   display: flex;
+  min-width: 44px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   margin: 0;
@@ -3951,6 +3953,7 @@ html[data-arrive="arrive"] .book[data-book-flip="back"] {
 }
 
 .book-tab {
+  min-width: 44px;
   min-height: 52px;
   padding: 0 0.1rem 4px;
   margin-bottom: -1px;
@@ -4377,11 +4380,19 @@ summary::-webkit-details-marker {
   background: transparent;
   color: inherit;
   font: inherit;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.admin-tab:focus-visible,
+.admin-text-btn:focus-visible,
+.admin-pill:focus-visible {
+  outline: 2px solid #e2b089;
+  outline-offset: 2px;
 }
 
 .admin-tab {
   display: inline-flex;
-  min-height: 44px;
   align-items: center;
   gap: 0.55rem;
   padding: 0 0.9rem;
@@ -4411,7 +4422,6 @@ summary::-webkit-details-marker {
 }
 
 .admin-text-btn {
-  min-height: 32px;
   color: var(--admin-muted);
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -4449,7 +4459,6 @@ summary::-webkit-details-marker {
 }
 
 .admin-pill {
-  min-height: 36px;
   padding: 0 0.55rem;
   border: 1px solid var(--admin-line);
   color: var(--admin-muted);

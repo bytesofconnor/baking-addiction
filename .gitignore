@@ -1,5 +1,6 @@
 node_modules
 dist
+dist-a11y
 .env
 .env.local
 .env*.local
