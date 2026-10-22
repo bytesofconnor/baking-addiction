@@ -1,0 +1,20 @@
+---
+description: Required accessibility bar for Family Recipe Book UI
+alwaysApply: true
+---
+
+# Accessibility
+
+Follow `.cursor/skills/accessibility/SKILL.md` on every UI, form, or route change.
+
+- Semantic HTML; no clickable `div` stand-ins for buttons or links
+- A real label on every form input (write desk is used by a non-technical person)
+- Alt text for recipe photos; empty alt only for decorative art
+- WCAG 2.1 AA contrast; visible `:focus-visible`; honor `prefers-reduced-motion`
+- Primary controls ≥ 44×44px on mobile; nothing hidden behind the bottom dock
+- Verify desktop 1280×800 and mobile 390×844
+- Add or update an a11y test (`tests/a11y.spec.ts`) for new pages or interactive components
+- Fail on serious/critical axe violations; do not disable rules or skip tests
+- If a surface cannot be reached without a live Convex backend, say so in the PR
+- Prove it works on the real page (axe + keyboard + tap targets), not “it compiles”
+- Never include any person's name in site content

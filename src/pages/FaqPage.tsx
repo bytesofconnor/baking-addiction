@@ -52,7 +52,7 @@ export function FaqPage() {
             Private, simple, and made to share.
           </p>
         </header>
-        <div className="book-back-list" aria-label="Frequently asked questions">
+        <section className="book-back-list" aria-label="Frequently asked questions">
           {FAQS.map((item, index) => (
             <details
               key={item.q}
@@ -74,7 +74,7 @@ export function FaqPage() {
               <p className="book-back-answer">{item.a}</p>
             </details>
           ))}
-        </div>
+        </section>
         <footer className="book-back-footer">
           <p className="book-back-proof">That’s the whole recipe.</p>
           {!signedIn ? (

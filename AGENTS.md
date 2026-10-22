@@ -75,6 +75,32 @@ Use these skills to maintain code quality and shipping standards:
 
 - **principle-laziness-protocol** (`.cursor/skills/principle-laziness-protocol/SKILL.md`): Use when refactoring or evaluating diff size. Bias toward deletion and the smallest change that solves the problem. Minimize the diff.
 
+- **accessibility** (`.cursor/skills/accessibility/SKILL.md`): Use for any UI, form, or route change. Accessibility is required, not extra.
+
+## Accessibility
+
+This book is used by a non-technical person on phones and desktops. Treat accessibility as a product requirement. Follow [`.cursor/skills/accessibility/SKILL.md`](./.cursor/skills/accessibility/SKILL.md) and the pstack principles: prove it works, test behavior not implementation, and check blast radius.
+
+### Must follow
+
+- **Semantic HTML.** Use headings, lists, `main`, `nav`, `button`, and labels that match what the control does. Do not rebuild native controls as clickable `div`s.
+- **Labels for every form input.** The write desk at `/add` is used by a non-technical person. Every input, select, textarea, and file picker needs a visible label (or a purpose-clear `aria-label` when a visible label would repeat chrome). Placeholder text is not a label.
+- **Alt text for recipe photos.** Real food photos describe the dish. Decorative art (cover boards, seasonal doodles, colophon marks) uses empty `alt` and stays out of the accessibility tree.
+- **Color contrast.** Body text, links, and controls must meet WCAG 2.1 AA. Do not rely on color alone to mean “active,” “error,” or “required.”
+- **Focus states.** Keyboard users must see a visible focus ring on every interactive control. Do not remove outlines without a stronger replacement.
+- **Reduced motion.** Honor `prefers-reduced-motion` for cover opens, page turns, and other motion. The book should still be usable with motion off.
+- **44px touch targets.** Primary controls (sign-in, dock tabs, FAQ summaries, save/submit, photo picker) must be at least 44×44px on mobile. Do not tuck actions under the bottom dock.
+- **Test both viewports.** Every UI change is verified at desktop (1280×800) and mobile (390×844). A desktop-only pass is not done.
+- **Add or update an a11y test** for any new page or interactive component. Public pages are covered by `tests/a11y.spec.ts` (`@axe-core/playwright`, keyboard, tap targets, dock clearance). If a surface cannot be reached without a live Convex backend, say so in the PR — do not skip or weaken the test.
+
+### What “prove it works” means here
+
+Run the real page, then read the real result: axe serious/critical violations, a keyboard-only pass that lands on the main controls with a visible ring, and a mobile pass where primary targets are 44px and content is not hidden behind the dock. “It compiles” and “the screenshot looks fine” are not proof.
+
+### Names in site content
+
+Never include any person's name in site content. Credit sources by site name and link, not by naming family members in the UI.
+
 ## Factory
 
 ### Production
@@ -90,7 +116,7 @@ Use these skills to maintain code quality and shipping standards:
 
 All PRs to `main` must pass:
 
-- **PR Checks / checks** — Lint (changed files only), typecheck, production build (`vite build`), Playwright smoke tests
+- **PR Checks / checks** — Lint (changed files only), typecheck, production build (`vite build`), Playwright smoke and accessibility tests
 - **PR Checks / content-guard** — Blocks Sally's Baking Addiction image hotlinks, copied branding text, production seed commands, and personal names
 
 ### Content Rules
