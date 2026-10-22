@@ -33,4 +33,4 @@ Example:
 
 ---
 
-**CI Checks:** This PR must pass lint, typecheck, build, content guard, and smoke tests before merge.
+**CI Checks:** This PR must pass lint, typecheck, build, content guard, and Playwright tests (smoke + accessibility) before merge.

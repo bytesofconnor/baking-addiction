@@ -70,7 +70,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run smoke tests
+      - name: Run Playwright tests
         run: npx playwright test
         env:
           # Dummy Convex URL for preview server
