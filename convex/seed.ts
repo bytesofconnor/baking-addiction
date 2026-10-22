@@ -1,8 +1,9 @@
+/* eslint-disable @convex-dev/explicit-table-ids */
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { inferKind } from "./lib/kinds";
 
-export const chrisSamples = [
+export const momSamples = [
   {
     slug: "pumpkin-muffins-extra-spice",
     title: "Pumpkin muffins, extra spice",
@@ -34,7 +35,7 @@ export const chrisSamples = [
       "Sunday morning, house already smelled like cinnamon before the oven beeped. I used Sally's pumpkin crumb muffins as the base and cooked them like I always do: more spice, no icing, chocolate on the crumb if kids are around.\n\nThey went in 22 minutes. The crumb stayed put. Next time I might warm the chocolate chips first so they don't sink.",
     sourceTitle: "Pumpkin Crumb Cake Muffins",
     sourceUrl: "https://sallysbakingaddiction.com/pumpkin-crumb-cake-muffins/",
-    bakerName: "Chris",
+    bakerName: "Mom",
     bakedOn: "2026-09-14",
     publishedAt: Date.UTC(2026, 8, 14),
     outcome: "15 muffins. Gone by noon. Doubled spice is the keeper.",
@@ -81,7 +82,7 @@ export const chrisSamples = [
       "The apples from the market were already sweet, so I cut the sugar in the filling and let the crumb do the talking. Same pan I always use. Served it warm with a little cream, not ice cream.\n\nThe edges got darker than Sally's photos. That's how we like it.",
     sourceTitle: "Classic Apple Crisp",
     sourceUrl: "https://sallysbakingaddiction.com/classic-apple-crisp/",
-    bakerName: "Chris",
+    bakerName: "Mom",
     bakedOn: "2026-09-02",
     publishedAt: Date.UTC(2026, 8, 2),
     outcome: "One 9×13. Enough for the table, none for tomorrow.",
@@ -123,7 +124,7 @@ export const chrisSamples = [
       "Four black bananas on the counter and a stick of butter I browned until it smelled like toffee. Sally's banana bread is the bones. The browned butter is the thing I write down so I don't forget.\n\nLoaf took a full hour. I tented it at 45 so the top wouldn't go too far.",
     sourceTitle: "My Favorite Banana Bread Recipe",
     sourceUrl: "https://sallysbakingaddiction.com/banana-bread/",
-    bakerName: "Chris",
+    bakerName: "Mom",
     bakedOn: "2026-08-21",
     publishedAt: Date.UTC(2026, 7, 21),
     outcome: "One loaf. Better on day two, toasted.",
@@ -171,7 +172,7 @@ export const chrisSamples = [
       "After-school batch. I chilled the dough while the kids did homework, then baked two trays so nobody had to wait. Sally's chewy cookies are the start. The flaky salt on top is how you can tell they're from this kitchen.\n\nI pull them a minute early. They finish on the sheet.",
     sourceTitle: "Chewy Chocolate Chip Cookies",
     sourceUrl: "https://sallysbakingaddiction.com/chewy-chocolate-chip-cookies/",
-    bakerName: "Chris",
+    bakerName: "Mom",
     bakedOn: "2026-08-08",
     publishedAt: Date.UTC(2026, 7, 8),
     outcome: "Two dozen. The salt is not optional.",
@@ -210,7 +211,7 @@ export const chrisSamples = [
       "Birthday week at school. I made Sally's vanilla cupcakes and went lighter on the swirl so they pack without smearing. Still enough frosting that a first grader knows it's a party.\n\nI used the small scoop. Twenty-four even tops.",
     sourceTitle: "Vanilla Cupcakes",
     sourceUrl: "https://sallysbakingaddiction.com/vanilla-cupcakes/",
-    bakerName: "Chris",
+    bakerName: "Mom",
     bakedOn: "2026-07-19",
     publishedAt: Date.UTC(2026, 6, 19),
     outcome: "Two dozen. Traveled. Came home empty.",
@@ -234,7 +235,7 @@ export function coverPath(slug: string) {
 }
 
 const SAMPLE_COVER_SLUGS = new Set([
-  ...chrisSamples.map((sample) => sample.slug),
+  ...momSamples.map((sample) => sample.slug),
   "nana-rhubarb-crumble",
   "nana-caramel-rolls",
   "brenda-thursday-brownies",
@@ -253,7 +254,7 @@ export const populateIfEmpty = internalMutation({
     if (existing.length > 0) {
       return null;
     }
-    const first = chrisSamples[0];
+    const first = momSamples[0];
     return await ctx.db.insert("bakes", {
       ...first,
       coverUrl: coverPath(first.slug),
@@ -272,7 +273,7 @@ export const ensureSamples = internalMutation({
   returns: v.number(),
   handler: async (ctx) => {
     let inserted = 0;
-    for (const sample of chrisSamples) {
+    for (const sample of momSamples) {
       const already = await ctx.db
         .query("bakes")
         .withIndex("by_slug", (q) => q.eq("slug", sample.slug))
@@ -324,7 +325,7 @@ export const stampKinds = internalMutation({
   },
 });
 
-export const signAsChris = internalMutation({
+export const signAsMom = internalMutation({
   args: {},
   returns: v.number(),
   handler: async (ctx) => {
@@ -336,7 +337,7 @@ export const signAsChris = internalMutation({
           ? { ...change, why: "The kids asked. Keep it." }
           : change,
       );
-      const bakerNeedsUpdate = bake.bakerName !== "Chris";
+      const bakerNeedsUpdate = bake.bakerName !== "Mom";
       const crumbNeedsUpdate = crumb.some(
         (change, index) => change.why !== bake.changes[index]?.why,
       );
@@ -344,7 +345,7 @@ export const signAsChris = internalMutation({
         continue;
       }
       await ctx.db.patch(bake._id, {
-        bakerName: "Chris",
+        bakerName: "Mom",
         changes: crumb,
       });
       patched += 1;

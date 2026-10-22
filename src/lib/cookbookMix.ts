@@ -22,7 +22,7 @@ export function whoKey(called: string): string {
   ) {
     return "me";
   }
-  if (name === "mom" || name === "christine" || name === "chris") {
+  if (name === "mom") {
     return "mom";
   }
   if (name === "nana" || name === "grandma") {

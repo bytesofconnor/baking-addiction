@@ -2,7 +2,7 @@
 
 ## About This Project
 
-**The Family Recipe Book** is Chris's private family cookbook. This is not a public blog or recipe site — it's a personal collection of family favorites for Chris and her family to use.
+**The Family Recipe Book** is a private family cookbook. This is not a public blog or recipe site — it's a personal collection of family favorites.
 
 ## Content Rules
 
@@ -14,9 +14,13 @@ Many recipes are sourced from [Sally's Baking Addiction](https://sallysbakingadd
 - **Credit and link only** — maintain attribution as `source: "sally"` in the recipe data
 - Sally's content is copyrighted; we respect that by linking to the original, not duplicating it
 
-### Chris Edits Through Forms Only
+### The baker edits through forms only
 
-Chris does not write code or markdown. All recipe edits happen through the web forms at `/add` (the write desk). Never suggest that Chris edit code or markdown files directly.
+The baker does not write code or markdown. All recipe edits happen through the web forms at `/add` (the write desk). Never suggest editing code or markdown files directly.
+
+### No personal names or emails
+
+Never put real personal names or emails in code, docs, or site content. Use generic wording (the baker, Mom, or `SITE_NAME`). Content guard rejects personal names in tracked source and docs.
 
 ## Development Workflow
 
@@ -87,7 +91,7 @@ Use these skills to maintain code quality and shipping standards:
 All PRs to `main` must pass:
 
 - **PR Checks / checks** — Lint (changed files only), typecheck, production build (`vite build`), Playwright smoke tests
-- **PR Checks / content-guard** — Blocks Sally's Baking Addiction image hotlinks, copied branding text, and production seed commands
+- **PR Checks / content-guard** — Blocks Sally's Baking Addiction image hotlinks, copied branding text, production seed commands, and personal names
 
 ### Content Rules
 
@@ -96,6 +100,7 @@ Content guard enforces:
 - **No Sally's Baking Addiction hotlinks:** No `<img>` tags or URLs pointing to `sallysbakingaddiction.com` images
 - **No Sally's branding:** No copied recipe text, branding strings, or photo credits from Sally's site (credit with `source: "sally"` and link to original)
 - **No production seeds:** Never `convex run seed:` commands targeting production (`beloved-lapwing-642`)
+- **No personal names or emails:** Never put real personal names or emails in code, docs, or site content
 
 ### Vercel Analytics
 
@@ -125,4 +130,4 @@ See [`ops.md`](./ops.md) for:
 
 ## Contact
 
-This is Connor Barrett's project for his family. Questions? Open an issue or reach out directly.
+This is a family project. Questions? Open an issue.

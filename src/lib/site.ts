@@ -4,8 +4,7 @@ export const SITE_NAME = "The Family Recipe Book";
 export const SITE_SHORT = "The Family Recipe Book";
 export const SITE_LINE = "Family favorites, all in one place.";
 export const FAMILY_LINE = "Family favorites, all in one place.";
-export const BAKER_NAME = "Chris";
-export const BAKER_FULL_NAME = "Christine Barrett";
+export const BAKER_NAME = "Mom";
 
 export function pageHeading(
   pathname: string,
@@ -58,7 +57,7 @@ function recipeHeading(title: string): { lead: string; accent: string } {
   return { lead: title, accent: "" };
 }
 
-const MOM_NAMES = new Set(["mom", "chris", "christine"]);
+const MOM_NAMES = new Set(["mom"]);
 
 export function bookSignedName(called: string | undefined): string | undefined {
   const who = called?.trim() || "";
