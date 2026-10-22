@@ -1,0 +1,27 @@
+# Dependabot version updates.
+# npm: weekly. Minor and patch updates are grouped by production vs
+# development so major bumps arrive as individual pull requests.
+# github-actions: weekly, ungrouped.
+
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      production:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      development:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
