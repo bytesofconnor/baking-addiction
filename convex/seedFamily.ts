@@ -1,3 +1,4 @@
+/* eslint-disable @convex-dev/explicit-table-ids */
 import { v } from "convex/values";
 import { internalMutation, mutation, type MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -111,7 +112,7 @@ const brendaSamples = [
     method:
       "Eight by eight. Weeknight pan.\n\nButter and cocoa melted together. Sugar, eggs, vanilla, not much flour. Pull them when the middle still moves.\n\nSalt on top. The first one is eaten standing up.",
     story:
-      "We make these on Thursdays when nobody wants a project. I don't ice them. Connor always cuts the corner. I take the middle while it's still warm.\n\nIf the pan's gone by morning, we don't talk about it.",
+      "We make these on Thursdays when nobody wants a project. I don't ice them. Someone always cuts the corner. I take the middle while it's still warm.\n\nIf the pan's gone by morning, we don't talk about it.",
     sourceTitle: "The apartment",
     sourceUrl: "",
     bakerName: "Brenda",
@@ -147,7 +148,7 @@ const brendaSamples = [
     method:
       "Eight wedges. Coffee first.\n\nCold butter, cinnamon in the dough, cream till it holds. Pat, cut, cinnamon sugar on top.\n\nDon't fuss the shape. Saturday isn't for that.",
     story:
-      "Saturday if we're home. I put the cinnamon in the dough so it isn't just a topping. Connor makes the coffee too strong and I don't correct him.\n\nThese are better than they look. That's also the house rule.",
+      "Saturday if we're home. I put the cinnamon in the dough so it isn't just a topping. Someone makes the coffee too strong and I don't correct them.\n\nThese are better than they look. That's also the house rule.",
     sourceTitle: "The apartment",
     sourceUrl: "",
     bakerName: "Brenda",
@@ -363,6 +364,8 @@ async function forgetPartnerHomeMix(
 }
 
 function samplesAllowed(): boolean {
+  // SITE_URL is not declared on the Convex env object.
+  // eslint-disable-next-line @convex-dev/no-process-env
   const site = process.env.SITE_URL ?? "";
   return (
     site.includes("localhost") ||

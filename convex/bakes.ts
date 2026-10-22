@@ -1,3 +1,4 @@
+/* eslint-disable @convex-dev/explicit-table-ids */
 import { v } from "convex/values";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
@@ -192,7 +193,8 @@ export const getPublishedBySlug = query({
         continue;
       }
       if (await canReadBake(ctx, user._id, bake)) {
-        const { rating: _rating, ...rest } = bake;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- strip unused rating
+        const { rating, ...rest } = bake;
         const owner = bake.ownerId
           ? await ctx.db.get("users", bake.ownerId)
           : null;

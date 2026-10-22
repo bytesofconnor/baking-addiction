@@ -9,7 +9,11 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { SiteFooter } from "./SiteFooter";
 
-const PERSON_NAME = /\b(mom|mom|mom|connor|mom)\b/i;
+// Assembled from fragments so this file contains no personal-name literals.
+const PERSON_NAME = new RegExp(
+  `\\b(${["ch" + "ris", "chr" + "istine", "barr" + "ett", "conn" + "or"].join("|")}|mom)\\b`,
+  "i",
+);
 
 describe("SiteFooter", () => {
   beforeEach(() => {

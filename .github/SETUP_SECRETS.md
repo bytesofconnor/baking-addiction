@@ -46,7 +46,7 @@ To enable automatic deployment on push to main, you need to configure the follow
 ### 4. CONVEX_DEPLOY_KEY
 
 **How to get it:**
-1. Go to your Convex dashboard: https://dashboard.convex.dev/t/connor-barrett/baking-addiction/beloved-lapwing-642
+1. Go to your Convex dashboard for production deployment `beloved-lapwing-642`
 2. Navigate to Settings → API Keys
 3. Create a new "Deployment Key" or use an existing one
 4. Copy the key

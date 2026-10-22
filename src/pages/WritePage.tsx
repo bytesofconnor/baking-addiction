@@ -156,12 +156,12 @@ function KitchenDoor({
     >
       <PageTitle title={`Kitchen code · ${SITE_SHORT}`} />
       <WhiskMark className="h-10 w-10 text-cinnamon" />
-      <Kicker className="mt-4">For Mom</Kicker>
+      <Kicker className="mt-4">For the baker</Kicker>
       <h1 className="font-display mt-3 text-[2.5rem] leading-[1.1] tracking-tight">
         The kitchen door
       </h1>
       <p className="mt-4 text-[19px] leading-8 text-ink-soft">
-        Connor sent you a link. If it didn&apos;t open on its own, type the
+        You have a kitchen link. If it didn&apos;t open on its own, type the
         kitchen code once. This device will remember you.
       </p>
       <Label htmlFor="kitchen-code" className="mt-8">
@@ -171,7 +171,7 @@ function KitchenDoor({
         type="text"
         name="username"
         autoComplete="username"
-        defaultValue="mom"
+        defaultValue="baker"
         readOnly
         tabIndex={-1}
         aria-hidden="true"

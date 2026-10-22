@@ -48,6 +48,20 @@ else
   echo "✅ PASS: No production seed commands found"
 fi
 
+# Personal names in tracked source/docs. Exclude this script so the pattern
+# itself does not fail the check. git grep already skips .git.
+echo ""
+echo "Checking for personal names in tracked source and docs..."
+RESULTS=$(git grep -n -i -E 'chr''istine|\bchr''is\b|barr''ett' -- . ':!.github/scripts/content-guard.sh' || true)
+if [ -n "$RESULTS" ]; then
+  echo "$RESULTS"
+  echo "❌ FAIL: Found a personal name in tracked source or docs"
+  echo "   Never put real personal names or emails in code, docs, or site content."
+  EXIT_CODE=1
+else
+  echo "✅ PASS: No personal names in tracked source or docs"
+fi
+
 if [ $EXIT_CODE -eq 0 ]; then
   echo ""
   echo "✅ Content guard passed"

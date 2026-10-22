@@ -49,7 +49,9 @@ export const remix = action({
     const steps = (args.steps ?? []).map((line) => line.trim()).filter(Boolean);
 
     const apiKey = (
-      env.AI_GATEWAY_API_KEY ?? process.env.AI_GATEWAY_API_KEY
+      env.AI_GATEWAY_API_KEY ??
+      // eslint-disable-next-line @convex-dev/no-process-env
+      process.env.AI_GATEWAY_API_KEY
     )?.trim();
     if (!apiKey) {
       console.warn("Kitchen remix: AI_GATEWAY_API_KEY missing; using notes.");
@@ -72,7 +74,7 @@ export const remix = action({
         model: gateway(KITCHEN_MODEL),
         instructions: [
           `You write short notes from ${baker}'s kitchen counter for their family recipe book.`,
-          `This bake belongs to ${baker}. Always name them as ${baker} — never call them Mom, Mom, Mom, or Sally unless that is literally their name on this bake.`,
+          `This bake belongs to ${baker}. Always name them as ${baker} — do not substitute a different name.`,
           "Use they/them for the baker.",
           "Answer the cook's question directly with a concrete swap or omission for THIS bake.",
           "If they are missing an ingredient, say what to use instead (or how to leave it out) and how it changes the dish.",
