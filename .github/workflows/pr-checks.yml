@@ -5,10 +5,15 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   content-guard:
     name: content-guard
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,6 +25,8 @@ jobs:
 
   checks:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
