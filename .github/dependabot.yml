@@ -1,32 +1,36 @@
-# Dependabot version updates.
-# npm: weekly. Minor and patch updates are grouped by production vs
-# development so major bumps arrive as individual pull requests.
-# github-actions: weekly, ungrouped.
+# typescript-eslint@8.72.0 peers typescript <6.1.0, and no published
+# typescript-eslint release accepts TypeScript 7. Stay on TypeScript 6.
 
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: npm
+    directory: /
     schedule:
-      interval: "weekly"
+      interval: weekly
     groups:
-      production:
-        dependency-type: "production"
+      npm:
+        applies-to: version-updates
+        patterns:
+          - "*"
         update-types:
-          - "minor"
-          - "patch"
-      development:
-        dependency-type: "development"
-        update-types:
-          - "minor"
-          - "patch"
-    # typescript-eslint@8.72.0 peers typescript <6.1.0, and no published
-    # typescript-eslint release accepts TypeScript 7. Stay on TypeScript 6.
+          - major
+          - minor
+          - patch
     ignore:
-      - dependency-name: "typescript"
-        versions: ["7.x"]
+      - dependency-name: typescript
+        versions:
+          - 7.x
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "weekly"
+      interval: weekly
+    groups:
+      github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - major
+          - minor
+          - patch
