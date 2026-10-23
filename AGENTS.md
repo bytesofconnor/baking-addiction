@@ -115,6 +115,20 @@ Never include any person's name in site content. Credit sources by site name and
   - Convex production deployment (`beloved-lapwing-642`)
   - See [`ops.md`](./ops.md) for deployment details
 
+### Vercel builds
+
+Hobby accounts have a daily build limit.
+
+Dependabot opens one npm pull request and one GitHub Actions pull request each week. Both groups include major, minor, and patch updates. TypeScript 7.x stays ignored.
+
+`vercel.json` sets `ignoreCommand` to `bash scripts/vercel-ignore-build.sh`. Exit 0 skips the build. Exit 1 builds.
+
+The script skips a preview build whose branch starts with `dependabot/` or `cursor/`. It skips when `git diff --quiet HEAD^ HEAD -- .` finds no changes under the Vercel project root. It builds when `HEAD^` is missing. A production build still runs when that root changes, including on a `dependabot/` or `cursor/` branch.
+
+The project root is the repository root. `vercel.json` lives there, and the project has no separate root directory. A commit that only changes docs or workflows still changes `.`, so a Git build of that commit still runs. The docs-only skip applies when the changed files sit outside the directory Vercel builds.
+
+`.github/workflows/deploy.yml` is the only production deploy. It builds with the Vercel CLI and then deploys Convex. The project is not connected to Git. Do not connect Git while that workflow deploys. A connection would build each push to `main` twice. The workflow uploads a prebuilt output, so this skip command does not replace that production path.
+
 ### Required CI Checks
 
 All PRs to `main` must pass:
