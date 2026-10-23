@@ -79,12 +79,12 @@ export async function recordUnlockFailure(ctx: MutationCtx): Promise<void> {
   const failedAt = [...gate.failedAt.filter((at) => at > windowStart), now].slice(
     -20,
   );
-  await ctx.db.patch(gate._id, { failedAt });
+  await ctx.db.patch("deskGates", gate._id, { failedAt });
 }
 
 export async function clearUnlockFailures(ctx: MutationCtx): Promise<void> {
   const gate = await getGate(ctx);
-  await ctx.db.patch(gate._id, { failedAt: [] });
+  await ctx.db.patch("deskGates", gate._id, { failedAt: [] });
 }
 
 export async function createDeskSession(
@@ -141,7 +141,7 @@ export async function refreshDeskSession(
   ctx: MutationCtx,
   sessionId: Doc<"deskSessions">["_id"],
 ): Promise<void> {
-  await ctx.db.patch(sessionId, {
+  await ctx.db.patch("deskSessions", sessionId, {
     expiresAt: Date.now() + DESK_SESSION_MS,
   });
 }

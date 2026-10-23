@@ -1,6 +1,10 @@
-/* eslint-disable @convex-dev/explicit-table-ids */
 import { v } from "convex/values";
-import { internalMutation, mutation, type MutationCtx } from "./_generated/server";
+import {
+  env,
+  internalMutation,
+  mutation,
+  type MutationCtx,
+} from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { startKitchen } from "./kitchens";
 import {
@@ -183,7 +187,7 @@ async function retireDuplicate(
     .withIndex("by_viewer", (q) => q.eq("viewerId", extraId))
     .take(40);
   for (const link of outgoing) {
-    await ctx.db.delete(link._id);
+    await ctx.db.delete("connections", link._id);
     if (link.otherUserId !== keepId) {
       await connectPair(ctx, keepId, link.otherUserId);
     }
@@ -193,7 +197,7 @@ async function retireDuplicate(
     .withIndex("by_other", (q) => q.eq("otherUserId", extraId))
     .take(40);
   for (const link of incoming) {
-    await ctx.db.delete(link._id);
+    await ctx.db.delete("connections", link._id);
     if (link.viewerId !== keepId) {
       await connectPair(ctx, link.viewerId, keepId);
     }
@@ -224,7 +228,10 @@ async function sampleCook(
   const existing = await findByEmail(ctx, info.email);
   if (existing) {
     if (existing.called !== info.called) {
-      await ctx.db.patch(existing._id, { called: info.called, name: info.name });
+      await ctx.db.patch("users", existing._id, {
+        called: info.called,
+        name: info.name,
+      });
     }
     const fresh = await ctx.db.get("users", existing._id);
     if (fresh) {
@@ -331,15 +338,15 @@ async function writeCard(
   };
 
   if (mine) {
-    await ctx.db.patch(mine._id, fields);
+    await ctx.db.patch("bakes", mine._id, fields);
     return;
   }
   if (orphan && !orphan.ownerId) {
-    await ctx.db.patch(orphan._id, fields);
+    await ctx.db.patch("bakes", orphan._id, fields);
     return;
   }
   if (orphan && orphan.ownerId !== user._id) {
-    await ctx.db.patch(orphan._id, fields);
+    await ctx.db.patch("bakes", orphan._id, fields);
     return;
   }
   await ctx.db.insert("bakes", {
@@ -358,15 +365,13 @@ async function forgetPartnerHomeMix(
     .take(8);
   for (const mix of existing) {
     if (mix.name === "Home" && mix.isDefault) {
-      await ctx.db.patch(mix._id, { isDefault: false });
+      await ctx.db.patch("cookbookMixes", mix._id, { isDefault: false });
     }
   }
 }
 
 function samplesAllowed(): boolean {
-  // SITE_URL is not declared on the Convex env object.
-  // eslint-disable-next-line @convex-dev/no-process-env
-  const site = process.env.SITE_URL ?? "";
+  const site = env.SITE_URL ?? "";
   return (
     site.includes("localhost") ||
     site.includes("127.0.0.1") ||
@@ -464,7 +469,7 @@ export const clearSamples = internalMutation({
         .withIndex("by_viewer", (q) => q.eq("viewerId", sample._id))
         .take(80);
       for (const link of outgoing) {
-        await ctx.db.delete(link._id);
+        await ctx.db.delete("connections", link._id);
         connections += 1;
       }
       const incoming = await ctx.db
@@ -472,7 +477,7 @@ export const clearSamples = internalMutation({
         .withIndex("by_other", (q) => q.eq("otherUserId", sample._id))
         .take(80);
       for (const link of incoming) {
-        await ctx.db.delete(link._id);
+        await ctx.db.delete("connections", link._id);
         connections += 1;
       }
 
@@ -496,14 +501,14 @@ export const clearSamples = internalMutation({
             .withIndex("by_bake", (q) => q.eq("bakeId", bake._id))
             .take(40);
           for (const photo of photos) {
-            await ctx.db.delete(photo._id);
+            await ctx.db.delete("photos", photo._id);
           }
           const makes = await ctx.db
             .query("bakeMakes")
             .withIndex("by_bake", (q) => q.eq("bakeId", bake._id))
             .take(40);
           for (const make of makes) {
-            await ctx.db.delete(make._id);
+            await ctx.db.delete("bakeMakes", make._id);
           }
           const slips = await ctx.db
             .query("recipeSlips")
@@ -512,9 +517,9 @@ export const clearSamples = internalMutation({
             )
             .take(40);
           for (const slip of slips) {
-            await ctx.db.delete(slip._id);
+            await ctx.db.delete("recipeSlips", slip._id);
           }
-          await ctx.db.delete(bake._id);
+          await ctx.db.delete("bakes", bake._id);
           bakes += 1;
         }
         const members = await ctx.db
@@ -522,16 +527,16 @@ export const clearSamples = internalMutation({
           .withIndex("by_kitchen", (q) => q.eq("kitchenId", kitchen._id))
           .take(40);
         for (const member of members) {
-          await ctx.db.delete(member._id);
+          await ctx.db.delete("members", member._id);
         }
         const invites = await ctx.db
           .query("invites")
           .withIndex("by_kitchen", (q) => q.eq("kitchenId", kitchen._id))
           .take(40);
         for (const invite of invites) {
-          await ctx.db.delete(invite._id);
+          await ctx.db.delete("invites", invite._id);
         }
-        await ctx.db.delete(kitchen._id);
+        await ctx.db.delete("kitchens", kitchen._id);
       }
 
       const mixes = await ctx.db
@@ -539,10 +544,10 @@ export const clearSamples = internalMutation({
         .withIndex("by_viewer", (q) => q.eq("viewerId", sample._id))
         .take(40);
       for (const mix of mixes) {
-        await ctx.db.delete(mix._id);
+        await ctx.db.delete("cookbookMixes", mix._id);
       }
 
-      await ctx.db.delete(sample._id);
+      await ctx.db.delete("users", sample._id);
     }
 
     // Drop sample user ids from real people's saved mixes.
@@ -551,7 +556,7 @@ export const clearSamples = internalMutation({
     for (const mix of realMixes) {
       const next = mix.otherUserIds.filter((id) => !sampleIds.has(id));
       if (next.length !== mix.otherUserIds.length) {
-        await ctx.db.patch(mix._id, { otherUserIds: next });
+        await ctx.db.patch("cookbookMixes", mix._id, { otherUserIds: next });
       }
     }
 

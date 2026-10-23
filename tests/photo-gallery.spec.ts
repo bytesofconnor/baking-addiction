@@ -187,13 +187,10 @@ test.describe("Legacy Single-Image Recipe", () => {
   // These tests require real recipe data to be present
   // They verify backward compatibility but cannot run in CI without database seeding
   test.skip("displays single photo without gallery UI (when recipe exists)", async ({ page }) => {
-    // This tests backward compatibility with recipes that have only coverStorageId
-    // Note: In CI without real data, these routes may not exist or return empty content
-    const response = await page.goto("/bakes/legacy-recipe", { 
-      waitUntil: "networkidle" 
+    await page.goto("/bakes/legacy-recipe", {
+      waitUntil: "networkidle",
     });
-    
-    // Only test if we have a recipe page (not 404)
+
     const pageText = await page.textContent("body");
     const isRecipePage = pageText && !pageText.includes("not in the book");
     
@@ -225,11 +222,10 @@ test.describe("Legacy Single-Image Recipe", () => {
   });
 
   test.skip("recipe with no photos shows decorative plate (when recipe exists)", async ({ page }) => {
-    const response = await page.goto("/bakes/no-photo-recipe", {
-      waitUntil: "networkidle"
+    await page.goto("/bakes/no-photo-recipe", {
+      waitUntil: "networkidle",
     });
-    
-    // Only test if we have a recipe page (not 404 or "not in the book")
+
     const pageText = await page.textContent("body");
     const isRecipePage = pageText && !pageText.includes("not in the book");
     

@@ -18,7 +18,7 @@ export function cardFromText(raw: string, fileName?: string): ExtractedCard {
     .map((line) => line.replace(/^\s*[-*•\d.)]+\s*/, "").trim())
     .filter((line) => line.length > 0);
 
-  let title = lines[0] ?? fileName?.replace(/\.[a-z0-9]+$/i, "") ?? "";
+  const title = lines[0] ?? fileName?.replace(/\.[a-z0-9]+$/i, "") ?? "";
   const ingredients: string[] = [];
   const steps: string[] = [];
   let section: "ing" | "step" | "unk" = "unk";

@@ -1,4 +1,3 @@
-/* eslint-disable @convex-dev/explicit-table-ids */
 import { v } from "convex/values";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
@@ -325,7 +324,7 @@ export const removeMine = mutation({
     >();
     for (const photo of photos) {
       storageIds.add(photo.storageId);
-      await ctx.db.delete(photo._id);
+      await ctx.db.delete("photos", photo._id);
     }
     if (bake.coverStorageId) {
       storageIds.add(bake.coverStorageId);
@@ -342,7 +341,7 @@ export const removeMine = mutation({
       .withIndex("by_bake", (q) => q.eq("bakeId", bake._id))
       .take(80);
     for (const make of makes) {
-      await ctx.db.delete(make._id);
+      await ctx.db.delete("bakeMakes", make._id);
     }
 
     const slips = await ctx.db
@@ -350,10 +349,10 @@ export const removeMine = mutation({
       .withIndex("by_bake_and_creator", (q) => q.eq("bakeId", bake._id))
       .take(40);
     for (const slip of slips) {
-      await ctx.db.delete(slip._id);
+      await ctx.db.delete("recipeSlips", slip._id);
     }
 
-    await ctx.db.delete(bake._id);
+    await ctx.db.delete("bakes", bake._id);
     return null;
   },
 });
@@ -489,7 +488,7 @@ export const updateMine = mutation({
         ? (bake.publishedAt ?? Date.now())
         : undefined;
 
-    await ctx.db.patch(args.bakeId, {
+    await ctx.db.patch("bakes", args.bakeId, {
       title,
       story: args.story.trim(),
       sourceTitle: (args.sourceTitle ?? "").trim(),

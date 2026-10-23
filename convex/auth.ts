@@ -1,8 +1,9 @@
 import Google from "@auth/core/providers/google";
 import { convexAuth } from "@convex-dev/auth/server";
+import { env } from "./_generated/server";
 
 function siteUrl(): string {
-  return process.env.SITE_URL ?? "http://localhost:4821";
+  return env.SITE_URL ?? "http://localhost:4821";
 }
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
@@ -31,7 +32,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         user.email?.split("@")[0] ||
         "Family";
       if (user.called !== called) {
-        await ctx.db.patch(userId, { called });
+        await ctx.db.patch("users", userId, { called });
       }
     },
   },
