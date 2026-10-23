@@ -7,10 +7,7 @@ import { pathToFileURL } from "node:url";
  *   headRepo: string,
  *   baseRepo: string,
  *   baseRef: string,
- *   headRef: string,
- *   actor: string,
- *   draft: boolean,
- *   paths: string[]
+ *   draft: boolean
  * }} MergeSnapshot
  *
  * @typedef {{ merge: boolean, reason: string }} MergeDecision
@@ -32,23 +29,12 @@ import { pathToFileURL } from "node:url";
  * @typedef {{ sha: string }} DeployDecision
  */
 
-const CURSOR_BRANCH = /^cursor\/[^/]+$/;
 const TWO_MINUTES_MS = 2 * 60 * 1000;
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 
 /**
- * @param {string} path
- * @returns {boolean}
- */
-export function isProtectedPath(path) {
-  return (
-    path === "AGENTS.md" ||
-    path.startsWith(".github/") ||
-    path.startsWith(".cursor/rules/")
-  );
-}
-
-/**
+ * Same-repository pull requests to main merge. Forks stay open.
+ * Drafts stay open until GitHub will accept auto-merge.
  * @param {MergeSnapshot} snapshot
  * @returns {MergeDecision}
  */
@@ -62,17 +48,7 @@ export function decideMerge(snapshot) {
   if (snapshot.draft) {
     return { merge: false, reason: "draft" };
   }
-  if (snapshot.actor === "dependabot[bot]") {
-    return { merge: true, reason: "dependabot" };
-  }
-  if (CURSOR_BRANCH.test(snapshot.headRef)) {
-    const protectedPaths = snapshot.paths.filter(isProtectedPath);
-    if (protectedPaths.length > 0) {
-      return { merge: false, reason: "cursor branch touches a protected path" };
-    }
-    return { merge: true, reason: "cursor branch" };
-  }
-  return { merge: false, reason: "not a cursor branch or dependabot" };
+  return { merge: true, reason: "same repository" };
 }
 
 /**

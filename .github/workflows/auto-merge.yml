@@ -1,8 +1,8 @@
-# GITHUB_TOKEN merges do not start push workflows. The main ruleset waits
-# for the checks and content-guard jobs, so this workflow runs again when
-# PR Checks succeeds and then calls Deploy to Vercel with the merge commit.
-# dependabot/fetch-metadata@v3 still publishes update-type. The log records
-# it. The value is not a merge gate.
+# Listens to pull_request only. A merge made with GITHUB_TOKEN does not
+# start the push trigger on Deploy to Vercel, so that workflow also listens
+# for a successful PR Checks run and deploys the squash commit.
+# Native auto-merge waits for the ruleset's required checks (checks and
+# content-guard). This job only arms the squash.
 
 name: Auto-merge safe pull requests
 
@@ -10,100 +10,46 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [main]
-  workflow_run:
-    workflows: ["PR Checks"]
-    types: [completed]
 
 permissions:
   contents: write
   pull-requests: write
 
 concurrency:
-  group: auto-merge-${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number || github.run_id }}
+  group: auto-merge-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: false
 
 jobs:
   gate:
-    if: github.event_name == 'pull_request' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request')
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.decide.outputs.sha }}
     steps:
-      - name: Checkout default branch
-        if: github.event_name == 'workflow_run'
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ github.sha }}
-
       - name: Checkout pull request merge
-        if: github.event_name == 'pull_request'
         uses: actions/checkout@v7
 
       - name: Read pull request
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EVENT_NAME: ${{ github.event_name }}
-          EVENT_ACTOR: ${{ github.actor }}
-          PR_FROM_EVENT: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          if [ -n "${PR_FROM_EVENT}" ] && [ "${PR_FROM_EVENT}" != "null" ]; then
-            N="${PR_FROM_EVENT}"
-          elif [ -n "${HEAD_SHA}" ]; then
-            N=$(gh pr list --search "${HEAD_SHA}" --state all --json number,headRefOid --jq ".[] | select(.headRefOid==\"${HEAD_SHA}\") | .number" | head -1)
-          else
-            N=""
-          fi
-          if [ -z "${N}" ]; then
-            echo "No pull request for this run"
-            echo "actor=" >> "$GITHUB_OUTPUT"
-            echo "number=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          VIEW=$(gh pr view "$N" --json headRefName,baseRefName,isDraft,headRepository)
-          USER_LOGIN=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${N}" --jq .user.login)
-          ACTOR="$USER_LOGIN"
-          if [ "$USER_LOGIN" = "dependabot[bot]" ] || [ "$USER_LOGIN" = "app/dependabot" ]; then
-            ACTOR="dependabot[bot]"
-          fi
-          if [ "$EVENT_NAME" = "pull_request" ] && [ "$EVENT_ACTOR" = "dependabot[bot]" ]; then
-            ACTOR="dependabot[bot]"
-          fi
-          gh pr diff "$N" --name-only > "$RUNNER_TEMP/paths.txt"
+          VIEW=$(gh pr view "$PR_NUMBER" --json baseRefName,isDraft,headRepository)
           jq -n \
-            --arg headRepo "$(jq -r .headRepository.nameWithOwner <<<"$VIEW")" \
+            --arg headRepo "$(jq -r '.headRepository.nameWithOwner // empty' <<<"$VIEW")" \
             --arg baseRepo "$GITHUB_REPOSITORY" \
             --arg baseRef "$(jq -r .baseRefName <<<"$VIEW")" \
-            --arg headRef "$(jq -r .headRefName <<<"$VIEW")" \
-            --arg actor "$ACTOR" \
             --argjson draft "$(jq -r .isDraft <<<"$VIEW")" \
-            --rawfile paths "$RUNNER_TEMP/paths.txt" \
-            '{headRepo:$headRepo, baseRepo:$baseRepo, baseRef:$baseRef, headRef:$headRef, actor:$actor, draft:$draft, paths: ($paths | split("\n") | map(select(length>0)))}' \
+            '{headRepo:$headRepo, baseRepo:$baseRepo, baseRef:$baseRef, draft:$draft}' \
             > "$RUNNER_TEMP/snapshot.json"
-          echo "number=$N" >> "$GITHUB_OUTPUT"
-          echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
-
-      - name: Dependabot metadata
-        id: metadata
-        if: github.event_name == 'pull_request' && steps.pr.outputs.actor == 'dependabot[bot]'
-        continue-on-error: true
-        uses: dependabot/fetch-metadata@v3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Log Dependabot update type
-        if: github.event_name == 'pull_request' && steps.pr.outputs.actor == 'dependabot[bot]'
-        run: echo "update-type=${{ steps.metadata.outputs.update-type }}"
+          echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
 
       - name: Arm auto-merge
         id: decide
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
-          CHECKS_UPDATED_AT: ${{ github.event.workflow_run.updated_at }}
         run: |
           set -euo pipefail
           SHA=""
@@ -115,20 +61,16 @@ jobs:
           DECISION=$(node .github/scripts/auto-merge-decision.mjs merge < "$RUNNER_TEMP/snapshot.json")
           echo "$DECISION"
           if [ "$(jq -r .merge <<<"$DECISION")" = "true" ]; then
-            BEFORE=$(gh pr view "$PR_NUMBER" --json state,mergedAt,mergeCommit,mergedBy)
-            if [ "$(jq -r .state <<<"$BEFORE")" != "MERGED" ]; then
+            BEFORE=$(gh pr view "$PR_NUMBER" --json state,mergedAt,mergeCommit,mergedBy,autoMergeRequest)
+            if [ "$(jq -r .state <<<"$BEFORE")" != "MERGED" ] && [ "$(jq -r '.autoMergeRequest == null' <<<"$BEFORE")" = "true" ]; then
               gh pr merge --auto --squash "$PR_NUMBER"
             fi
             AFTER=$(gh pr view "$PR_NUMBER" --json state,mergedAt,mergeCommit,mergedBy)
-            CHECKS="null"
-            if [ "$EVENT_NAME" = "workflow_run" ] && [ -n "$CHECKS_UPDATED_AT" ]; then
-              CHECKS=$(jq -n --arg t "$CHECKS_UPDATED_AT" '$t')
-            fi
             jq -n \
-              --arg eventName "$EVENT_NAME" \
+              --arg eventName "pull_request" \
               --argjson before "$BEFORE" \
               --argjson after "$AFTER" \
-              --argjson checksUpdatedAt "$CHECKS" \
+              --argjson checksUpdatedAt null \
               '{
                 eventName: $eventName,
                 checksUpdatedAt: $checksUpdatedAt,
@@ -147,7 +89,7 @@ jobs:
               }' > "$RUNNER_TEMP/deploy.json"
             DEPLOY=$(node .github/scripts/auto-merge-decision.mjs deploy < "$RUNNER_TEMP/deploy.json")
             echo "$DEPLOY"
-            SHA=$(jq -r .sha <<<"$DEPLOY")
+            SHA=$(jq -r '.sha // empty' <<<"$DEPLOY")
           fi
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
 
