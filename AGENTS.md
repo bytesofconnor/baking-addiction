@@ -137,7 +137,7 @@ The `@vercel/analytics` package was removed because Analytics is not enabled in 
 
 ### Merge Policy
 
-**Auto-merge to main when all required checks are green** (owner granted 2026-10-20).
+Same-repository pull requests squash-merge to `main` when the required checks pass. Pull requests from forks stay open for review.
 
 ### Pull Request Requirements
 

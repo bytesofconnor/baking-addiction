@@ -1,3 +1,8 @@
+# Push deploys a merge made by a person. A merge made with GITHUB_TOKEN
+# does not start that push trigger, so a successful PR Checks run resolves
+# the squash commit and deploys it once. Auto-merge calls this workflow
+# directly when the squash finishes inside the pull_request job.
+
 name: Deploy to Vercel
 
 on:
@@ -10,19 +15,117 @@ on:
         description: Merge commit to deploy
         required: true
         type: string
+  workflow_run:
+    workflows: ["PR Checks"]
+    types: [completed]
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
-  group: deploy-production-${{ github.event_name == 'workflow_call' && inputs.sha || github.sha }}
+  group: deploy-production
   cancel-in-progress: false
 
 jobs:
+  resolve:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.decide.outputs.sha }}
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v7
+
+      - name: Resolve token merge
+        id: decide
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_FROM_EVENT: ${{ github.event.workflow_run.pull_requests[0].number }}
+          HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          CHECKS_UPDATED_AT: ${{ github.event.workflow_run.updated_at }}
+        run: |
+          set -euo pipefail
+          SHA=""
+          PR_NUMBER="${PR_FROM_EVENT:-}"
+          if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
+            if [ -n "${HEAD_REPO:-}" ] && [ -n "${HEAD_BRANCH:-}" ]; then
+              PR_NUMBER=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "${HEAD_REPO}:${HEAD_BRANCH}" --base main --state all --json number --jq '.[0].number // empty')
+            else
+              PR_NUMBER=""
+            fi
+          fi
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No pull request for this check run"
+            echo "sha=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          VIEW=$(gh pr view "$PR_NUMBER" --json baseRefName,isDraft,headRepository)
+          jq -n \
+            --arg headRepo "$(jq -r '.headRepository.nameWithOwner // empty' <<<"$VIEW")" \
+            --arg baseRepo "$GITHUB_REPOSITORY" \
+            --arg baseRef "$(jq -r .baseRefName <<<"$VIEW")" \
+            --argjson draft "$(jq -r .isDraft <<<"$VIEW")" \
+            '{headRepo:$headRepo, baseRepo:$baseRepo, baseRef:$baseRef, draft:$draft}' \
+            > "$RUNNER_TEMP/snapshot.json"
+          DECISION=$(node .github/scripts/auto-merge-decision.mjs merge < "$RUNNER_TEMP/snapshot.json")
+          echo "$DECISION"
+          if [ "$(jq -r .merge <<<"$DECISION")" != "true" ]; then
+            echo "sha=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          read_state() {
+            gh pr view "$PR_NUMBER" --json state,mergedAt,mergeCommit,mergedBy
+          }
+          BEFORE=$(read_state)
+          AFTER="$BEFORE"
+          for attempt in 1 2 3 4 5 6 7; do
+            state=$(jq -r .state <<<"$AFTER")
+            if [ "$state" = "MERGED" ] || [ "$state" = "CLOSED" ]; then
+              break
+            fi
+            if [ "$attempt" -lt 7 ]; then
+              sleep 15
+              AFTER=$(read_state)
+            fi
+          done
+          jq -n \
+            --arg eventName "workflow_run" \
+            --argjson before "$BEFORE" \
+            --argjson after "$AFTER" \
+            --arg checksUpdatedAt "${CHECKS_UPDATED_AT:-}" \
+            '{
+              eventName: $eventName,
+              checksUpdatedAt: (if $checksUpdatedAt == "" then null else $checksUpdatedAt end),
+              before: {
+                state: $before.state,
+                mergedAt: $before.mergedAt,
+                mergeCommitOid: (if $before.mergeCommit == null then null else $before.mergeCommit.oid end),
+                mergedBy: (if $before.mergedBy == null then null else $before.mergedBy.login end)
+              },
+              after: {
+                state: $after.state,
+                mergedAt: $after.mergedAt,
+                mergeCommitOid: (if $after.mergeCommit == null then null else $after.mergeCommit.oid end),
+                mergedBy: (if $after.mergedBy == null then null else $after.mergedBy.login end)
+              }
+            }' > "$RUNNER_TEMP/deploy.json"
+          DEPLOY=$(node .github/scripts/auto-merge-decision.mjs deploy < "$RUNNER_TEMP/deploy.json")
+          echo "$DEPLOY"
+          SHA=$(jq -r '.sha // empty' <<<"$DEPLOY")
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
   deploy:
-    # A merge made with GITHUB_TOKEN does not start this push trigger.
-    # Auto-merge calls this workflow with the merge commit instead.
-    if: github.event_name == 'workflow_call' || github.actor != 'github-actions[bot]'
+    needs: resolve
+    if: |
+      always() &&
+      (needs.resolve.result == 'success' || needs.resolve.result == 'skipped') &&
+      (
+        (github.event_name == 'push' && github.actor != 'github-actions[bot]') ||
+        github.event_name == 'workflow_call' ||
+        (github.event_name == 'workflow_run' && needs.resolve.outputs.sha != '')
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -30,7 +133,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.event_name == 'workflow_call' && inputs.sha || github.sha }}
+          ref: ${{ github.event_name == 'workflow_call' && inputs.sha || github.event_name == 'workflow_run' && needs.resolve.outputs.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -75,27 +178,27 @@ jobs:
         run: |
           echo "Waiting 10s for CDN to update..."
           sleep 10
-          
+
           # Fetch the production HTML and extract the bundle filename
           PROD_BUNDLE=$(curl -sL https://thefamilyrecipebook.app | grep -o 'assets/index-[^"]*\.js' | head -1)
-          
+
           if [ -z "$PROD_BUNDLE" ]; then
             echo "❌ Failed to extract bundle filename from production"
             exit 1
           fi
-          
+
           echo "Production bundle: $PROD_BUNDLE"
-          
+
           # Check local build output to get expected bundle name
           LOCAL_BUNDLE=$(grep -o 'assets/index-[^"]*\.js' .vercel/output/static/index.html | head -1)
-          
+
           if [ -z "$LOCAL_BUNDLE" ]; then
             echo "❌ Failed to extract bundle filename from local build"
             exit 1
           fi
-          
+
           echo "Expected bundle: $LOCAL_BUNDLE"
-          
+
           # Compare bundle filenames
           if [ "$PROD_BUNDLE" = "$LOCAL_BUNDLE" ]; then
             echo "✅ Production deployment verified - bundle matches build"
