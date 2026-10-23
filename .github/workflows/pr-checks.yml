@@ -31,6 +31,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      - name: Vercel ignore build
+        run: bash scripts/vercel-ignore-build.test.sh
+
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:

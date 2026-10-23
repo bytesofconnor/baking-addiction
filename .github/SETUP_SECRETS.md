@@ -73,12 +73,12 @@ If the workflow fails:
 3. Ensure the Vercel token has the right permissions
 4. Check that the Convex deployment key is valid for the production deployment
 
-## Alternative Method
+## One production deploy path
 
-If you prefer not to use secrets, you can connect Git directly to Vercel:
+`.github/workflows/deploy.yml` is the production deploy. It builds with the Vercel CLI and deploys Convex.
 
-```bash
-npx vercel git connect https://github.com/bytesofconnor/baking-addiction --yes --scope connors-projects-408eaae2
-```
+The Vercel project is not connected to Git. Do not run `vercel git connect` while that workflow deploys. A Git connection would start a second production build for the same push.
 
-Then use the alternative workflow file: `.github/workflows/deploy-alternative.yml`
+`ignoreCommand` in `vercel.json` applies to Git builds. It does not replace the workflow.
+
+`.github/workflows/deploy-alternative.yml` stays on `workflow_dispatch` so it does not deploy on push.
