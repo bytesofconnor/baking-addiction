@@ -63,12 +63,12 @@ export const save = mutation({
     if (args.makeDefault) {
       for (const mix of existing) {
         if (mix.isDefault && mix._id !== same?._id) {
-          await ctx.db.patch(mix._id, { isDefault: false });
+          await ctx.db.patch("cookbookMixes", mix._id, { isDefault: false });
         }
       }
     }
     if (same) {
-      await ctx.db.patch(same._id, {
+      await ctx.db.patch("cookbookMixes", same._id, {
         name,
         isDefault: args.makeDefault || same.isDefault,
       });
@@ -105,10 +105,10 @@ export const setDefault = mutation({
       .take(8);
     for (const other of existing) {
       if (other.isDefault && other._id !== mix._id) {
-        await ctx.db.patch(other._id, { isDefault: false });
+        await ctx.db.patch("cookbookMixes", other._id, { isDefault: false });
       }
     }
-    await ctx.db.patch(mix._id, { isDefault: true });
+    await ctx.db.patch("cookbookMixes", mix._id, { isDefault: true });
     return null;
   },
 });

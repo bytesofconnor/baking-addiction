@@ -183,10 +183,10 @@ export const setCalled = mutation({
     if (called.length > 32) {
       throw new Error("A little shorter — it has to fit in the corner.");
     }
-    await ctx.db.patch(user._id, { called });
+    await ctx.db.patch("users", user._id, { called });
     const kitchen = await ownedKitchen(ctx, user._id);
     if (kitchen && called.toLowerCase() !== "mom") {
-      await ctx.db.patch(kitchen._id, { name: recipesBookName(called) });
+      await ctx.db.patch("kitchens", kitchen._id, { name: recipesBookName(called) });
     }
     return null;
   },
@@ -207,7 +207,7 @@ export const setAvatar = mutation({
   handler: async (ctx, args) => {
     const user = await requireSignedIn(ctx);
     const previous = user.avatarStorageId;
-    await ctx.db.patch(user._id, { avatarStorageId: args.storageId });
+    await ctx.db.patch("users", user._id, { avatarStorageId: args.storageId });
     if (previous && previous !== args.storageId) {
       await ctx.storage.delete(previous);
     }
@@ -221,7 +221,7 @@ export const clearAvatar = mutation({
   handler: async (ctx) => {
     const user = await requireSignedIn(ctx);
     const previous = user.avatarStorageId;
-    await ctx.db.patch(user._id, { avatarStorageId: undefined });
+    await ctx.db.patch("users", user._id, { avatarStorageId: undefined });
     if (previous) {
       await ctx.storage.delete(previous);
     }

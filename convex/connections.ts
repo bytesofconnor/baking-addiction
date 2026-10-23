@@ -69,7 +69,7 @@ export const setCalled = mutation({
     if (called.length > 32) {
       throw new Error("A little shorter — it's a name in your book.");
     }
-    await ctx.db.patch(link._id, {
+    await ctx.db.patch("connections", link._id, {
       called: called.length > 0 ? called : "",
     });
     return null;
@@ -93,7 +93,7 @@ export const setIncluded = mutation({
     if (!link) {
       throw new Error("They aren't synced with you.");
     }
-    await ctx.db.patch(link._id, { included: args.included });
+    await ctx.db.patch("connections", link._id, { included: args.included });
     return null;
   },
 });
@@ -114,7 +114,7 @@ export const throwOut = mutation({
     if (!link) {
       throw new Error("They aren't in your book.");
     }
-    await ctx.db.delete(link._id);
+    await ctx.db.delete("connections", link._id);
 
     // Drop the reverse link too — family is mutual.
     const reverse = await ctx.db
@@ -124,7 +124,7 @@ export const throwOut = mutation({
       )
       .unique();
     if (reverse) {
-      await ctx.db.delete(reverse._id);
+      await ctx.db.delete("connections", reverse._id);
     }
 
     for (const viewerId of [user._id, args.otherUserId]) {
@@ -137,7 +137,7 @@ export const throwOut = mutation({
         if (!mix.otherUserIds.includes(dropId)) {
           continue;
         }
-        await ctx.db.patch(mix._id, {
+        await ctx.db.patch("cookbookMixes", mix._id, {
           otherUserIds: mix.otherUserIds.filter((id) => id !== dropId),
         });
       }

@@ -78,9 +78,7 @@ export const fromUpload = action({
         : await pagesFromFile(bytes, args.fileName, mime);
     const rawText = pages.join("\n\n---\n\n");
 
-    const apiKey = (
-      env.AI_GATEWAY_API_KEY ?? process.env.AI_GATEWAY_API_KEY
-    )?.trim();
+    const apiKey = env.AI_GATEWAY_API_KEY?.trim();
     if (apiKey) {
       try {
         const cards = await cardsWithAi({

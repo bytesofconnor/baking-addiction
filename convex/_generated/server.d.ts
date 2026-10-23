@@ -32,6 +32,7 @@ type Env = {
   readonly CONVEX_SITE_URL: string;
   readonly AI_GATEWAY_API_KEY: string | undefined;
   readonly WRITER_PASSWORD: string;
+  readonly SITE_URL: string | undefined;
 };
 
 /**

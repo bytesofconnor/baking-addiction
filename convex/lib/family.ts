@@ -303,7 +303,7 @@ export async function claimOrphanBakes(
       if (bake.kitchenId) {
         continue;
       }
-      await ctx.db.patch(bake._id, { kitchenId, ownerId });
+      await ctx.db.patch("bakes", bake._id, { kitchenId, ownerId });
     }
   }
 }

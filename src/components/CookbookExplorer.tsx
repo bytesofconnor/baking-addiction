@@ -81,7 +81,6 @@ export function CookbookExplorer({
       write({});
     }
     // Clear retired filter params from older links.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
   function write(next: {

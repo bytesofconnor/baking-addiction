@@ -48,11 +48,7 @@ export const remix = action({
       .filter(Boolean);
     const steps = (args.steps ?? []).map((line) => line.trim()).filter(Boolean);
 
-    const apiKey = (
-      env.AI_GATEWAY_API_KEY ??
-      // eslint-disable-next-line @convex-dev/no-process-env
-      process.env.AI_GATEWAY_API_KEY
-    )?.trim();
+    const apiKey = env.AI_GATEWAY_API_KEY?.trim();
     if (!apiKey) {
       console.warn("Kitchen remix: AI_GATEWAY_API_KEY missing; using notes.");
       return {
