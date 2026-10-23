@@ -24,6 +24,8 @@ Never put real personal names or emails in code, docs, or site content. Use gene
 
 ## Development Workflow
 
+Agents working in this repo operate under /poteto-mode.
+
 ### Keep PRs Small
 
 Each PR should make one focused change. Small PRs are easier to review, test, and roll back if needed.
