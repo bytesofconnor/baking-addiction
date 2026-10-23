@@ -33,7 +33,13 @@ Each PR should make one focused change. Small PRs are easier to review, test, an
 
 ### Required PR Sections
 
+PR bodies need Summary, Verification, Blast Radius headings (checked in CI; Dependabot exempt).
+
 Every pull request body **must** include:
+
+#### Summary
+
+What the change is and why, in a few sentences.
 
 #### Verification
 
@@ -133,7 +139,7 @@ The project root is the repository root. `vercel.json` lives there, and the proj
 
 All PRs to `main` must pass:
 
-- **PR Checks / checks** — Lint (changed files only), typecheck, production build (`vite build`), Playwright smoke and accessibility tests
+- **PR Checks / checks** — Lint (changed files only), typecheck, production build (`vite build`), Playwright smoke and accessibility tests, and the PR body gate (Summary, Verification, and Blast Radius headings; Dependabot exempt)
 - **PR Checks / content-guard** — Blocks Sally's Baking Addiction image hotlinks, copied branding text, production seed commands, and personal names
 
 ### Content Rules
@@ -158,8 +164,7 @@ Same-repository pull requests squash-merge to `main` when the required checks pa
 Every PR must:
 
 1. **Pass CI:** All checks (lint, typecheck, build, content guard, smoke tests) must pass
-2. **Include verification:** Show evidence the change works — test output, build logs, screenshots, or script results
-3. **Include blast-radius note:** For non-trivial changes, document what could break and why it won't (or what testing proves it's safe)
+2. **Include Summary, Verification, and Blast Radius headings.** CI checks those names. Dependabot pull requests are exempt. Verification shows the commands and results. Blast radius says what else could break.
 
 ## Operations
 

@@ -1,6 +1,6 @@
-## Overview
+## Summary
 
-Brief description of what this PR does and why.
+What this change is and why. CI requires Summary, Verification, and Blast Radius headings. Dependabot is exempt.
 
 ## Verification
 
