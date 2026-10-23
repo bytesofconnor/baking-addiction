@@ -20,6 +20,11 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # typescript-eslint@8.72.0 peers typescript <6.1.0, and no published
+    # typescript-eslint release accepts TypeScript 7. Stay on TypeScript 6.
+    ignore:
+      - dependency-name: "typescript"
+        versions: ["7.x"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
