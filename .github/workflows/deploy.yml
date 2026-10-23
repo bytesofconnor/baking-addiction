@@ -4,18 +4,33 @@ on:
   push:
     branches:
       - main
+  workflow_call:
+    inputs:
+      sha:
+        description: Merge commit to deploy
+        required: true
+        type: string
 
 permissions:
   contents: read
 
+concurrency:
+  group: deploy-production-${{ github.event_name == 'workflow_call' && inputs.sha || github.sha }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
+    # A merge made with GITHUB_TOKEN does not start this push trigger.
+    # Auto-merge calls this workflow with the merge commit instead.
+    if: github.event_name == 'workflow_call' || github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_call' && inputs.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
