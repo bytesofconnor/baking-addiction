@@ -25,6 +25,7 @@ Never put real personal names or emails in code, docs, or site content. Use gene
 ## Development Workflow
 
 Agents working in this repo operate under /poteto-mode.
+Cursor models first (grok-4.7, then grok-4.6, then composer-2.5); others opt-in only; retry on a Cursor model if refused for usage.
 
 ### Keep PRs Small
 
